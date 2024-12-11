@@ -44,7 +44,7 @@ const SignIn = () => {
         localStorage.setItem("email", email);
   
         // Check if the user is an admin (support@eduinvest.in)
-        if (email === "support@eduinvest.in") {
+        if (email === "kunal@edumocks.com") {
           // Navigate to admin panel if email matches
           navigate("/admin-panel");
         } else if (location.state?.from) {
