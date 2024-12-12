@@ -21,8 +21,10 @@ const app = express();
 
 
 app.use(cors({
-    origin: ["https://www.edumocks.com", "http://localhost:3000", "https://api.edumocks.com"]
-  }));
+    origin: ["https://edumocks.com", "https://www.edumocks.com", "http://localhost:3000"],
+    methods: ["GET", "POST", "PUT", "DELETE"], // Ensure all needed methods are allowed
+    credentials: true, // If you're using cookies or other credentials
+}));
 app.use(express.json());
 
 // Serve static images from the "images" folder (adjust the folder name if needed)
