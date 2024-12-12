@@ -20,7 +20,9 @@ const delayTestRoutes = require('./routes/delayTestRoutes');
 const app = express();
 
 
-app.use(cors({ origin: "http://localhost:3000" }));
+app.use(cors({
+    origin: ["https://www.edumocks.com", "http://localhost:3000"]
+  }));
 app.use(express.json());
 
 // Serve static images from the "images" folder (adjust the folder name if needed)
