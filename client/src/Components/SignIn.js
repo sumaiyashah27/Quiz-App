@@ -30,10 +30,7 @@ const SignIn = () => {
     setLoading(true);
   
     try {
-      const response = await axios.post(
-        "http://localhost:5000/api/users/signin",
-        { email, password }
-      );
+      const response = await axios.post("/api/users/signin", { email, password });
   
       if (response.data.message === "Login successful") {
         const { userId, firstName } = response.data;
@@ -56,7 +53,7 @@ const SignIn = () => {
         }
       }
     } catch (error) {
-      console.error("Login error:", error.response ? error.response.data : error.message);
+      console.error("Login error:", error.message);
       alert("Login failed. Please check your credentials.");
     } finally {
       setLoading(false);

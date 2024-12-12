@@ -92,7 +92,6 @@ router.get("/users", async (req, res) => {
 });
 
 // Delete user by userId
-// Delete user by userId
 router.delete("/user/:userId", async (req, res) => {
     const { userId } = req.params;
 

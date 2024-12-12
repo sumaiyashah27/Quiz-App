@@ -20,5 +20,5 @@
     "@google-pay/button-react": "^3.1.0",
     "webpack-dev-server": "^5.1.0"
   },
-  "proxy": "https://195.35.22.73:5000"
+  "proxy": "http://localhost:5000"
 }
