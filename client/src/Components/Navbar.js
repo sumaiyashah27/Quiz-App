@@ -58,7 +58,7 @@ const Navbar = () => {
             {dropdownOpen && (
               <div onMouseEnter={() => setDropdownOpen(true)} onMouseLeave={() => setDropdownOpen(false)} style={{ display: "inline-block", position: "absolute", backgroundColor: "white", boxShadow: "0px 4px 6px rgba(0, 0, 0, 0.1)", borderRadius: "4px", overflow: "hidden", zIndex: "10", }}>
                 {/* Admin Panel Link */}
-                {email === "support@eduinvest.in" && (
+                {email === "kunal@edumocks.com" && (
                   <Link to="/admin-panel"onClick={() => setDropdownOpen(false)}
                     style={{ display: "block", padding: "10px 20px", textDecoration: "none", color: "#333", backgroundColor: "#fff", textAlign: "left",}}>
                     <FaUserCog /> Admin Panel

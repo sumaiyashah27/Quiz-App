@@ -107,8 +107,23 @@ const Bookcourse = () => {
           {/* <p style={{ fontSize: "1.2rem", color: "#007bff" }}>{user._id}</p> */}
         </div>
       )}
-
       <div className="courses-section-wrapper" style={{ marginTop: "30px" }}>
+        <div className="courses-container" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(250px, 1fr))", gap: "20px", justifyContent: "center", alignItems: "center" }}>
+          {Array.isArray(courses) && courses.length > 0 ? (
+            courses.map((course) => (
+              <div key={course._id} className="course-card" style={{ backgroundColor: "#fff", borderRadius: "15px", padding: "20px", boxShadow: "0 4px 12px rgba(0, 0, 0, 0.1)", textAlign: "center", transition: "transform 0.3s ease-in-out" }} onMouseOver={(e) => e.currentTarget.style.transform = "translateY(-10px)"} onMouseOut={(e) => e.currentTarget.style.transform = "translateY(0)"}>
+                <h3 className="course-name" style={{ fontSize: "1.5rem", color: "#333", marginBottom: "10px" }}>{course.name}</h3>
+                <button className="book-test-button" onClick={() => handleBookTest(course)} style={{ backgroundColor: "#fe9e0d", color: "#fff", padding: "12px 20px", fontSize: "1rem", border: "none", borderRadius: "5px", cursor: "pointer", transition: "background-color 0.3s ease" }} onMouseOver={(e) => e.currentTarget.style.backgroundColor = "#d47b09"} onMouseOut={(e) => e.currentTarget.style.backgroundColor = "#fe9e0d"}>
+                  <FaBook /> Book Test
+                </button>
+              </div>
+            ))
+          ) : (
+            <p>No courses available.</p>
+          )}
+        </div>
+      </div>
+      {/* <div className="courses-section-wrapper" style={{ marginTop: "30px" }}>
         <div className="courses-container" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(250px, 1fr))", gap: "20px", justifyContent: "center", alignItems: "center" }}>
           {courses.map((course) => (
             <div key={course._id} className="course-card" style={{ backgroundColor: "#fff", borderRadius: "15px", padding: "20px", boxShadow: "0 4px 12px rgba(0, 0, 0, 0.1)", textAlign: "center", transition: "transform 0.3s ease-in-out" }} onMouseOver={(e) => e.currentTarget.style.transform = "translateY(-10px)"} onMouseOut={(e) => e.currentTarget.style.transform = "translateY(0)"}>
@@ -119,20 +134,34 @@ const Bookcourse = () => {
             </div>
           ))}
         </div>
-      </div>
+      </div> */}
 
       {selectedCourse && (
         <div className="popup" style={{ position: "fixed", top: "50%", left: "50%", transform: "translate(-50%, -50%)", backgroundColor: "#fff", padding: "20px", borderRadius: "15px", boxShadow: "0 4px 15px rgba(0, 0, 0, 0.2)", width: "80%", maxWidth: "600px", zIndex: "1000", overflowY: "auto", boxSizing: "border-box", maxHeight: "80vh" }}>
           <h2 style={{ fontSize: "1.8rem", fontWeight: "bold", color: "#333", textAlign: "center", marginBottom: "20px" }}>Select Subjects for {selectedCourse.name}</h2>
           <ul className="subject-list" style={{ listStyleType: "none", padding: 0, display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(200px, 1fr))", gap: "10px", justifyContent:"center" }}>
-            {selectedCourse.subjects.map((subject) => (
+            {/* {selectedCourse.subjects.map((subject) => (
               <li key={subject._id} style={{ backgroundColor: "#f9f9f9", borderRadius: "8px", padding: "15px", boxShadow: "0 4px 8px rgba(0, 0, 0, 0.1)", textAlign: "center", transition: "transform 0.3s ease" }} onMouseOver={(e) => e.currentTarget.style.transform = "translateY(-5px)"} onMouseOut={(e) => e.currentTarget.style.transform = "translateY(0)"}>
                 <label style={{ fontSize: "1rem", color: "#333", display: "flex", alignItems: "center", gap: "8px", cursor: "pointer" }}>
                   <input type="checkbox" onChange={() => handleCheckboxChange(subject)} style={{ accentColor: "#fe9e0d", width: "20px", height: "20px" }} />
                   {subject.name}
                 </label>
               </li>
-            ))}
+            ))} */}
+            {Array.isArray(selectedCourse?.subjects) && selectedCourse.subjects.length > 0 ? (
+              selectedCourse.subjects.map((subject) => (
+                <li key={subject._id} style={{ backgroundColor: "#f9f9f9", borderRadius: "8px", padding: "15px", boxShadow: "0 4px 8px rgba(0, 0, 0, 0.1)", textAlign: "center", transition: "transform 0.3s ease" }} onMouseOver={(e) => e.currentTarget.style.transform = "translateY(-5px)"} onMouseOut={(e) => e.currentTarget.style.transform = "translateY(0)"}>
+                  <label style={{ fontSize: "1rem", color: "#333", display: "flex", alignItems: "center", gap: "8px", cursor: "pointer" }}>
+                    <input type="checkbox" onChange={() => handleCheckboxChange(subject)} 
+                    style={{ accentColor: "#fe9e0d", width: "20px", height: "20px" }}/>
+                    {subject.name}
+                  </label>
+                </li>
+              ))
+            ) : (
+              <p>No subjects available for this course.</p>
+            )}
+
           </ul>
           {errorMessage && (
             <p style={{ color: "red", fontWeight: "bold", marginTop: "20px", textAlign: "center" }}>
