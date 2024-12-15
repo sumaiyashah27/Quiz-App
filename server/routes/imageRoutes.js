@@ -28,7 +28,7 @@ router.post('/upload-images', upload.array('images', 10), async (req, res) => {
       // Construct full image URL
       const imageRecords = req.files.map((file) => ({
         name: file.originalname,
-        location: `/images/${file.filename}`, // This matches the static path
+        location: `${req.protocol}://${req.get('host')}/images/${file.filename}`, // This matches the static path
       }));
   
       const savedImages = await Image.insertMany(imageRecords);
@@ -71,7 +71,7 @@ router.delete('/:imageId', async (req, res) => {
     await Image.findByIdAndDelete(imageId);
 
     // Remove the image file from the filesystem
-    const imagePath = path.join(__dirname, '../image', location.replace('/images/', ''));
+    const imagePath = path.join(uploadFolder, path.basename(location));
     fs.unlinkSync(imagePath);  // Deletes the file from the system
 
     res.send('Image deleted successfully');

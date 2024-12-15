@@ -95,7 +95,7 @@ export default function Images() {
 
       <div className="image-gallery" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '20px', marginTop: '30px' }}>
         {images.map((image, index) => {
-          const imageUrl = `${image.location}`;
+          const imageUrl = image.location;
           return (
             <div key={index} style={{ position: 'relative', borderRadius: '10px', overflow: 'hidden', boxShadow: '0 4px 8px rgba(0, 0, 0, 0.1)', backgroundColor: '#fff' }}>
               <a href={imageUrl} target="_blank" rel="noopener noreferrer">
