@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { FaPlus, FaTimes, FaImage, FaCloudUploadAlt, FaTrashAlt, FaCopy } from 'react-icons/fa';
 
-const BASE_URL = process.env.REACT_APP_API_BASE_URL || 'http://localhost:5000';
+const BASE_URL = process.env.REACT_APP_API_BASE_URL || 'https://www.api.edumocks.com';
 
 export default function Images() {
   const [images, setImages] = useState([]);
