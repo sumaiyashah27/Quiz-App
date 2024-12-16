@@ -138,7 +138,7 @@ const Userpanel = () => {
     const newScheduledTests = [...scheduledTests, testData];
     setScheduledTests(newScheduledTests);
     try {
-      const response = await axios.post('http://localhost:5000/api/scheduleTest', testData);
+      const response = await axios.post('/api/scheduleTest', testData);
       console.log('Test scheduled successfully:', response.data);
       setModalOpen(false);
       alert('Test scheduled successfully!');
