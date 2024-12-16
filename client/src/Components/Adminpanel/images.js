@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { FaPlus, FaTimes, FaImage, FaCloudUploadAlt, FaTrashAlt, FaCopy } from 'react-icons/fa';
 
+const BASE_URL = process.env.REACT_APP_API_BASE_URL || 'http://localhost:5000';
+
 export default function Images() {
   const [images, setImages] = useState([]);
   const [selectedFiles, setSelectedFiles] = useState([]);
@@ -12,7 +14,7 @@ export default function Images() {
   useEffect(() => {
     setLoading(true);
     axios
-      .get('http://localhost:5000/api/images')
+      .get(`${BASE_URL}/api/images`)
       .then((response) => {
         setImages(response.data);
         setLoading(false);
@@ -29,7 +31,9 @@ export default function Images() {
     const formData = new FormData();
     selectedFiles.forEach((file) => formData.append('images', file));
     try {
-      const response = await axios.post('http://localhost:5000/api/images/upload-images', formData, { headers: { 'Content-Type': 'multipart/form-data' } });
+      const response = await axios.post(`${BASE_URL}/api/images/upload-images`, formData, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+      });
       setImages(response.data);
       setIsModalOpen(false);
       setSelectedFiles([]);
@@ -44,7 +48,9 @@ export default function Images() {
         console.error('Image location is not available');
         return;
       }
-      await axios.delete(`http://localhost:5000/api/images/${imageId}`, { data: { location: imageLocation } });
+      await axios.delete(`${BASE_URL}/api/images/${imageId}`, {
+        data: { location: imageLocation },
+      });
       setImages(images.filter((image) => image._id !== imageId));
     } catch (error) {
       console.error('Error deleting image:', error);
@@ -54,9 +60,7 @@ export default function Images() {
   const Modal = ({ title, children, onClose }) => (
     <div style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', backgroundColor: 'rgba(0,0,0,0.5)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 1000 }}>
       <div style={{ backgroundColor: '#fff', padding: '20px', borderRadius: '8px', width: '400px', textAlign: 'center', position: 'relative' }}>
-        <span onClick={onClose} style={{ position: 'absolute', top: '10px', right: '10px', cursor: 'pointer', fontSize: '20px' }}>
-          <FaTimes />
-        </span>
+        <span onClick={onClose} style={{ position: 'absolute', top: '10px', right: '10px', cursor: 'pointer', fontSize: '20px' }}><FaTimes /></span>
         <h3>{title}</h3>
         {children}
       </div>
@@ -74,25 +78,9 @@ export default function Images() {
 
   return (
     <div className="images-container" style={{ padding: '30px', backgroundColor: '#f4f4f4' }}>
-      <h1 style={{ textAlign: 'center', color: '#333', fontSize: '2rem', marginBottom: '20px' }}>
-        <FaImage style={{ marginRight: '10px' }} />
-        Image Management
-      </h1>
-
-      <div onClick={() => setIsModalOpen(true)} style={{ backgroundColor: '#4CAF50', color: 'white', borderRadius: '50%', width: '50px', height: '50px', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto', boxShadow: '0 4px 8px rgba(0, 0, 0, 0.1)', cursor: 'pointer', transition: 'transform 0.3s ease' }}>
-        <FaPlus />
-      </div>
-
-      {isModalOpen && (
-        <Modal title="Upload New Images" onClose={() => setIsModalOpen(false)}>
-          <input type="file" multiple onChange={handleFileChange} style={{ marginBottom: '10px', padding: '10px', borderRadius: '5px', border: '1px solid #ccc', width: '100%', backgroundColor: '#f9f9f9' }} />
-          <p style={{ color: '#555', marginBottom: '20px' }}>{displaySelectedFiles()}</p>
-          <div onClick={uploadImages} style={{ backgroundColor: '#2196F3', color: 'white', borderRadius: '50%', width: '50px', height: '50px', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto', cursor: 'pointer' }}>
-            <FaCloudUploadAlt />
-          </div>
-        </Modal>
-      )}
-
+      <h1 style={{ textAlign: 'center', color: '#333', fontSize: '2rem', marginBottom: '20px' }}><FaImage style={{ marginRight: '10px' }} />Image Management</h1>
+      <div onClick={() => setIsModalOpen(true)} style={{ backgroundColor: '#4CAF50', color: 'white', borderRadius: '50%', width: '50px', height: '50px', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto', boxShadow: '0 4px 8px rgba(0, 0, 0, 0.1)', cursor: 'pointer', transition: 'transform 0.3s ease' }}><FaPlus /></div>
+      {isModalOpen && (<Modal title="Upload New Images" onClose={() => setIsModalOpen(false)}><input type="file" multiple onChange={handleFileChange} style={{ marginBottom: '10px', padding: '10px', borderRadius: '5px', border: '1px solid #ccc', width: '100%', backgroundColor: '#f9f9f9' }} /><p style={{ color: '#555', marginBottom: '20px' }}>{displaySelectedFiles()}</p><div onClick={uploadImages} style={{ backgroundColor: '#2196F3', color: 'white', borderRadius: '50%', width: '50px', height: '50px', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto', cursor: 'pointer' }}><FaCloudUploadAlt /></div></Modal>)}
       <div className="image-gallery" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '20px', marginTop: '30px' }}>
         {images.map((image, index) => {
           const imageUrl = image.location;
@@ -102,10 +90,9 @@ export default function Images() {
                 <img src={imageUrl} alt={image.name} style={{ width: '100%', height: '200px', objectFit: 'cover', borderRadius: '8px 8px 0 0', transition: 'transform 0.3s ease' }} />
               </a>
               <div style={{ padding: '15px', textAlign: 'center' }}>
-                <span style={{ display: 'block', fontSize: '16px', color: '#333', fontWeight: '500' }}>{image.name}</span>
-                {/* <span style={{ display: 'block', fontSize: '14px', color: '#666', marginTop: '5px' }}>
-                  <strong>Location:</strong> {image.location}
-                </span> */}
+                <span style={{ display: 'block', fontSize: '16px', color: '#333', fontWeight: '500' }}>
+                  {image.name}
+                </span>
                 <div style={{ marginTop: '10px', display: 'flex', justifyContent: 'center', gap: '10px' }}>
                   <div onClick={() => navigator.clipboard.writeText(imageUrl)} style={{ backgroundColor: '#2196F3', color: 'white', borderRadius: '50%', width: '40px', height: '40px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }} aria-label="Copy Link">
                     <FaCopy />
