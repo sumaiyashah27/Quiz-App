@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { FaPlus, FaTimes, FaImage, FaCloudUploadAlt, FaTrashAlt, FaCopy } from 'react-icons/fa';
 
-const BASE_URL = process.env.REACT_APP_API_BASE_URL || 'https://www.api.edumocks.com';
+//const BASE_URL = process.env.REACT_APP_API_BASE_URL || 'https://www.api.edumocks.com';
 
 export default function Images() {
   const [images, setImages] = useState([]);
@@ -14,7 +14,7 @@ export default function Images() {
   useEffect(() => {
     setLoading(true);
     axios
-      .get(`${BASE_URL}/api/images`)
+      .get(`/api/images`)
       .then((response) => {
         console.log('Fetched Images:', response.data); // Check response structure
         setImages(response.data);
@@ -34,7 +34,7 @@ export default function Images() {
     const formData = new FormData();
     selectedFiles.forEach((file) => formData.append('images', file));
     try {
-      const response = await axios.post(`${BASE_URL}/api/images/upload-images`, formData, {
+      const response = await axios.post(`/api/images/upload-images`, formData, {
         headers: { 'Content-Type': 'multipart/form-data' },
       });
       setImages(response.data);
@@ -51,7 +51,7 @@ export default function Images() {
         console.error('Image location is not available');
         return;
       }
-      await axios.delete(`${BASE_URL}/api/images/${imageId}`, {
+      await axios.delete(`/api/images/${imageId}`, {
         data: { location: imageLocation },
       });
       setImages(images.filter((image) => image._id !== imageId));
