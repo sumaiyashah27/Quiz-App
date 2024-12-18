@@ -28,7 +28,8 @@ router.post('/upload-images', upload.array('images', 10), async (req, res) => {
     // Construct full image URL
     const imageRecords = req.files.map((file) => ({
       name: file.originalname,
-      location: `${req.protocol}://${req.get('host')}/images/${file.filename}`, // Matches the Nginx alias
+      //location: `${req.protocol}://${req.get('host')}/images/${file.filename}`, // Matches the Nginx alias
+      location: `${req.protocol}://api.edumocks.com/images/${file.filename}`,
     }));
 
     const savedImages = await Image.insertMany(imageRecords);
