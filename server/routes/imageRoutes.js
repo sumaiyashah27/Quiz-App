@@ -29,7 +29,8 @@ router.post('/upload-images', upload.array('images', 10), async (req, res) => {
       // Construct full image URL
       const imageRecords = req.files.map((file) => ({
         name: file.originalname,
-        location: `${req.protocol}://${req.get('host')}/images/${file.filename}`, // This matches the static path
+        //location: `${req.protocol}://${req.get('host')}/images/${file.filename}`, // This matches the static path
+        location: `/images/${file.filename}`, // Correct URL format
       }));
   
       const savedImages = await Image.insertMany(imageRecords);
