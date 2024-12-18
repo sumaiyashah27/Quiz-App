@@ -11,26 +11,44 @@ export default function Images() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
-  useEffect(() => {
-    setLoading(true);
-    axios
-      .get(`/api/images`)
-      .then((response) => {
-        console.log('Fetched Images:', response.data); // Check response structure
-        setImages(response.data);
-        setLoading(false);
-      })
-      .catch((error) => {
-        console.error('Error fetching images:', error);
-        setError('Error fetching images');
-        setLoading(false);
-      });
+  // useEffect(() => {
+  //   setLoading(true);
+  //   axios
+  //     .get(`/api/images`)
+  //     .then((response) => {
+  //       console.log('Fetched Images:', response.data); // Check response structure
+  //       setImages(response.data);
+  //       setLoading(false);
+  //     })
+  //     .catch((error) => {
+  //       console.error('Error fetching images:', error);
+  //       setError('Error fetching images');
+  //       setLoading(false);
+  //     });
 
+  // }, []);
+
+  useEffect(() => {
+    fetchImages();
   }, []);
+
+  const fetchImages = async () => {
+    setLoading(true);
+    try {
+      const response = await axios.get('/api/images');
+      setImages(response.data);
+    } catch (err) {
+      console.error('Error fetching images:', err);
+      setError('Failed to load images');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleFileChange = (e) => setSelectedFiles([...e.target.files]);
 
   const uploadImages = async () => {
+    if (!selectedFiles.length) return;
     const formData = new FormData();
     selectedFiles.forEach((file) => formData.append('images', file));
     try {
