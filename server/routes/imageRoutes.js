@@ -7,7 +7,8 @@ const Image = require('../models/image-model'); // Ensure this path points to yo
 const router = express.Router();
 
 // Define the folder where images will be stored
-const uploadFolder = path.join(__dirname, '../image');
+//const uploadFolder = path.join(__dirname, '../image');
+const uploadFolder = '/var/www/api.edumocks.com/image/';
 fs.ensureDirSync(uploadFolder); // Ensure the folder exists
 
 // Multer storage setup
@@ -48,7 +49,7 @@ router.get('/', async (req, res) => {
       res.status(500).send('Error retrieving images');
     }
   });
-  
+
 // Route: Delete an image
 router.delete('/:imageId', async (req, res) => {
   try {
