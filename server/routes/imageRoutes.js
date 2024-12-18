@@ -30,15 +30,13 @@ router.post('/upload-images', upload.array('images', 10), async (req, res) => {
         name: file.originalname,
         location: `${req.protocol}://${req.get('host')}/images/${file.filename}`, // This matches the static path
       }));
-  
       const savedImages = await Image.insertMany(imageRecords);
-  
       res.json(savedImages);
     } catch (error) {
       console.error('Error uploading images:', error);
       res.status(500).send('Error uploading images');
     }
-  });
+});
 
 // Route: Get all uploaded images
 router.get('/', async (req, res) => {
@@ -50,7 +48,8 @@ router.get('/', async (req, res) => {
       res.status(500).send('Error retrieving images');
     }
   });
-  // Route: Delete an image
+  
+// Route: Delete an image
 router.delete('/:imageId', async (req, res) => {
   try {
     const { imageId } = req.params;
@@ -80,6 +79,5 @@ router.delete('/:imageId', async (req, res) => {
     res.status(500).send('Error deleting image');
   }
 });
-
 
 module.exports = router;
