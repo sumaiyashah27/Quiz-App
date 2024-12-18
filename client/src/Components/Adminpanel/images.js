@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { FaPlus, FaTimes, FaImage, FaCloudUploadAlt, FaTrashAlt, FaCopy } from 'react-icons/fa';
 
-//const BASE_URL = process.env.REACT_APP_API_BASE_URL || 'https://www.api.edumocks.com';
+const BASE_URL = process.env.REACT_APP_API_BASE_URL || 'https://www.api.edumocks.com';
 
 export default function Images() {
   const [images, setImages] = useState([]);
@@ -14,7 +14,7 @@ export default function Images() {
   useEffect(() => {
     setLoading(true);
     axios
-      .get(`/api/images`)
+      .get(`${BASE_URL}/api/images`)
       .then((response) => {
         console.log('Fetched Images:', response.data); // Check response structure
         setImages(response.data);
@@ -34,7 +34,7 @@ export default function Images() {
     const formData = new FormData();
     selectedFiles.forEach((file) => formData.append('images', file));
     try {
-      const response = await axios.post(`/api/images/upload-images`, formData, {
+      const response = await axios.post(`${BASE_URL}/api/images/upload-images`, formData, {
         headers: { 'Content-Type': 'multipart/form-data' },
       });
       setImages(response.data);
@@ -51,7 +51,7 @@ export default function Images() {
         console.error('Image location is not available');
         return;
       }
-      await axios.delete(`/api/images/${imageId}`, {
+      await axios.delete(`${BASE_URL}/api/images/${imageId}`, {
         data: { location: imageLocation },
       });
       setImages(images.filter((image) => image._id !== imageId));
@@ -86,7 +86,7 @@ export default function Images() {
       {isModalOpen && (<Modal title="Upload New Images" onClose={() => setIsModalOpen(false)}><input type="file" multiple onChange={handleFileChange} style={{ marginBottom: '10px', padding: '10px', borderRadius: '5px', border: '1px solid #ccc', width: '100%', backgroundColor: '#f9f9f9' }} /><p style={{ color: '#555', marginBottom: '20px' }}>{displaySelectedFiles()}</p><div onClick={uploadImages} style={{ backgroundColor: '#2196F3', color: 'white', borderRadius: '50%', width: '50px', height: '50px', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto', cursor: 'pointer' }}><FaCloudUploadAlt /></div></Modal>)}
       <div className="image-gallery" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '20px', marginTop: '30px' }}>
         {images.map((image, index) => {
-          const imageUrl = `${image.location}`;
+          const imageUrl = `${BASE_URL}${image.location}`;
           return (
             <div key={index} style={{ position: 'relative', borderRadius: '10px', overflow: 'hidden', boxShadow: '0 4px 8px rgba(0, 0, 0, 0.1)', backgroundColor: '#fff' }}>
               <a href={imageUrl} target="_blank" rel="noopener noreferrer">

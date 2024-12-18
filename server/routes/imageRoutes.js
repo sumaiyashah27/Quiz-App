@@ -7,7 +7,8 @@ const Image = require('../models/image-model'); // Ensure this path points to yo
 const router = express.Router();
 
 // Define the folder where images will be stored
-const uploadFolder = path.join(__dirname, '../image');
+//const uploadFolder = path.join(__dirname, '../image');
+const uploadFolder = '/var/www/api.edumocks.com/image/';
 fs.ensureDirSync(uploadFolder); // Ensure the folder exists
 
 // Multer storage setup
@@ -30,13 +31,15 @@ router.post('/upload-images', upload.array('images', 10), async (req, res) => {
         name: file.originalname,
         location: `${req.protocol}://${req.get('host')}/images/${file.filename}`, // This matches the static path
       }));
+  
       const savedImages = await Image.insertMany(imageRecords);
+  
       res.json(savedImages);
     } catch (error) {
       console.error('Error uploading images:', error);
       res.status(500).send('Error uploading images');
     }
-});
+  });
 
 // Route: Get all uploaded images
 router.get('/', async (req, res) => {
