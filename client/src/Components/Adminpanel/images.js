@@ -14,7 +14,7 @@ export default function Images() {
   useEffect(() => {
     setLoading(true);
     axios
-      .get(`${BASE_URL}/api/images`)
+      .get(`/api/images`)
       .then((response) => {
         console.log('Fetched Images:', response.data); // Check response structure
         setImages(response.data);
