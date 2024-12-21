@@ -164,24 +164,30 @@ router.get("/questions", async (req, res) => {
   }
 });
 
-router.get('/:subjectId/questions', async (req, res) => {
-  const { subjectId } = req.params;
-
+// Route to fetch questions for a subject
+router.get('/subjects/:subjectId/questions', async (req, res) => {
+  const { subjectId } = req.params;  // Ensure subjectId is a valid ObjectId
+  
   try {
-    // Find the subject by ID and populate its questions
-    const subject = await Subject.findById(subjectId).populate('questions');
-
-    if (!subject) {
-      return res.status(404).json({ message: 'Subject not found' });
+    // Ensure subjectId is a valid ObjectId
+    if (!mongoose.Types.ObjectId.isValid(subjectId)) {
+      return res.status(400).json({ error: 'Invalid subjectId' });
     }
 
-    // Return the questions of the subject
+    // Fetch subject by subjectId
+    const subject = await Subject.findById(subjectId).populate('questions');
+    
+    if (!subject) {
+      return res.status(404).json({ error: 'Subject not found' });
+    }
+
     res.json(subject.questions);
-  } catch (error) {
-    console.error('Error fetching questions:', error);
-    res.status(500).json({ message: 'Server error' });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Error fetching questions' });
   }
 });
+
 
 // Add a new question for a subject (with image upload)
 router.post('/subjects/:subjectId/questions', async (req, res) => {
