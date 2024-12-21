@@ -1,12 +1,16 @@
 const express = require('express');
-const multer = require('multer');
 const Question = require('../models/question-model'); // Initialize the router
-const upload = multer(); // For handling file uploads
 const csv = require('csv-parser');
 const stream = require('stream');
 const Subject = require("../models/subject-model");
+const path = require('path');
+const multer = require('multer');
 
 const router = express.Router();
+// Set up storage configuration
+const storage = multer.memoryStorage();  // Use memory storage for in-memory file handling
+const upload = multer({ storage: storage });  
+
 
 // Get all subjects with questions
 router.get("/", async (req, res) => {
@@ -179,5 +183,37 @@ router.get('/:subjectId/questions', async (req, res) => {
   }
 });
 
+// Add a new question for a subject (with image upload)
+router.post("/:subjectId/questions", upload.single('image'), async (req, res) => {
+  const { subjectId } = req.params;
+  const questionData = req.body;
+
+  // Validation
+  if (!question || !options || !correctAnswer) {
+    return res.status(400).json({ message: "Question, options, and correct answer are required." });
+  }
+
+  try {
+    const newQuestion = new Question({
+      question: questionData.question,
+      options: questionData.options,
+      correctAns: questionData.correctAns,
+      description: description || "",
+      answerDescription: questionData.answerDescription,
+      subjectId: id, // Link question to the subject
+    });
+
+    await newQuestion.save();
+    // Add the new question to the subject's questions array
+    await Subject.findByIdAndUpdate(id, {
+      $push: { questions: newQuestion._id },
+    });
+
+    res.status(201).json({ message: "Question added successfully", question: newQuestion });
+  } catch (error) {
+    console.error("Error adding question:", error);
+    res.status(500).json({ message: "Failed to add question", error: error.message });
+  }
+});
 
 module.exports = router;

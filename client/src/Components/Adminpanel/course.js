@@ -50,7 +50,11 @@ const Course = () => {
   
   
   const handleAddSubjectToCourse = async () => { if (!selectedCourse || !selectedSubject) { alert('Please select both a course and a subject.'); return; } const courseToUpdate = courses.find((course) => course._id === selectedCourse); const isSubjectAlreadyAdded = courseToUpdate && courseToUpdate.subjects.some((subject) => subject._id === selectedSubject); if (isSubjectAlreadyAdded) { alert('This subject is already added to the course.'); return; } const updatedCourses = courses.map((course) => { if (course._id === selectedCourse) { const subjectToAdd = subjectOptions.find((subject) => subject._id === selectedSubject); return { ...course, subjects: [...course.subjects, subjectToAdd] }; } return course; }); setCourses(updatedCourses); try { await axios.put(`/api/courses/${selectedCourse}/add-subject`, { subjectId: selectedSubject }); handleCourseSelect(selectedCourse); closeAddSubjectModal(); } catch (error) { console.error('Error adding subject to course:', error); fetchCourses(); } };
-  const handleAddCourse = async () => { if (!newCourseName) { alert('Please enter a course name.'); return; } try { const newCourse = { name: newCourseName }; await axios.post('/api/courses', newCourse); fetchCourses(); closeAddCourseModal(); } catch (error) { console.error('Error adding new course:', error); } };
+  const handleAddCourse = async () => { 
+    if (!newCourseName) { 
+      alert('Please enter a course name.'); 
+      return; 
+    } try { const newCourse = { name: newCourseName }; await axios.post('/api/courses', newCourse); fetchCourses(); closeAddCourseModal(); } catch (error) { console.error('Error adding new course:', error); } };
   const handleDeleteCourse = async (courseId) => { try { await axios.delete(`/api/courses/${courseId}`); setCourses(courses.filter((course) => course._id !== courseId)); alert('Course deleted successfully'); } catch (error) { console.error('Error deleting course:', error.response || error); alert('Error deleting the course'); } };
   const handleDeleteSubject = async (courseId, subjectId) => {
     try {

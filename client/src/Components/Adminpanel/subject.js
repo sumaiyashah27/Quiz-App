@@ -14,11 +14,9 @@ const Subject = () => {
   const [newSubjectPrice, setNewSubjectPrice] = useState('');
   const [currentSubjectId, setCurrentSubjectId] = useState(null);
   const [selectedFile, setSelectedFile] = useState(null);
-  const [editingSubject, setEditingSubject] = useState(null);
-  const [showEditQuestionModal, setShowEditQuestionModal] = useState(false); // Or an appropriate initial value
-  const [editingQuestion, setEditingQuestion] = useState(null); // For the question being edited
-  const [updatedQuestion, setUpdatedQuestion] = useState({question: '', image: '', options: { a: '', b: '', c: '', d: '' }, correctAnswer: '', description: ''});
+  const [editingSubject, setEditingSubject] = useState(null);  
   const [expandedQuestion, setExpandedQuestion] = useState({});
+  const [showAddQuestionModal, setShowAddQuestionModal] = useState(false);
 
   useEffect(() => {
     fetchSubjects();
@@ -110,45 +108,27 @@ const Subject = () => {
     }
   };
   
-  const handleEditQuestion = (question, currentSubjectId) => {
-    setEditingQuestion(question); // Set the selected question to be edited
-    setCurrentSubjectId(currentSubjectId); // Set the chapter ID
-    setUpdatedQuestion({
-      question: question.question,
-      image: question.questionImage || '', // Set current image or empty
-      options: question.options || { a: '', b: '', c: '', d: '' },
-      correctAnswer: question.correctAns,
-      description: question.answerDescription,
-    });
-    setShowEditQuestionModal(true); // Show the edit question modal
-  };
+  // const handleAddQuestion = async () => {
+  //   try {
+  //     // Prepare form data for uploading the image
+  //     const formData = new FormData();
+  //     formData.append('question', questionText);
+  //     formData.append('image', questionImage); // Attach image file
+  //     formData.append('options', JSON.stringify({ A: optionA, B: optionB, C: optionC, D: optionD }));
+  //     formData.append('correctAnswer', correctAnswer);
+  //     formData.append('description', description);
   
-  const handleUpdateQuestion = async () => {
-    if (!currentSubjectId || !editingQuestion?._id) {
-      console.error("Missing Subject ID or question ID");
-      return; // Return early if chapter or question ID is invalid
-    }setLoading(true);
-
-    try {
-      // Send PUT request to update the question with all its fields
-      const response = await axios.put(
-        `/api/subjects/${currentSubjectId}/questions/${editingQuestion._id}`,
-        {
-          question: updatedQuestion.question,
-          questionImage: updatedQuestion.image,
-          options: updatedQuestion.options,
-          correctAns: updatedQuestion.correctAnswer,
-          answerDescription: updatedQuestion.description,
-        }
-      );
-      console.log('Question updated:', response.data);
-      alert('Question updat Sucessfully');
-      setShowEditQuestionModal(false); // Close the modal after updating
-      fetchSubjects(); // Refresh the chapters list with the updated question
-    } catch (error) {
-      console.error('Error updating question:', error.response?.data || error);
-    }
-  };
+  //     // API call to save question
+  //     await axios.post(`/api/subjects/${currentSubjectId}/questions`, formData, {
+  //       headers: { 'Content-Type': 'multipart/form-data' },
+  //     });
+  
+  //     setShowAddQuestionModal(false); // Close modal
+  //     fetchSubjects(); // Refresh table to show new question
+  //   } catch (error) {
+  //     console.error('Error adding question:', error);
+  //   }
+  // };
 
   const toggleSubjectExpansion = (subjectId) => {
     setExpandedSubject(expandedSubject === subjectId ? null : subjectId);
@@ -157,6 +137,135 @@ const Subject = () => {
   const toggleQuestionExpand = (questionId) => {
     setExpandedQuestion((prevState) => ({ ...prevState, [questionId]: !prevState[questionId], }));
   };
+  const [questionParts, setQuestionParts] = useState([]);
+  const [answerParts, setAnswerParts] = useState([]);
+  const [options, setOptions] = useState({ a: '', b: '', c: '', d: '' });
+  const [correctAns, setCorrectAns] = useState('');
+  // Define state for success and error messages
+  const [successMessage, setSuccessMessage] = useState('');
+  const [errorMessage, setErrorMessage] = useState('');
+  //Function to render table
+  const renderTable = (table, index, partType) => {
+    // Ensure table.data is an array, if not, initialize it
+    const data = Array.isArray(table.data) ? table.data : [];
+  
+    return (
+      <div key={`table-${index}`} style={{ marginBottom: '10px' }}>
+        <div>
+          <label>Rows: </label>
+          <input 
+            type="number" 
+            value={table.rows} 
+            min={1} 
+            onChange={(e) => updateTable(index, partType, +e.target.value, table.columns)} 
+          />
+          <label style={{ marginLeft: '10px' }}>Columns: </label>
+          <input 
+            type="number" 
+            value={table.columns} 
+            min={1} 
+            onChange={(e) => updateTable(index, partType, table.rows, +e.target.value)} 
+          />
+        </div>
+        <div 
+          style={{ display: 'grid', gridTemplateColumns: `repeat(${table.columns}, 1fr)`, gap: '5px', marginTop: '10px' }}
+        >
+          {data.map((row, rowIndex) =>
+            row.map((cell, colIndex) => (
+              <input
+                key={`cell-${rowIndex}-${colIndex}`}
+                type="text"
+                value={cell}
+                onChange={(e) => {
+                  const newData = [...data];
+                  newData[rowIndex][colIndex] = e.target.value;
+                  updateTable(index, partType, table.rows, table.columns);
+                }}
+              />
+            ))
+          )}
+        </div>
+      </div>
+    );
+  };
+  
+  // Function to update value
+  const updateValue = (index, value, partType) => {
+    const updatedParts = partType === 'question' ? [...questionParts] : [...answerParts];
+    updatedParts[index].value = value;
+    partType === 'question' ? setQuestionParts(updatedParts) : setAnswerParts(updatedParts);
+  };  
+  // Define reset form function
+  const resetForm = () => {
+    setQuestionParts('');
+    setOptions([]);
+    setCorrectAns('');
+    setAnswerParts('');
+  };
+
+// Function to update a table
+const updateTable = (index, partType, rows, columns) => {
+  const parts = partType === 'question' ? [...questionParts] : [...answerParts];
+  const table = parts[index].value;
+  const newData = Array.from({ length: rows }, (_, i) =>
+      Array.from({ length: columns }, (_, j) => (table.data[i]?.[j] || ''))
+  );
+  parts[index].value = { rows, columns, data: newData };
+  partType === 'question' ? setQuestionParts(parts) : setAnswerParts(parts);
+};
+ // Function to add question part
+ const addQuestionPart = (type) => {
+    if (type === 'table') {
+      // Initialize table with two rows and two columns (for example)
+      setQuestionParts([...questionParts, { type: 'table', value: [['', '']] }]);
+    } else {
+      setQuestionParts([...questionParts, { type, value: '' }]);
+    }
+  };
+
+// Function to add answer part
+const addAnswerPart = (type) => {
+  if (type === 'table') {
+    // Initialize table with two rows and two columns (for example)
+    setAnswerParts([...answerParts, { type: 'table', value: [['', '']] }]);
+  } else {
+    setAnswerParts([...answerParts, { type, value: '' }]);
+  }
+};
+
+const handleAddQuestion = async () => {
+  try {
+    const questionData = {
+      question: questionParts,  // Send the question parts in the order entered
+      options,
+      correctAns,
+      answerDescription: answerParts,  // Send the answer parts in the order entered
+      subjectId: currentSubjectId,  // Subject ID
+    };
+
+    // API call to save question
+    await axios.post(`/api/subjects/${currentSubjectId}/questions`, questionData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    });
+
+    // Show success message
+    setSuccessMessage('Question added successfully!'); // Assuming you have a state for success message
+
+    // Close modal
+    setShowAddQuestionModal(false);
+
+    // Refresh table to show new question
+    fetchSubjects();
+
+    // Reset state (optional, depends on your implementation)
+    resetForm(); // Add a function to reset your form fields if necessary
+    
+  } catch (error) {
+    console.error('Error adding question:', error);
+    setErrorMessage('An error occurred while adding the question.'); // Optional: Show error message
+  }
+};
+
 
   return (
     <div>
@@ -206,7 +315,6 @@ const Subject = () => {
           </div>
         </div>
       )}
-
       {/* List of Subjects */}
       {loading ? (
         <p>Loading...</p>
@@ -231,9 +339,18 @@ const Subject = () => {
 
             {expandedSubject === subject._id && (
               <div style={{ marginTop: '10px' }}>
-                <button onClick={() => { setCurrentSubjectId(subject._id); setShowUploadModal(true); }} style={{ backgroundColor: '#4CAF50', color: 'white', padding: '8px 16px', borderRadius: '5px', cursor: 'pointer' }} >
+                {/* <button onClick={() => { setCurrentSubjectId(subject._id); setShowUploadModal(true); }} style={{ backgroundColor: '#4CAF50', color: 'white', padding: '8px 16px', borderRadius: '5px', cursor: 'pointer' }} >
                   <FontAwesomeIcon icon={faUpload} style={{ marginRight: '8px' }} /> Upload CSV
-                </button>
+                </button> */}
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '20px' }}>
+                  <button onClick={() => { setCurrentSubjectId(subject._id); setShowUploadModal(true); }} style={{ padding: '10px 20px', backgroundColor: '#007bff', color: '#fff', border: 'none', borderRadius: '4px', cursor: 'pointer' }}>
+                    Upload CSV
+                  </button>
+                  <button onClick={() => setShowAddQuestionModal(true)} style={{ padding: '10px 20px', backgroundColor: '#28a745', color: '#fff', border: 'none', borderRadius: '4px', cursor: 'pointer' }}>
+                    Add Question
+                  </button>
+                </div>
+
                 {/* Questions here */}
                 <>
               <ul style={{ paddingLeft: "20px" }}>
@@ -245,10 +362,6 @@ const Subject = () => {
                         Question {subject.questions.indexOf(question) + 1}
                       </span>
                       <div>
-                        {/* Edit Button */}
-                        <button onClick={() => handleEditQuestion(question, subject._id)} style={{ marginLeft: "5px", padding: "5px 12px", backgroundColor: "#4CAF50", color: "white", borderRadius: "5px", cursor: "pointer" }} >
-                          <FontAwesomeIcon icon={faEdit} />
-                        </button>
                         {/* Delete Button */}
                         <button style={{ marginLeft: "5px", padding: "5px 12px", backgroundColor: "#f44336", color: "white", borderRadius: "5px", cursor: "pointer" }} >
                           <FontAwesomeIcon icon={faTrash} />
@@ -283,6 +396,71 @@ const Subject = () => {
           </div>
         ))
       )}
+      {showAddQuestionModal && (
+        <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', backgroundColor: 'rgba(0,0,0,0.5)', overflow: 'auto', zIndex: 1000 }}>
+          <div style={{ backgroundColor: '#fff', padding: '30px', borderRadius: '12px', width: '80%', maxWidth: '800px', textAlign: 'center', position: 'relative', maxHeight: '90vh', overflowY: 'auto', boxShadow: '0px 4px 15px rgba(0, 0, 0, 0.1)', animation: 'fadeIn 0.3s ease-in-out' }}>
+            <span onClick={() => setShowAddQuestionModal(false)} style={{ position: 'absolute', top: '15px', right: '15px', cursor: 'pointer', fontSize: '24px', color: '#888', transition: 'color 0.3s' }} onMouseEnter={(e) => (e.target.style.color = '#f00')} onMouseLeave={(e) => (e.target.style.color = '#888')}>
+              <FontAwesomeIcon icon={faTimes} />
+            </span>
+            <h3 style={{ color: '#333', fontSize: '24px', marginBottom: '20px' }}>Add New Question</h3>
+
+            {/* Question Parts */}
+            <h4 style={{ color: '#555', marginBottom: '10px' }}>Question</h4>
+            {questionParts.map((part, index) =>
+              part.type === 'table' ? (
+                renderTable(part.value, index, 'question')
+              ) : (
+                <textarea key={`question-${index}`} value={part.value} onChange={(e) => updateValue(index, e.target.value, 'question')} placeholder={`Enter question ${part.type}`} style={{ width: '100%', padding: '10px', marginBottom: '15px', fontSize: '16px', borderRadius: '8px', border: '1px solid #ddd', boxSizing: 'border-box', transition: 'border-color 0.3s' }} onFocus={(e) => (e.target.style.borderColor = '#4CAF50')} onBlur={(e) => (e.target.style.borderColor = '#ddd')} />
+              )
+            )}
+            <div style={{ marginBottom: '20px' }}>
+              <button onClick={() => addQuestionPart('text')} style={{ padding: '10px 20px', backgroundColor: '#007bff', color: '#fff', border: 'none', borderRadius: '8px', cursor: 'pointer', margin: '5px' }}>Add Text</button>
+              <button onClick={() => addQuestionPart('image')} style={{ padding: '10px 20px', backgroundColor: '#007bff', color: '#fff', border: 'none', borderRadius: '8px', cursor: 'pointer', margin: '5px' }}>Add Image</button>
+              <button onClick={() => addQuestionPart('table')} style={{ padding: '10px 20px', backgroundColor: '#007bff', color: '#fff', border: 'none', borderRadius: '8px', cursor: 'pointer', margin: '5px' }}>Add Table</button>
+            </div>
+
+            {/* Options */}
+            <h4 style={{ color: '#555', marginBottom: '10px' }}>Options</h4>
+            {['a', 'b', 'c', 'd'].map((option) => (
+              <div key={option} style={{ marginBottom: '15px',display: 'flex', alignItems: 'center' }}>
+                <label style={{ fontSize: '16px', marginBottom: '5px',width: '80px' }}>{option.toUpperCase()}:</label>
+                <input type="text" value={options[option]} onChange={(e) => setOptions({ ...options, [option]: e.target.value })} placeholder={`Option ${option.toUpperCase()}`} style={{ width: '100%', padding: '10px', fontSize: '16px', borderRadius: '8px', border: '1px solid #ddd', boxSizing: 'border-box', transition: 'border-color 0.3s' }} onFocus={(e) => (e.target.style.borderColor = '#4CAF50')} onBlur={(e) => (e.target.style.borderColor = '#ddd')} />
+              </div>
+            ))}
+            <div>
+              <label style={{ fontSize: '16px', marginBottom: '5px', display: 'block' }}>Correct Answer: </label>
+              <select value={correctAns} onChange={(e) => setCorrectAns(e.target.value)} style={{ padding: '10px', fontSize: '16px', borderRadius: '8px', border: '1px solid #ddd', width: '100%', transition: 'border-color 0.3s' }} onFocus={(e) => (e.target.style.borderColor = '#4CAF50')} onBlur={(e) => (e.target.style.borderColor = '#ddd')}>
+                <option value="">Select correct answer</option>
+                <option value="a">A</option>
+                <option value="b">B</option>
+                <option value="c">C</option>
+                <option value="d">D</option>
+              </select>
+            </div>
+
+            {/* Answer Parts */}
+            <h4 style={{ color: '#555', marginBottom: '10px' }}>Answer Description</h4>
+            {answerParts.map((part, index) =>
+              part.type === 'table' ? (
+                renderTable(part.value, index, 'answer')
+              ) : (
+                <textarea key={`answer-${index}`} value={part.value} onChange={(e) => updateValue(index, e.target.value, 'answer')} placeholder={`Enter answer ${part.type}`} style={{ width: '100%', padding: '10px', marginBottom: '15px', fontSize: '16px', borderRadius: '8px', border: '1px solid #ddd', boxSizing: 'border-box', transition: 'border-color 0.3s' }} onFocus={(e) => (e.target.style.borderColor = '#4CAF50')} onBlur={(e) => (e.target.style.borderColor = '#ddd')} />
+              )
+            )}
+            <div style={{ marginBottom: '20px' }}>
+              <button onClick={() => addAnswerPart('text')} style={{ padding: '10px 20px', backgroundColor: '#007bff', color: '#fff', border: 'none', borderRadius: '8px', cursor: 'pointer', margin: '5px' }}>Add Text</button>
+              <button onClick={() => addAnswerPart('image')} style={{ padding: '10px 20px', backgroundColor: '#007bff', color: '#fff', border: 'none', borderRadius: '8px', cursor: 'pointer', margin: '5px' }}>Add Image</button>
+              <button onClick={() => addAnswerPart('table')} style={{ padding: '10px 20px', backgroundColor: '#007bff', color: '#fff', border: 'none', borderRadius: '8px', cursor: 'pointer', margin: '5px' }}>Add Table</button>
+            </div>
+
+            <button onClick={handleAddQuestion} style={{ padding: '12px 25px', backgroundColor: '#28a745', color: '#fff', border: 'none', borderRadius: '8px', cursor: 'pointer', width: '100%', marginBottom: '10px', transition: 'background-color 0.3s' }} onMouseEnter={(e) => (e.target.style.backgroundColor = '#218838')} onMouseLeave={(e) => (e.target.style.backgroundColor = '#28a745')}>
+              Add Question
+            </button>
+          </div>
+        </div>
+      )}
+
+
       {/* Upload CSV Modal */}
       {showUploadModal && (
         <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', backgroundColor: 'rgba(0,0,0,0.5)' }}>
@@ -297,24 +475,6 @@ const Subject = () => {
             </button>
           </div>
         </div>
-      )}
-      {showEditQuestionModal && (
-        <Modal isOpen={showEditQuestionModal} onClose={() => setShowEditQuestionModal(false)} contentLabel="Edit Question" style={{ content: { maxWidth: '600px', margin: 'auto' } }}>
-          <h3>Edit Question</h3>
-          <input type="text" value={updatedQuestion.question} onChange={(e) => setUpdatedQuestion((prev) => ({ ...prev, question: e.target.value }))} placeholder="Question" style={{ padding: '10px', width: '100%', marginBottom: '10px' }}/>
-          <input type="text" value={updatedQuestion.image} onChange={(e) => setUpdatedQuestion((prev) => ({ ...prev, image: e.target.value })) } placeholder="Image URL (Optional)" style={{ padding: '10px', width: '100%', marginBottom: '10px' }}/>
-          {updatedQuestion.image && (
-            <img src={updatedQuestion.image}alt="Preview" style={{ maxWidth: '25%', maxHeight: '200px', borderRadius: '5px', marginBottom: '10px', }}/>
-          )}
-          {['a', 'b', 'c', 'd'].map((option) => (
-            <input key={option} type="text" value={updatedQuestion.options[option]} onChange={(e) => setUpdatedQuestion((prev) => ({  ...prev,  options: { ...prev.options, [option]: e.target.value }, })) } placeholder={`Option ${option.toUpperCase()}`} style={{ padding: '10px', width: '100%', marginBottom: '10px' }}/>
-          ))}
-          <input type="text" value={updatedQuestion.correctAnswer}onChange={(e) =>  setUpdatedQuestion((prev) => ({ ...prev, correctAnswer: e.target.value }))}placeholder="Correct Answer"style={{ padding: '10px', width: '100%', marginBottom: '10px' }}/>
-          <textarea value={updatedQuestion.description} onChange={(e) => setUpdatedQuestion((prev) => ({ ...prev, description: e.target.value })) }placeholder="Answer Description"style={{ padding: '10px', width: '100%', marginBottom: '10px' }} />
-          <button onClick={handleUpdateQuestion} style={{ backgroundColor: 'green', color: 'white', padding: '10px 15px', borderRadius: '4px',}} >
-            <FontAwesomeIcon icon={faEdit} style={{ marginRight: "5px" }} />Update Question
-          </button>
-        </Modal>
       )}
     </div>
   );

@@ -18,7 +18,7 @@ const Dashboard = () => {
         const enrollmentResponse = await axios.get('/api/quizenroll/admin/total-enrollments');
         setTotalEnrollments(enrollmentResponse.data.totalEnrollments);
 
-        const delayedQuizResponse = await axios.get(''); // Add correct API
+        const delayedQuizResponse = await axios.get('/api/quizenroll/admin/total-enrollments'); // Add correct API
         setTotalDelayedQuizzes(delayedQuizResponse.data.totalDelayedQuizzes);
       } catch (error) {
         console.error('Error fetching dashboard data:', error);
