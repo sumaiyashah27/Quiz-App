@@ -184,33 +184,48 @@ router.get('/:subjectId/questions', async (req, res) => {
 });
 
 // Add a new question for a subject (with image upload)
-// Route to add a question
-router.post('/:subjectId/questions', async (req, res) => {
-  const { question, options, correctAns, answerDescription, subjectId } = req.body;
+router.post("/:subjectId/questions", upload.single('image'), async (req, res) => {
+  const { subjectId } = req.params; // Use 'subjectId' from the URL params
+  const questionData = req.body;
+
+  // Set default values for any missing fields
+  const question = questionData.question || "-"; // Default to "-" if no input
+  const options = questionData.options || { a: "-", b: "-", c: "-", d: "-" }; // Default to "-" if no options
+  const correctAns = questionData.correctAns || "-"; // Default to "-" if no correct answer
+  const description = questionData.description || "-"; // Default to "-" if no description
+  const answerDescription = questionData.answerDescription || "-"; // Default to "-" if no answer description
+
+  // Validation (You can skip the validation for defaults if you want to ensure the data always exists)
+  if (!question || !options || !correctAns) {
+    return res.status(400).json({ message: "Question, options, and correct answer are required." });
+  }
 
   try {
-    // Create new question
+    // Create the new question document
     const newQuestion = new Question({
       question,
       options,
       correctAns,
+      description,
       answerDescription,
-      subjectId
+      subjectId, // Link question to the subject using 'subjectId'
     });
 
     // Save the question
     await newQuestion.save();
 
-    // Respond with the saved question
-    res.status(201).json(newQuestion);
+    // Add the new question to the subject's questions array
+    await Subject.findByIdAndUpdate(subjectId, {
+      $push: { questions: newQuestion._id },
+    });
+
+    // Respond with success
+    res.status(201).json({ message: "Question added successfully", question: newQuestion });
   } catch (error) {
-    // Log errors
     console.error("Error adding question:", error);
-    if (error.name === 'ValidationError') {
-      return res.status(400).json({ message: "Validation failed", errors: error.errors });
-    }
-    res.status(500).json({ message: "Server error" });
+    res.status(500).json({ message: "Failed to add question", error: error.message });
   }
 });
+
 
 module.exports = router;
