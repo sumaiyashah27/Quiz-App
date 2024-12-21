@@ -8,6 +8,7 @@ require('dotenv').config();
 const userRoutes = require("./routes/userRoutes");
 const courseRoutes = require("./routes/courseRoutes");
 const subjectRoutes = require("./routes/subjectRoutes");
+const questionRoutes = require("./routes/questionRoutes");
 const chapterRoutes = require("./routes/chapterRoutes");
 const imageRoutes = require('./routes/imageRoutes');
 const paymentRoutes = require("./routes/paymetRoutes");
@@ -34,6 +35,7 @@ app.use('/images', express.static(path.join(__dirname, './image'))); // Replace 
 app.use("/api/users", userRoutes);
 app.use("/api/courses", courseRoutes);
 app.use("/api/subjects", subjectRoutes);
+app.use("/api/questions", questionRoutes);
 app.use("/api/chapters", chapterRoutes);
 app.use("/api/images", imageRoutes);
 app.use("/api/payment", paymentRoutes);
