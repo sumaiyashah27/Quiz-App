@@ -184,40 +184,33 @@ router.get('/:subjectId/questions', async (req, res) => {
 });
 
 // Add a new question for a subject (with image upload)
-router.post("/:subjectId/questions", async (req, res) => {
-  const { subjectId } = req.params;
-  const { question, options, correctAns, answerDescription } = req.body;
-
-  // Validate required fields
-  if (!question || !options || !correctAns) {
-    return res.status(400).json({ message: "Question, options, and correct answer are required." });
-  }
-
+// Add a new question to a subject
+router.post('/:subjectId/questions', async (req, res) => {
   try {
-    // Create a new question document
+    const { question, options, correctAns, answerDescription } = req.body;
+    const { subjectId } = req.params;
+
+    // Validate if the subject exists
+    const subject = await Subject.findById(subjectId);
+    if (!subject) {
+      return res.status(404).json({ message: 'Subject not found' });
+    }
+
+    // Create a new question
     const newQuestion = new Question({
-      question,
+      question, // Array of parts (text, image, table)
       options,
       correctAns,
       answerDescription,
-      subjectId  // Link the question to the subject
+      subject: subjectId,
     });
 
-    // Save the question
     await newQuestion.save();
-
-    // Add the question's ID to the subject's 'questions' array
-    await Subject.findByIdAndUpdate(subjectId, {
-      $push: { questions: newQuestion._id }
-    });
-
-    res.status(201).json({ message: "Question added successfully", question: newQuestion });
+    res.status(201).json({ message: 'Question added successfully', data: newQuestion });
   } catch (error) {
-    console.error("Error adding question:", error);
-    res.status(500).json({ message: "Failed to add question", error: error.message });
+    console.error(error);
+    res.status(500).json({ message: 'Server error' });
   }
 });
-
-
 
 module.exports = router;

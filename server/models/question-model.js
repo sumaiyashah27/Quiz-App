@@ -1,33 +1,35 @@
-const mongoose = require("mongoose");
-const Schema = mongoose.Schema;
+const mongoose = require('mongoose');
 
-const questionSchema = new Schema({
-  question: [{
-    type: { type: String, required: true },  // 'text', 'image', or 'table'
-    value: { type: Schema.Types.Mixed, required: true } // 'text' content, 'image' URL, or 'table' object
-  }],
+const QuestionSchema = new mongoose.Schema({
+  // The question field can have an array of objects, where each object has a type (text, image, table) and a value (content)
+  question: [
+    {
+      type: { type: String, enum: ['text', 'image', 'table'], required: true }, // Type of the part (text, image, table)
+      value: { type: mongoose.Schema.Types.Mixed, required: true }, // The actual content for the part (text, URL for image, table data)
+    },
+  ],
+
+  // Options for the multiple choice answers (a, b, c, d)
   options: {
-    a: { type: String, required: true },
-    b: { type: String, required: true },
-    c: { type: String, required: true },
-    d: { type: String, required: true }
+    a: { type: String },
+    b: { type: String },
+    c: { type: String },
+    d: { type: String },
   },
-  correctAns: {
-    type: String,
-    required: true,
-    validate: {
-      validator: (v) => ['a', 'b', 'c', 'd'].includes(v),
-      message: 'Correct answer must be one of a, b, c, or d',
-    }
-  },
-  answerDescription: [{
-    type: { type: String, required: true },  // 'text', 'image', or 'table'
-    value: { type: Schema.Types.Mixed, required: true } // 'text' content, 'image' URL, or 'table' object
-  }],
-  subjectId: { type: Schema.Types.ObjectId, ref: 'Subject', required: true }
-}, { timestamps: true }); // Optional: Add timestamps for createdAt and updatedAt
 
-questionSchema.index({ subjectId: 1 }); // Index for performance improvement
+  // Correct answer choice (a, b, c, or d)
+  correctAns: { type: String },
 
-const Question = mongoose.model('Question', questionSchema);
-module.exports = Question;
+  // Description for the answer, can also contain text, image, or table types
+  answerDescription: [
+    {
+      type: { type: String, enum: ['text', 'image', 'table'], required: true },
+      value: { type: mongoose.Schema.Types.Mixed, required: true },
+    },
+  ],
+
+  // Reference to the subject model (for linking to a specific subject)
+  subject: { type: mongoose.Schema.Types.ObjectId, ref: 'Subject', required: true },
+});
+
+module.exports = mongoose.model('Question', QuestionSchema);

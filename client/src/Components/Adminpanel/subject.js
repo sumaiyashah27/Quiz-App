@@ -13,9 +13,7 @@ const Subject = () => {
   const [loading, setLoading] = useState(false);
   const [newSubjectPrice, setNewSubjectPrice] = useState('');
   const [currentSubjectId, setCurrentSubjectId] = useState(null);
-  const [selectedFile, setSelectedFile] = useState(null);
   const [editingSubject, setEditingSubject] = useState(null);  
-  const [expandedQuestion, setExpandedQuestion] = useState({});
   const [showAddQuestionModal, setShowAddQuestionModal] = useState(false);
   const [questionParts, setQuestionParts] = useState([]); // Make sure it's initialized as an array
   const [answerParts, setAnswerParts] = useState([]);
@@ -29,34 +27,18 @@ const Subject = () => {
     fetchSubjects();
   }, []);
 
-  // const fetchSubjects = async () => {
-  //   setLoading(true);
-  //   try {
-  //     const { data } = await axios.get('/api/subjects');
-  //     setSubjects(data);
-  //   } catch (error) {
-  //     console.error("Error fetching subjects:", error);
-  //   } finally {
-  //     setLoading(false);
-  //   }
-  // };
-
   const fetchSubjects = async () => {
     setLoading(true);
     try {
       const { data } = await axios.get('/api/subjects');
-      const subjectsWithQuestions = await Promise.all(data.map(async (subject) => {
-        const questions = await axios.get(`/api/subjects/${subject._id}/questions`);
-        return { ...subject, questions: questions.data }; // Merge questions into the subject
-      }));
-      setSubjects(subjectsWithQuestions);
+      setSubjects(data);
     } catch (error) {
       console.error("Error fetching subjects:", error);
     } finally {
       setLoading(false);
     }
   };
-
+  
   const handleAddSubject = async () => {
     if (!newSubjectName.trim()) {
       alert("Please enter a subject name.");
@@ -115,10 +97,6 @@ const Subject = () => {
   const toggleSubjectExpansion = (subjectId) => {
     setExpandedSubject(expandedSubject === subjectId ? null : subjectId);
   };
-
-  const toggleQuestionExpand = (questionId) => {
-    setExpandedQuestion((prevState) => ({ ...prevState, [questionId]: !prevState[questionId], }));
-  };
  
   //Function to render table
   const renderTable = (table, index, partType) => {
@@ -175,34 +153,27 @@ const Subject = () => {
 const addAnswerPart = (type) => {
   setAnswerParts([...answerParts, { type, value: type === 'table' ? { rows: 1, columns: 1, data: [['']] } : '' }]);
 };
-
 const handleAddQuestion = async () => {
   if (!currentSubjectId) {
     console.error("Current Subject ID is null");
     return;
   }
-
   const questionData = {
-    question: questionParts,   // The question parts array
+    question: questionParts,   // The question parts array (text, image, table)
     options,                    // Options (e.g., a, b, c, d)
     correctAns,                 // The correct answer
     answerDescription: answerParts, // Answer description parts
-    subjectId: currentSubjectId,
+    subjectId: currentSubjectId,    // Associated subject ID
   };
 
   console.log("Attempting to add question with data:", questionData);
-
   try {
     const response = await axios.post(`/api/subjects/${currentSubjectId}/questions`, questionData, {
       headers: { 'Content-Type': 'application/json' },
     });
-    
-
     console.log("Question added successfully:", response.data);
-
     setSuccessMessage('Question added successfully!');
     setTimeout(() => setSuccessMessage(''), 3000); // Clear message after 3 seconds
-
     setShowAddQuestionModal(false); // Close modal
     fetchSubjects();  // Refresh the subjects
     resetForm();      // Reset the form
@@ -216,7 +187,6 @@ const handleAddQuestion = async () => {
   return (
     <div>
       <h2 style={{ textAlign: 'center', marginBottom: '20px', color: '#4CAF50' }}>Subject Details</h2>
-
       {/* Button to Add Subject */}
       <button onClick={() => setShowAddSubjectModal(true)} style={{ backgroundColor: '#4CAF50', color: 'white', padding: '10px 12px', fontSize: '14px', borderRadius: '8px', cursor: 'pointer' }}>
         <FontAwesomeIcon icon={faPlus} style={{ marginRight: '8px' }} /> Add Subject
@@ -295,103 +265,6 @@ const handleAddQuestion = async () => {
                     Add Question
                   </button>
                 </div>
-
-                {/* Questions here */}
-                <>
-              <ul style={{ paddingLeft: "20px" }}>
-                {subject.questions.map((question) => (
-                  <li key={question._id} style={{ marginBottom: "10px" }}>
-                    <div style={{ display: "flex", justifyContent: "space-between" }}>
-                      {/* Question Title */}
-                      <span onClick={() => toggleQuestionExpand(question._id)} style={{ cursor: "pointer", color: "blue", textDecoration: "underline" }} >
-                        Question {subject.questions.indexOf(question) + 1}
-                      </span>
-                      <div>
-                        {/* Delete Button */}
-                        <button style={{ marginLeft: "5px", padding: "5px 12px", backgroundColor: "#f44336", color: "white", borderRadius: "5px", cursor: "pointer" }} >
-                          <FontAwesomeIcon icon={faTrash} />
-                        </button>
-                      </div>
-                    </div>
-
-                    {/* Render Question Details Conditionally */}
-                    {expandedQuestion[question._id] && (
-                      <div style={{ marginTop: "10px", backgroundColor: "#f5f5f5", padding: "10px", borderRadius: "5px" }}>
-                        <p><strong>Question:</strong></p>
-                        {/* Render each question part */}
-                        {question.question.map((part, index) => {
-                          if (part.type === 'text') {
-                            return <p key={index}>{part.value}</p>;
-                          }
-                          if (part.type === 'image') {
-                            return <img key={index} src={part.value} alt="Question" style={{ maxWidth: "100%", borderRadius: "5px", marginBottom: "10px" }} />;
-                          }
-                          if (part.type === 'table') {
-                            // Handle table rendering here (if applicable)
-                            return (
-                              <table key={index} style={{ width: '100%', marginBottom: '10px', borderCollapse: 'collapse' }}>
-                                <tbody>
-                                  {part.value.map((row, rowIndex) => (
-                                    <tr key={rowIndex}>
-                                      {row.map((cell, colIndex) => (
-                                        <td key={colIndex} style={{ padding: '8px', border: '1px solid #ddd' }}>
-                                          {cell}
-                                        </td>
-                                      ))}
-                                    </tr>
-                                  ))}
-                                </tbody>
-                              </table>
-                            );
-                          }
-                          return null;
-                        })}
-                        {question.questionImage && (
-                          <img src={question.questionImage} style={{ maxWidth: "50%", borderRadius: "5px", marginBottom: "10px" }} />
-                        )}
-
-                        <p><strong>Options:</strong></p>
-                        <ul style={{ listStyleType: "none", paddingLeft: "10px" }}>
-                          <li>A. {question.options.a}</li>
-                          <li>B. {question.options.b}</li>
-                          <li>C. {question.options.c}</li>
-                          <li>D. {question.options.d}</li>
-                        </ul>
-                        <p><strong>Correct Answer:</strong> {question.correctAns}</p>
-                        <p><strong>Answer Description:</strong></p>
-                        {/* Render each answer part */}
-                        {question.answerDescription.map((part, index) => {
-                          if (part.type === 'text') {
-                            return <p key={index}>{part.value}</p>;
-                          }
-                          if (part.type === 'image') {
-                            return <img key={index} src={part.value} alt="Answer Description" style={{ maxWidth: "100%", borderRadius: "5px", marginBottom: "10px" }} />;
-                          }
-                          if (part.type === 'table') {
-                            return (
-                              <table key={index} style={{ width: '100%', marginBottom: '10px', borderCollapse: 'collapse' }}>
-                                <tbody>
-                                  {part.value.map((row, rowIndex) => (
-                                    <tr key={rowIndex}>
-                                      {row.map((cell, colIndex) => (
-                                        <td key={colIndex} style={{ padding: '8px', border: '1px solid #ddd' }}>
-                                          {cell}
-                                        </td>
-                                      ))}
-                                    </tr>
-                                  ))}
-                                </tbody>
-                              </table>
-                            );
-                          }
-                          return null;
-                        })}
-                      </div>
-                    )}
-                  </li>
-                ))}
-              </ul>
-            </>
               </div>
             )}
           </div>
@@ -413,7 +286,6 @@ const handleAddQuestion = async () => {
                   return (
                     <textarea key={`question-${index}`} value={part.value} onChange={(e) => updateValue(index, e.target.value, 'question')} placeholder="Enter text" style={{ width: '100%', padding: '10px', marginBottom: '15px', fontSize: '16px', borderRadius: '8px', border: '1px solid #ddd', boxSizing: 'border-box', transition: 'border-color 0.3s' }} onFocus={(e) => (e.target.style.borderColor = '#4CAF50')} onBlur={(e) => (e.target.style.borderColor = '#ddd')}/>
                   );
-
                 case 'image':
                   return (
                     <div key={`question-${index}`} style={{ marginBottom: '15px' }}>
@@ -430,7 +302,6 @@ const handleAddQuestion = async () => {
                   return null;
               }
             })}
-
             <div style={{ marginBottom: '20px' }}>
               <button onClick={() => addQuestionPart('text')} style={{ padding: '10px 20px', backgroundColor: '#007bff', color: '#fff', border: 'none', borderRadius: '8px', cursor: 'pointer', margin: '5px' }}>Add Text</button>
               <button onClick={() => addQuestionPart('image')} style={{ padding: '10px 20px', backgroundColor: '#007bff', color: '#fff', border: 'none', borderRadius: '8px', cursor: 'pointer', margin: '5px' }}>Add Image</button>
@@ -481,7 +352,6 @@ const handleAddQuestion = async () => {
                   return null;
               }
             })}
-
             <div style={{ marginBottom: '20px' }}>
               <button onClick={() => addAnswerPart('text')} style={{ padding: '10px 20px', backgroundColor: '#007bff', color: '#fff', border: 'none', borderRadius: '8px', cursor: 'pointer', margin: '5px' }}>Add Text</button>
               <button onClick={() => addAnswerPart('image')} style={{ padding: '10px 20px', backgroundColor: '#007bff', color: '#fff', border: 'none', borderRadius: '8px', cursor: 'pointer', margin: '5px' }}>Add Image</button>
