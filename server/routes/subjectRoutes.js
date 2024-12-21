@@ -185,7 +185,7 @@ router.get('/:subjectId/questions', async (req, res) => {
 
 // Add a new question for a subject (with image upload)
 // Add a new question to a subject
-router.post('/:subjectId/questions', async (req, res) => {
+router.post('/api/subjects/:subjectId/questions', async (req, res) => {
   try {
     const { question, options, correctAns, answerDescription } = req.body;
     const { subjectId } = req.params;
