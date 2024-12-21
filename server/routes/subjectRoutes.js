@@ -184,32 +184,37 @@ router.get('/:subjectId/questions', async (req, res) => {
 });
 
 // Add a new question for a subject (with image upload)
-// Add a new question to a subject
-router.post('/api/subjects/:subjectId/questions', async (req, res) => {
-  try {
-    const { question, options, correctAns, answerDescription } = req.body;
-    const { subjectId } = req.params;
+router.post('/subjects/:subjectId/questions', async (req, res) => {
+  const { subjectId } = req.params; // Get the subjectId from the URL params
+  const { question, options, correctAns, answerDescription } = req.body; // Get the data from the request body
 
-    // Validate if the subject exists
+  try {
+    // Find the subject by subjectId to make sure it exists
     const subject = await Subject.findById(subjectId);
     if (!subject) {
-      return res.status(404).json({ message: 'Subject not found' });
+      return res.status(404).json({ error: 'Subject not found' });
     }
 
-    // Create a new question
+    // Create the new question
     const newQuestion = new Question({
-      question, // Array of parts (text, image, table)
+      question,
       options,
       correctAns,
       answerDescription,
-      subject: subjectId,
+      subject: subjectId, // Associate the question with the subject
     });
 
+    // Save the question to the database
     await newQuestion.save();
-    res.status(201).json({ message: 'Question added successfully', data: newQuestion });
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: 'Server error' });
+
+    // Add the question's ID to the subject's questions array
+    subject.questions.push(newQuestion._id);
+    await subject.save();
+
+    res.status(201).json({ message: 'Question added successfully', question: newQuestion });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Failed to add question' });
   }
 });
 
