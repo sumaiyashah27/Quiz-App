@@ -1,5 +1,6 @@
 const express = require('express');
 const Question = require('../models/question-model'); // Initialize the router
+const Subject = require('../models/subject-model');
 const csv = require('csv-parser');
 const stream = require('stream');
 const path = require('path');
@@ -191,6 +192,8 @@ router.get('/subjects/:subjectId/questions', async (req, res) => {
 // Add a new question for a subject (with image upload)
 router.post('/:subjectId/questions', async (req, res) => {
   console.log("Request received for subjectId:", req.params.subjectId);
+  console.log("Request body:", req.body);
+
   const { subjectId } = req.params;
   const { question, options, correctAns, answerDescription } = req.body;
 
@@ -199,6 +202,8 @@ router.post('/:subjectId/questions', async (req, res) => {
     if (!subject) {
       return res.status(404).json({ message: 'Subject not found' });
     }
+
+    console.log("Subject found:", subject);
 
     const newQuestion = new Question({
       question,
@@ -209,9 +214,10 @@ router.post('/:subjectId/questions', async (req, res) => {
     });
 
     await newQuestion.save();
-
-    subject.questions.push(newQuestion._id); // Add the question to the subject
+    subject.questions.push(newQuestion._id);
     await subject.save();
+
+    console.log("Question added successfully:", newQuestion);
 
     res.status(201).json(newQuestion);
   } catch (error) {
@@ -219,6 +225,7 @@ router.post('/:subjectId/questions', async (req, res) => {
     res.status(500).json({ message: 'Internal Server Error' });
   }
 });
+
 
 
 

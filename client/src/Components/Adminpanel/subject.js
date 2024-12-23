@@ -157,34 +157,48 @@ const addAnswerPart = (type) => {
 const handleAddQuestion = async () => {
   if (!currentSubjectId) {
     console.error("Current Subject ID is null");
+    setErrorMessage("Please select a subject before adding a question.");
     return;
   }
+
   console.log("Current Subject ID:", currentSubjectId);
+
   const questionData = {
-    question: questionParts,  // The question parts array
+    question: questionParts,
     options,
     correctAns,
-    answerDescription: answerParts, 
+    answerDescription: answerParts,
     subjectId: currentSubjectId,
   };
 
   console.log("Attempting to add question with data:", questionData);
 
   try {
-    const response = await axios.post(`/api/subjects/${currentSubjectId}/questions`, questionData, {
-      headers: { 'Content-Type': 'application/json' },
-    });
+    const response = await axios.post(
+      `/api/subjects/${currentSubjectId}/questions`,
+      questionData,
+      {
+        headers: {
+          "Content-Type": "application/json",
+        },
+      }
+    );
+
     console.log("Question added successfully:", response.data);
-    setTimeout(() => setSuccessMessage(''), 3000); // Clear message after 3 seconds
+    setTimeout(() => setSuccessMessage(""), 3000); // Clear message after 3 seconds
     setShowAddQuestionModal(false); // Close modal
-    fetchSubjects(); 
-    resetForm();
-    // other success code
+    fetchSubjects();
+    resetForm(); // other success code
   } catch (error) {
-    console.error('Error adding question:', error.response);
-    setErrorMessage('An error occurred while adding the question. Please try again.');
-  }
+    console.error("Error adding question:", error.response);
+    if (error.response.status === 404) {
+      setErrorMessage("The requested endpoint was not found.");
+    } else {
+      setErrorMessage("An error occurred while adding the question. Please try again.");
+    }
+  }
 };
+
 
   return (
     <div>
