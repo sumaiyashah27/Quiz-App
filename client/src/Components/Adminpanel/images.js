@@ -105,7 +105,7 @@ export default function Images() {
       <div onClick={() => setIsModalOpen(true)} style={{ backgroundColor: '#4CAF50', color: 'white', borderRadius: '50%', width: '50px', height: '50px', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto', boxShadow: '0 4px 8px rgba(0, 0, 0, 0.1)', cursor: 'pointer', transition: 'transform 0.3s ease' }}><FaPlus /></div>
       {isModalOpen && (<Modal title="Upload New Images" onClose={() => setIsModalOpen(false)}><input type="file" multiple onChange={handleFileChange} style={{ marginBottom: '10px', padding: '10px', borderRadius: '5px', border: '1px solid #ccc', width: '100%', backgroundColor: '#f9f9f9' }} /><p style={{ color: '#555', marginBottom: '20px' }}>{displaySelectedFiles()}</p><div onClick={uploadImages} style={{ backgroundColor: '#2196F3', color: 'white', borderRadius: '50%', width: '50px', height: '50px', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto', cursor: 'pointer' }}><FaCloudUploadAlt /></div></Modal>)}
       <div className="image-gallery" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '20px', marginTop: '30px' }}>
-        {Array.isArray(images) && images.map((image, index) => {
+        {images.map((image, index) => {
           const imageUrl = `${image.location}`;
           return (
             <div key={index} style={{ position: 'relative', borderRadius: '10px', overflow: 'hidden', boxShadow: '0 4px 8px rgba(0, 0, 0, 0.1)', backgroundColor: '#fff' }}>
