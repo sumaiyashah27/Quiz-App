@@ -171,7 +171,7 @@ const handleAddQuestion = async () => {
   console.log("Attempting to add question with data:", questionData);
 
   try {
-    const response = await axios.post(`/api/questions`, questionData, {
+    const response = await axios.post(`/api/subjects/${currentSubjectId}/questions`, questionData, {
       headers: { 'Content-Type': 'application/json' },
     });
     console.log("Question added successfully:", response.data);
