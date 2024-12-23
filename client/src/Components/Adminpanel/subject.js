@@ -175,7 +175,7 @@ const handleAddQuestion = async () => {
 
   try {
     const response = await axios.post(
-      `/api/subjects/${currentSubjectId}/questions/add-question`, // Updated URL with subjectId
+      `/api/add-question`, 
       questionData,
       {
         headers: {
@@ -185,19 +185,27 @@ const handleAddQuestion = async () => {
     );
 
     console.log("Question added successfully:", response.data);
-    setTimeout(() => setSuccessMessage(""), 3000); // Clear message after 3 seconds
+    setSuccessMessage("Question added successfully!");
+    setTimeout(() => setSuccessMessage(""), 3000); // Clear success message after 3 seconds
     setShowAddQuestionModal(false); // Close modal
-    fetchSubjects();
-    resetForm(); // other success code
+    fetchSubjects(); // Refresh subjects if needed
+    resetForm(); // Reset the form to initial state
   } catch (error) {
-    console.error("Error adding question:", error.response);
-    if (error.response.status === 404) {
-      setErrorMessage("The requested endpoint was not found.");
+    console.error("Error adding question:", error);
+
+    // Safe check for error response
+    if (error.response) {
+      if (error.response.status === 404) {
+        setErrorMessage("The requested endpoint was not found.");
+      } else {
+        setErrorMessage("An error occurred while adding the question. Please try again.");
+      }
     } else {
-      setErrorMessage("An error occurred while adding the question. Please try again.");
+      setErrorMessage("An unexpected error occurred. Please check your connection and try again.");
     }
   }
 };
+
 
 const handleUploadCSV = async () => {
   if (!selectedFile || !currentSubjectId) {

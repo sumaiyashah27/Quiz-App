@@ -6,34 +6,28 @@ const multer = require('multer');
 const router = express.Router();
 
 // Add a new question for a subject (with image upload)
-router.post('/questions', async (req, res) => {
-  console.log("Request received for subjectId:", req.params.subjectId);
-  const { subjectId } = req.params;
-  const { question, options, correctAns, answerDescription } = req.body;
+// Add a new question
+router.post('/add-question', async (req, res) => {
+  const { questionParts, options, correctAns, answerParts, subjectId } = req.body;
 
   try {
-    const subject = await Subject.findById(subjectId);
-    if (!subject) {
-      return res.status(404).json({ message: 'Subject not found' });
-    }
-
-    const newQuestion = new Question({
-      question,
+    const newQuestion = await Question.create({
+      question: questionParts.map((part) => ({
+        type: part.type,
+        value: part.value,
+      })),
       options,
       correctAns,
-      answerDescription,
+      answerDescription: answerParts.map((part) => ({
+        type: part.type,
+        value: part.value,
+      })),
       subject: subjectId,
     });
 
-    await newQuestion.save();
-
-    subject.questions.push(newQuestion._id); // Add the question to the subject
-    await subject.save();
-
-    res.status(201).json(newQuestion);
+    res.status(201).json({ message: 'Question added successfully', question: newQuestion });
   } catch (error) {
-    console.error('Error adding question:', error);
-    res.status(500).json({ message: 'Internal Server Error' });
+    res.status(400).json({ error: error.message });
   }
 });
 
