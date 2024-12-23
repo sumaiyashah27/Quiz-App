@@ -1,12 +1,7 @@
 const express = require('express');
-const Question = require('../models/question-model'); // Initialize the router
-const path = require('path');
-const multer = require('multer');
-
+const Question = require('../models/question-model');
 const router = express.Router();
 
-// Add a new question for a subject (with image upload)
-// Add a new question
 router.post('/add-question', async (req, res) => {
   const { questionParts, options, correctAns, answerParts, subjectId } = req.body;
 

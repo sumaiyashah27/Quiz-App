@@ -175,7 +175,7 @@ const handleAddQuestion = async () => {
 
   try {
     const response = await axios.post(
-      `/api/add-question`, 
+      `/api/questions/add-question`,  // Updated URL
       questionData,
       {
         headers: {
@@ -205,6 +205,7 @@ const handleAddQuestion = async () => {
     }
   }
 };
+
 
 
 const handleUploadCSV = async () => {
