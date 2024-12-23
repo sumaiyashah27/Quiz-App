@@ -153,37 +153,38 @@ const Subject = () => {
 const addAnswerPart = (type) => {
   setAnswerParts([...answerParts, { type, value: type === 'table' ? { rows: 1, columns: 1, data: [['']] } : '' }]);
 };
+
 const handleAddQuestion = async () => {
   if (!currentSubjectId) {
     console.error("Current Subject ID is null");
     return;
   }
+  console.log("Current Subject ID:", currentSubjectId);
   const questionData = {
-    question: questionParts,   // The question parts array (text, image, table)
-    options,                    // Options (e.g., a, b, c, d)
-    correctAns,                 // The correct answer
-    answerDescription: answerParts, // Answer description parts
-    subjectId: currentSubjectId,    // Associated subject ID
+    question: questionParts,  // The question parts array
+    options,
+    correctAns,
+    answerDescription: answerParts, 
+    subjectId: currentSubjectId,
   };
 
   console.log("Attempting to add question with data:", questionData);
+
   try {
-    const response = await axios.post(`/api/questions`, questionData, {
+    const response = await axios.post(`/api/subjects/${currentSubjectId}/questions`, questionData, {
       headers: { 'Content-Type': 'application/json' },
     });
     console.log("Question added successfully:", response.data);
-    setSuccessMessage('Question added successfully!');
     setTimeout(() => setSuccessMessage(''), 3000); // Clear message after 3 seconds
     setShowAddQuestionModal(false); // Close modal
-    fetchSubjects();  // Refresh the subjects
-    resetForm();      // Reset the form
+    fetchSubjects(); 
+    resetForm();
+    // other success code
   } catch (error) {
-    console.error('Error adding question:', error);
+    console.error('Error adding question:', error.response);
     setErrorMessage('An error occurred while adding the question. Please try again.');
-    setTimeout(() => setErrorMessage(''), 3000); // Clear message after 3 seconds
   }
 };
-
 
   return (
     <div>
