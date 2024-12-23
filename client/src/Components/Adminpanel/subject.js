@@ -19,7 +19,7 @@ const Subject = () => {
   const [answerParts, setAnswerParts] = useState([]);
   const [options, setOptions] = useState({ a: '', b: '', c: '', d: '' });
   const [correctAns, setCorrectAns] = useState('');
-  // Define state for success and error messages
+  const [selectedFile, setSelectedFile] = useState(null);
   const [successMessage, setSuccessMessage] = useState('');
   const [errorMessage, setErrorMessage] = useState('');
 
@@ -175,7 +175,7 @@ const handleAddQuestion = async () => {
 
   try {
     const response = await axios.post(
-      `/api/subjects/${currentSubjectId}/questions`,
+      `/api/subjects/${currentSubjectId}/add-question`,
       questionData,
       {
         headers: {
@@ -197,6 +197,24 @@ const handleAddQuestion = async () => {
       setErrorMessage("An error occurred while adding the question. Please try again.");
     }
   }
+};
+const handleUploadCSV = async () => {
+  if (!selectedFile || !currentSubjectId) {
+    alert("Please select a file and chapter.");
+    return;
+  }
+  const formData = new FormData();
+  formData.append("file", selectedFile);
+  try {
+    await axios.post(`/api/subjects/${currentSubjectId}/upload`, formData, {
+      headers: { "Content-Type": "multipart/form-data" },
+    });
+    alert("File uploaded successfully!");
+    setShowUploadModal(false);
+    fetchSubjects();
+  } catch (error) {
+    console.error("Error uploading file:", error);
+  }
 };
 const removeQuestionPart = (index) => {
   setQuestionParts((prevParts) => prevParts.filter((_, i) => i !== index));
@@ -307,12 +325,12 @@ const removeAnswerPart = (index) => {
               switch (part.type) {
                 case 'text':
                   return (
-                    <>
-                    <textarea key={`question-${index}`} value={part.value} onChange={(e) => updateValue(index, e.target.value, 'question')} placeholder="Enter text" style={{ width: '100%', padding: '10px', marginBottom: '15px', fontSize: '16px', borderRadius: '8px', border: '1px solid #ddd', boxSizing: 'border-box', transition: 'border-color 0.3s' }} onFocus={(e) => (e.target.style.borderColor = '#4CAF50')} onBlur={(e) => (e.target.style.borderColor = '#ddd')}/>
-                    <span onClick={() => removeQuestionPart(index)} style={{ position: 'absolute', top: '5px', right: '5px', cursor: 'pointer', fontSize: '18px', color: '#888', transition: 'color 0.3s' }} onMouseEnter={(e) => (e.target.style.color = '#f00')} onMouseLeave={(e) => (e.target.style.color = '#888')}>
-                      <FontAwesomeIcon icon={faTimes} />
-                    </span>
-                  </>
+                    <div style={{ position: 'relative', marginBottom: '15px', border: '1px solid #ddd', borderRadius: '8px', padding: '10px' }}>
+                      <textarea  key={`question-${index}`}  value={part.value}  onChange={(e) => updateValue(index, e.target.value, 'question')}  placeholder="Enter text"  style={{ width: '100%', padding: '10px', fontSize: '16px', borderRadius: '8px', border: 'none', boxSizing: 'border-box' }}  onFocus={(e) => (e.target.style.border = '2px solid #4CAF50')}  onBlur={(e) => (e.target.style.border = 'none')} />
+                      <span  onClick={() => removeQuestionPart(index)}  style={{ position: 'absolute', top: '5px', right: '5px', cursor: 'pointer', fontSize: '18px', color: '#888', transition: 'color 0.3s' }}  onMouseEnter={(e) => (e.target.style.color = '#f00')}  onMouseLeave={(e) => (e.target.style.color = '#888')} >
+                        <FontAwesomeIcon icon={faTimes} />
+                      </span>
+                    </div>
                   );
                 case 'image':
                   return (
@@ -364,16 +382,24 @@ const removeAnswerPart = (index) => {
               switch (part.type) {
                 case 'text':
                   return (
-                    <textarea key={`answer-${index}`} value={part.value} onChange={(e) => updateValue(index, e.target.value, 'answer')} placeholder="Enter text" style={{ width: '100%', padding: '10px', marginBottom: '15px', fontSize: '16px', borderRadius: '8px', border: '1px solid #ddd', boxSizing: 'border-box', transition: 'border-color 0.3s' }} onFocus={(e) => (e.target.style.borderColor = '#4CAF50')} onBlur={(e) => (e.target.style.borderColor = '#ddd')}/>
-                  );
+                    <div key={`answer-${index}`} style={{ position: 'relative', marginBottom: '15px' }}>
+                      <textarea  value={part.value}  onChange={(e) => updateValue(index, e.target.value, 'answer')}  placeholder="Enter text"  style={{ width: '100%', padding: '10px', fontSize: '16px', borderRadius: '8px', border: '1px solid #ddd', boxSizing: 'border-box', transition: 'border-color 0.3s' }}  onFocus={(e) => (e.target.style.borderColor = '#4CAF50')}  onBlur={(e) => (e.target.style.borderColor = '#ddd')} />
+                      <span  onClick={() => removeAnswerPart(index)}  style={{ position: 'absolute', top: '5px', right: '5px', cursor: 'pointer', fontSize: '18px', color: '#888', transition: 'color 0.3s' }}  onMouseEnter={(e) => (e.target.style.color = '#f00')}  onMouseLeave={(e) => (e.target.style.color = '#888')}>
+                        <FontAwesomeIcon icon={faTimes} />
+                      </span>
+                    </div>
 
+                  );
                 case 'image':
                   return (
-                    <div key={`answer-${index}`} style={{ marginBottom: '15px' }}>
-                      <input type="text"value={part.value} onChange={(e) => updateValue(index, e.target.value, 'answer')} placeholder="Enter image URL" style={{ width: '100%', padding: '10px', fontSize: '16px', borderRadius: '8px', border: '1px solid #ddd', boxSizing: 'border-box', transition: 'border-color 0.3s' }} onFocus={(e) => (e.target.style.borderColor = '#4CAF50')} onBlur={(e) => (e.target.style.borderColor = '#ddd')}/>
+                    <div key={`answer-${index}`} style={{ position: 'relative', marginBottom: '15px' }}>
+                      <input  type="text"  value={part.value}  onChange={(e) => updateValue(index, e.target.value, 'answer')}  placeholder="Enter image URL"  style={{ width: '100%', padding: '10px', fontSize: '16px', borderRadius: '8px', border: '1px solid #ddd', boxSizing: 'border-box', transition: 'border-color 0.3s' }}  onFocus={(e) => (e.target.style.borderColor = '#4CAF50')}  onBlur={(e) => (e.target.style.borderColor = '#ddd')} />
                       {part.value && (
-                        <img src={part.value} alt="Preview" style={{ width: '100%', maxHeight: '200px', objectFit: 'cover', marginTop: '10px', borderRadius: '8px' }}/>
+                        <img src={part.value} alt="Preview" style={{ width: '100%', maxHeight: '200px', objectFit: 'cover', marginTop: '10px', borderRadius: '8px' }} />
                       )}
+                      <span  onClick={() => removeAnswerPart(index)}  style={{ position: 'absolute', top: '5px', right: '5px', cursor: 'pointer', fontSize: '18px', color: '#888', transition: 'color 0.3s' }}  onMouseEnter={(e) => (e.target.style.color = '#f00')}  onMouseLeave={(e) => (e.target.style.color = '#888')}>
+                        <FontAwesomeIcon icon={faTimes} />
+                      </span>
                     </div>
                   );
                 case 'table':
@@ -395,6 +421,22 @@ const removeAnswerPart = (index) => {
           </div>
         </div>
       )}
+      {/* Upload CSV Modal */}
+      {showUploadModal && (
+        <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', backgroundColor: 'rgba(0,0,0,0.5)' }}>
+          <div style={{ backgroundColor: '#fff', padding: '20px', borderRadius: '8px', width: '400px', textAlign: 'center', position: 'relative' }}>
+            <span onClick={() => setShowUploadModal(false)} style={{ position: 'absolute', top: '10px', right: '10px', cursor: 'pointer', fontSize: '20px' }}>
+              <FontAwesomeIcon icon={faTimes} />
+            </span>
+            <h3>Upload CSV for Questions</h3>
+            <input type="file" accept=".csv" onChange={(e) => setSelectedFile(e.target.files[0])} />
+            <button onClick={handleUploadCSV} style={{ backgroundColor: '#4CAF50', color: 'white', padding: '10px 12px', fontSize: '14px', borderRadius: '8px', cursor: 'pointer' }}>
+              Upload CSV
+            </button>
+          </div>
+        </div>
+      )}
+
     </div>
   );
 };

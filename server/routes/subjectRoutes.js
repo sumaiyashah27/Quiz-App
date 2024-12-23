@@ -190,7 +190,7 @@ router.get('/subjects/:subjectId/questions', async (req, res) => {
 
 
 // Add a new question for a subject (with image upload)
-router.post('/api/subjects/:subjectId/questions', async (req, res) => {
+router.post('/:subjectId/add-question', async (req, res) => {
   console.log("Request received for subjectId:", req.params.subjectId);
   console.log("Request body:", req.body);
 
