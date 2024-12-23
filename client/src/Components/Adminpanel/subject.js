@@ -175,7 +175,7 @@ const handleAddQuestion = async () => {
 
   try {
     const response = await axios.post(
-      `/api/subjects/${currentSubjectId}/add-question`,
+      `/api/subjects/${currentSubjectId}/questions/add-question`, // Updated URL with subjectId
       questionData,
       {
         headers: {
@@ -195,9 +195,10 @@ const handleAddQuestion = async () => {
       setErrorMessage("The requested endpoint was not found.");
     } else {
       setErrorMessage("An error occurred while adding the question. Please try again.");
-    }
-  }
+    }
+  }
 };
+
 const handleUploadCSV = async () => {
   if (!selectedFile || !currentSubjectId) {
     alert("Please select a file and chapter.");
