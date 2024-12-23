@@ -198,6 +198,13 @@ const handleAddQuestion = async () => {
     }
   }
 };
+const removeQuestionPart = (index) => {
+  setQuestionParts((prevParts) => prevParts.filter((_, i) => i !== index));
+};
+
+const removeAnswerPart = (index) => {
+  setAnswerParts((prevParts) => prevParts.filter((_, i) => i !== index));
+};
 
 
   return (
@@ -300,7 +307,12 @@ const handleAddQuestion = async () => {
               switch (part.type) {
                 case 'text':
                   return (
+                    <>
                     <textarea key={`question-${index}`} value={part.value} onChange={(e) => updateValue(index, e.target.value, 'question')} placeholder="Enter text" style={{ width: '100%', padding: '10px', marginBottom: '15px', fontSize: '16px', borderRadius: '8px', border: '1px solid #ddd', boxSizing: 'border-box', transition: 'border-color 0.3s' }} onFocus={(e) => (e.target.style.borderColor = '#4CAF50')} onBlur={(e) => (e.target.style.borderColor = '#ddd')}/>
+                    <span onClick={() => removeQuestionPart(index)} style={{ position: 'absolute', top: '5px', right: '5px', cursor: 'pointer', fontSize: '18px', color: '#888', transition: 'color 0.3s' }} onMouseEnter={(e) => (e.target.style.color = '#f00')} onMouseLeave={(e) => (e.target.style.color = '#888')}>
+                      <FontAwesomeIcon icon={faTimes} />
+                    </span>
+                  </>
                   );
                 case 'image':
                   return (
@@ -309,6 +321,9 @@ const handleAddQuestion = async () => {
                       {part.value && (
                         <img src={part.value} alt="Preview" style={{ width: '100%', maxHeight: '200px', objectFit: 'cover', marginTop: '10px', borderRadius: '8px' }}/>
                       )}
+                      <span onClick={() => removeQuestionPart(index)} style={{ position: 'absolute', top: '5px', right: '5px', cursor: 'pointer', fontSize: '18px', color: '#888', transition: 'color 0.3s' }} onMouseEnter={(e) => (e.target.style.color = '#f00')} onMouseLeave={(e) => (e.target.style.color = '#888')}>
+                        <FontAwesomeIcon icon={faTimes} />
+                      </span>
                     </div>
                   );
                 case 'table':
