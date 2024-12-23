@@ -190,40 +190,48 @@ router.get('/subjects/:subjectId/questions', async (req, res) => {
 
 
 // Add a new question for a subject (with image upload)
-router.post('/subjects/:subjectId/questions/add-question', async (req, res) => {
-  console.log("Request received for subjectId:", req.params.subjectId);
-  console.log("Request body:", req.body);
-
-  const { subjectId } = req.params;
-  const { question, options, correctAns, answerDescription } = req.body;
-
+router.post('/:subjectId/questions', async (req, res) => {
   try {
-    const subject = await Subject.findById(subjectId);
-    if (!subject) {
-      return res.status(404).json({ message: 'Subject not found' });
-    }
+    // Validate incoming data
+    validateQuestionData(req.body);
 
-    console.log("Subject found:", subject);
-
+    // Create a new question
     const newQuestion = new Question({
-      question,
-      options,
-      correctAns,
-      answerDescription,
-      subject: subjectId,
+      question: req.body.question,
+      options: req.body.options,
+      correctAns: req.body.correctAns,
+      answerDescription: req.body.answerDescription,
+      subject: req.params.subjectId,
     });
 
+    // Save the question to the database
     await newQuestion.save();
-    subject.questions.push(newQuestion._id);
-    await subject.save();
-
-    console.log("Question added successfully:", newQuestion);
-
     res.status(201).json(newQuestion);
   } catch (error) {
-    console.error('Error adding question:', error);
-    res.status(500).json({ message: 'Internal Server Error' });
+    res.status(400).json({ error: error.message });
   }
 });
+// Function to validate the incoming question data
+const validateQuestionData = (data) => {
+  if (!data.question || !Array.isArray(data.question)) {
+    throw new Error('Question is required and should be an array');
+  }
+
+  if (!data.options || typeof data.options !== 'object') {
+    throw new Error('Options should be an object with keys a, b, c, d');
+  }
+
+  if (!['a', 'b', 'c', 'd'].includes(data.correctAns)) {
+    throw new Error('Correct answer should be one of a, b, c, or d');
+  }
+
+  if (!data.answerDescription || !Array.isArray(data.answerDescription)) {
+    throw new Error('Answer description is required and should be an array');
+  }
+
+  if (!data.subjectId) {
+    throw new Error('Subject ID is required');
+  }
+};
 
 module.exports = router;

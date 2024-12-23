@@ -155,57 +155,26 @@ const addAnswerPart = (type) => {
 };
 
 const handleAddQuestion = async () => {
-  if (!currentSubjectId) {
-    console.error("Current Subject ID is null");
-    setErrorMessage("Please select a subject before adding a question.");
-    return;
-  }
-
-  console.log("Current Subject ID:", currentSubjectId);
-
   const questionData = {
-    question: questionParts,
+    question: questionParts,  // questionParts should be an array of objects like [{type: 'text', value: 'Question'}]
     options,
     correctAns,
-    answerDescription: answerParts,
+    answerDescription: answerParts,  // answerParts should be an array of objects like [{type: 'text', value: 'Explanation'}]
     subjectId: currentSubjectId,
   };
 
-  console.log("Attempting to add question with data:", questionData);
+  console.log("Sending question data:", questionData);  // Debug: check the data format before sending it
 
   try {
-    const response = await axios.post(
-      `/api/questions/`,  // Updated URL
-      questionData,
-      {
-        headers: {
-          "Content-Type": "application/json",
-        },
-      }
-    );
+    const response = await axios.post(`/api/subjects/${currentSubjectId}/questions`, questionData, {
+      headers: { 'Content-Type': 'application/json' },
+    });
     console.log("Question added successfully:", response.data);
-    setSuccessMessage("Question added successfully!");
-    setTimeout(() => setSuccessMessage(""), 3000); // Clear success message after 3 seconds
-    setShowAddQuestionModal(false); // Close modal
-    fetchSubjects(); // Refresh subjects if needed
-    resetForm(); // Reset the form to initial state
   } catch (error) {
-    console.error("Error adding question:", error);
-
-    // Safe check for error response
-    if (error.response) {
-      if (error.response.status === 404) {
-        setErrorMessage("The requested endpoint was not found.");
-      } else {
-        setErrorMessage("An error occurred while adding the question. Please try again.");
-      }
-    } else {
-      setErrorMessage("An unexpected error occurred. Please check your connection and try again.");
-    }
+    console.error("Error adding question:", error.response);  // Log the error for debugging
+    setErrorMessage('An error occurred while adding the question. Please try again.');
   }
 };
-
-
 
 const handleUploadCSV = async () => {
   if (!selectedFile || !currentSubjectId) {
