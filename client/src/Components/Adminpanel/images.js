@@ -17,13 +17,20 @@ export default function Images() {
     setLoading(true);
     try {
       const response = await axios.get('/api/images');
-      console.log('Fetched Images:', response.data); // Log response data
-      const imageList = response.data.map(image => ({
-        _id: image._id,
-        name: image.name,
-        location: `/images/${image.name}`, // Assuming the images are located in the /images/ directory
-      }));
-      setImages(imageList);
+      console.log('Fetched Images:', response.data); // Log the actual response to inspect its structure
+      
+      // Check if the response is an array before mapping
+      if (Array.isArray(response.data)) {
+        const imageList = response.data.map(image => ({
+          _id: image._id,
+          name: image.name,
+          location: `/images/${image.name}`, // Assuming the images are located in the /images/ directory
+        }));
+        setImages(imageList);
+      } else {
+        console.error('Expected an array but got:', response.data);
+        setError('Failed to load images: Response is not an array');
+      }
     } catch (err) {
       console.error('Error fetching images:', err);
       setError('Failed to load images');
@@ -31,6 +38,7 @@ export default function Images() {
       setLoading(false);
     }
   };
+  
 
   const handleFileChange = (e) => setSelectedFiles([...e.target.files]);
 
