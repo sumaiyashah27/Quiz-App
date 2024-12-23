@@ -19,8 +19,13 @@ export default function Images() {
     setLoading(true);
     try {
       const response = await axios.get('/api/images');
-      console.log('Fetched Images:', response.data); // Check the response here
-      setImages(response.data);
+      console.log('Fetched Images:', response.data); // Log response data
+      // Assuming the image data from the server is a list of file paths
+      const imageList = response.data.map(image => ({
+        name: image,
+        location: `/images/${image}`, // Assuming the images are located in the /images/ directory
+      }));
+      setImages(imageList);
     } catch (err) {
       console.error('Error fetching images:', err);
       setError('Failed to load images');
@@ -88,7 +93,7 @@ export default function Images() {
       {isModalOpen && (<Modal title="Upload New Images" onClose={() => setIsModalOpen(false)}><input type="file" multiple onChange={handleFileChange} style={{ marginBottom: '10px', padding: '10px', borderRadius: '5px', border: '1px solid #ccc', width: '100%', backgroundColor: '#f9f9f9' }} /><p style={{ color: '#555', marginBottom: '20px' }}>{displaySelectedFiles()}</p><div onClick={uploadImages} style={{ backgroundColor: '#2196F3', color: 'white', borderRadius: '50%', width: '50px', height: '50px', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto', cursor: 'pointer' }}><FaCloudUploadAlt /></div></Modal>)}
       <div className="image-gallery" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '20px', marginTop: '30px' }}>
         {Array.isArray(images) && images.map((image, index) => {
-          const imageUrl = `${image.location}`;
+          const imageUrl = image.location;
           return (
             <div key={index} style={{ position: 'relative', borderRadius: '10px', overflow: 'hidden', boxShadow: '0 4px 8px rgba(0, 0, 0, 0.1)', backgroundColor: '#fff' }}>
               <a href={imageUrl} target="_blank" rel="noopener noreferrer">
