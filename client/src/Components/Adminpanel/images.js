@@ -2,12 +2,31 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { FaPlus, FaTimes, FaImage, FaCloudUploadAlt, FaTrashAlt, FaCopy } from 'react-icons/fa';
 
+//const BASE_URL = process.env.REACT_APP_API_BASE_URL || 'https://www.api.edumocks.com';
+
 export default function Images() {
   const [images, setImages] = useState([]);
   const [selectedFiles, setSelectedFiles] = useState([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+
+  // useEffect(() => {
+  //   setLoading(true);
+  //   axios
+  //     .get(`/api/images`)
+  //     .then((response) => {
+  //       console.log('Fetched Images:', response.data); // Check response structure
+  //       setImages(response.data);
+  //       setLoading(false);
+  //     })
+  //     .catch((error) => {
+  //       console.error('Error fetching images:', error);
+  //       setError('Error fetching images');
+  //       setLoading(false);
+  //     });
+
+  // }, []);
 
   useEffect(() => {
     fetchImages();
@@ -17,20 +36,7 @@ export default function Images() {
     setLoading(true);
     try {
       const response = await axios.get('/api/images');
-      console.log('Fetched Images:', response.data); // Log the actual response to inspect its structure
-      
-      // Check if the response is an array before mapping
-      if (Array.isArray(response.data)) {
-        const imageList = response.data.map(image => ({
-          _id: image._id,
-          name: image.name,
-          location: `/images/${image.name}`, // Assuming the images are located in the /images/ directory
-        }));
-        setImages(imageList);
-      } else {
-        console.error('Expected an array but got:', response.data);
-        setError('Failed to load images: Response is not an array');
-      }
+      setImages(response.data);
     } catch (err) {
       console.error('Error fetching images:', err);
       setError('Failed to load images');
@@ -38,7 +44,6 @@ export default function Images() {
       setLoading(false);
     }
   };
-  
 
   const handleFileChange = (e) => setSelectedFiles([...e.target.files]);
 
@@ -96,21 +101,19 @@ export default function Images() {
     <div className="images-container" style={{ padding: '30px', backgroundColor: '#f4f4f4' }}>
       <h1 style={{ textAlign: 'center', color: '#333', fontSize: '2rem', marginBottom: '20px' }}><FaImage style={{ marginRight: '10px' }} />Image Management</h1>
       <div onClick={() => setIsModalOpen(true)} style={{ backgroundColor: '#4CAF50', color: 'white', borderRadius: '50%', width: '50px', height: '50px', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto', boxShadow: '0 4px 8px rgba(0, 0, 0, 0.1)', cursor: 'pointer', transition: 'transform 0.3s ease' }}><FaPlus /></div>
-      {isModalOpen && (<Modal title="Upload New Images" onClose={() => setIsModalOpen(false)}>
-        <input type="file" multiple onChange={handleFileChange} style={{ marginBottom: '10px', padding: '10px', borderRadius: '5px', border: '1px solid #ccc', width: '100%', backgroundColor: '#f9f9f9' }} />
-        <p style={{ color: '#555', marginBottom: '20px' }}>{displaySelectedFiles()}</p>
-        <div onClick={uploadImages} style={{ backgroundColor: '#2196F3', color: 'white', borderRadius: '50%', width: '50px', height: '50px', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto', cursor: 'pointer' }}><FaCloudUploadAlt /></div>
-      </Modal>)}
+      {isModalOpen && (<Modal title="Upload New Images" onClose={() => setIsModalOpen(false)}><input type="file" multiple onChange={handleFileChange} style={{ marginBottom: '10px', padding: '10px', borderRadius: '5px', border: '1px solid #ccc', width: '100%', backgroundColor: '#f9f9f9' }} /><p style={{ color: '#555', marginBottom: '20px' }}>{displaySelectedFiles()}</p><div onClick={uploadImages} style={{ backgroundColor: '#2196F3', color: 'white', borderRadius: '50%', width: '50px', height: '50px', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto', cursor: 'pointer' }}><FaCloudUploadAlt /></div></Modal>)}
       <div className="image-gallery" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '20px', marginTop: '30px' }}>
-        {Array.isArray(images) && images.map((image, index) => {
-          const imageUrl = image.location;
+        {images.map((image, index) => {
+          const imageUrl = `${image.location}`;
           return (
-            <div key={image._id} style={{ position: 'relative', borderRadius: '10px', overflow: 'hidden', boxShadow: '0 4px 8px rgba(0, 0, 0, 0.1)', backgroundColor: '#fff' }}>
+            <div key={index} style={{ position: 'relative', borderRadius: '10px', overflow: 'hidden', boxShadow: '0 4px 8px rgba(0, 0, 0, 0.1)', backgroundColor: '#fff' }}>
               <a href={imageUrl} target="_blank" rel="noopener noreferrer">
                 <img src={imageUrl} alt={image.name} style={{ width: '100%', height: '200px', objectFit: 'cover', borderRadius: '8px 8px 0 0', transition: 'transform 0.3s ease' }} />
               </a>
               <div style={{ padding: '15px', textAlign: 'center' }}>
-                <span style={{ display: 'block', fontSize: '16px', color: '#333', fontWeight: '500' }}>{image.name}</span>
+                <span style={{ display: 'block', fontSize: '16px', color: '#333', fontWeight: '500' }}>
+                  {image.name}
+                </span>
                 <div style={{ marginTop: '10px', display: 'flex', justifyContent: 'center', gap: '10px' }}>
                   <div onClick={() => navigator.clipboard.writeText(imageUrl)} style={{ backgroundColor: '#2196F3', color: 'white', borderRadius: '50%', width: '40px', height: '40px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }} aria-label="Copy Link">
                     <FaCopy />
