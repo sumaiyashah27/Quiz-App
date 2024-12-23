@@ -175,7 +175,7 @@ const handleAddQuestion = async () => {
 
   try {
     const response = await axios.post(
-      `/api/questions/add-question`,  // Updated URL
+      `/api/questions/`,  // Updated URL
       questionData,
       {
         headers: {
@@ -183,7 +183,6 @@ const handleAddQuestion = async () => {
         },
       }
     );
-
     console.log("Question added successfully:", response.data);
     setSuccessMessage("Question added successfully!");
     setTimeout(() => setSuccessMessage(""), 3000); // Clear success message after 3 seconds

@@ -2,7 +2,7 @@ const express = require('express');
 const Question = require('../models/question-model');
 const router = express.Router();
 
-router.post('/add-question', async (req, res) => {
+router.post('/', async (req, res) => {
   const { questionParts, options, correctAns, answerParts, subjectId } = req.body;
 
   try {
