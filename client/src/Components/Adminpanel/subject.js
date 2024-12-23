@@ -166,7 +166,7 @@ const handleAddQuestion = async () => {
   console.log("Sending question data:", questionData);  // Debug: check the data format before sending it
 
   try {
-    const response = await axios.post(`/api/subjects/${currentSubjectId}/add-question`, questionData, {
+    const response = await axios.post(`/api/subjects/${currentSubjectId}/questions/add`, questionData, {
       headers: { 'Content-Type': 'application/json' },
     });
     console.log("Question added successfully:", response.data);

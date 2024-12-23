@@ -190,7 +190,7 @@ router.get("/questions", async (req, res) => {
 
 
 // Add a new question for a subject (with image upload)
-router.post('/subjects/:subjectId/add-question', async (req, res) => {
+router.post('/subjects/:subjectId/questions/add', async (req, res) => {
   try {
     // Validate incoming data
     validateQuestionData(req.body);
