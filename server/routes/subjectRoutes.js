@@ -11,7 +11,6 @@ const router = express.Router();
 const storage = multer.memoryStorage();  // Use memory storage for in-memory file handling
 const upload = multer({ storage: storage });  
 
-
 // Get all subjects with questions
 router.get("/", async (req, res) => {
     try {
@@ -22,6 +21,7 @@ router.get("/", async (req, res) => {
         res.status(500).json({ message: "Error fetching subjects", error: error.message });
     }
 });
+
  // Add a new subject
 router.post("/", async (req, res) => {
     const { name, price, questions = [] } = req.body; // Removed chapters, now using questions
@@ -37,6 +37,7 @@ router.post("/", async (req, res) => {
       res.status(500).json({ message: "Error adding subject", error: error.message });
     }
   });
+
 // Update a subject by ID
 router.put("/:id", async (req, res) => {
   const { id } = req.params;
@@ -198,7 +199,29 @@ router.get("/questions", async (req, res) => {
 // Route to fetch questions for a subject
 router.get('/subjects/:subjectId/questions', async (req, res) => {
   const { subjectId } = req.params;  // Ensure subjectId is a valid ObjectId
-  
+
+  try {
+    // Ensure subjectId is a valid ObjectId
+    if (!mongoose.Types.ObjectId.isValid(subjectId)) {
+      return res.status(400).json({ error: 'Invalid subjectId' });
+    }
+
+    // Fetch subject by subjectId
+    const subject = await Subject.findById(subjectId).populate('questions');
+    
+    if (!subject) {
+      return res.status(404).json({ error: 'Subject not found' });
+    }
+
+    res.json(subject.questions);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Error fetching questions' });
+  }
+});
+
+// Add a new question for a subject (with image upload)
+router.post('api/subjects/:subjectId/questions/add', async (req, res) => {
   try {
     // Ensure subjectId is a valid ObjectId
     if (!mongoose.Types.ObjectId.isValid(subjectId)) {
