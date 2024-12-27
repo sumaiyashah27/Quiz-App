@@ -1,15 +1,22 @@
 const mongoose = require('mongoose');
 
 const QuestionSchema = new mongoose.Schema({
-  // The question field can have an array of objects, where each object has a type (text, image, table) and a value (content)
-  question: [
-    {
-      type: { type: String, enum: ['text', 'image', 'table'], required: true }, // Type of the part (text, image, table)
-      value: { type: mongoose.Schema.Types.Mixed, required: true }, // The actual content for the part (text, URL for image, table data)
-    },
-  ],
+  // First set of question fields
+  questionText1: { type: String },
+  questionImage1: { type: String },  // URL or file path to image
+  questionTable1: { type: mongoose.Schema.Types.Mixed },  // Can store tables as objects or arrays
 
-  // Options for the multiple choice answers (a, b, c, d)
+  // Second set of question fields
+  questionText2: { type: String },
+  questionImage2: { type: String },
+  questionTable2: { type: mongoose.Schema.Types.Mixed },
+
+  // Third set of question fields
+  questionText3: { type: String },
+  questionImage3: { type: String },
+  questionTable3: { type: mongoose.Schema.Types.Mixed },
+
+  // Multiple choice options
   options: {
     a: { type: String },
     b: { type: String },
@@ -20,13 +27,20 @@ const QuestionSchema = new mongoose.Schema({
   // Correct answer choice (a, b, c, or d)
   correctAns: { type: String },
 
-  // Description for the answer, can also contain text, image, or table types
-  answerDescription: [
-    {
-      type: { type: String, enum: ['text', 'image', 'table'], required: true },
-      value: { type: mongoose.Schema.Types.Mixed, required: true },
-    },
-  ],
+  // First set of answer description fields
+  answerDescriptionText1: { type: String },
+  answerDescriptionImage1: { type: String },  // URL or file path to image
+  answerDescriptionTable1: { type: mongoose.Schema.Types.Mixed },
+
+  // Second set of answer description fields
+  answerDescriptionText2: { type: String },
+  answerDescriptionImage2: { type: String },
+  answerDescriptionTable2: { type: mongoose.Schema.Types.Mixed },
+
+  // Third set of answer description fields
+  answerDescriptionText3: { type: String },
+  answerDescriptionImage3: { type: String },
+  answerDescriptionTable3: { type: mongoose.Schema.Types.Mixed },
 
   // Reference to the subject model (for linking to a specific subject)
   subject: { type: mongoose.Schema.Types.ObjectId, ref: 'Subject', required: true },

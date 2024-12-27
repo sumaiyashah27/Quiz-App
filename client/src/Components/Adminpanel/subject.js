@@ -13,15 +13,12 @@ const Subject = () => {
   const [loading, setLoading] = useState(false);
   const [newSubjectPrice, setNewSubjectPrice] = useState('');
   const [currentSubjectId, setCurrentSubjectId] = useState(null);
-  const [editingSubject, setEditingSubject] = useState(null);  
-  const [showAddQuestionModal, setShowAddQuestionModal] = useState(false);
-  const [questionParts, setQuestionParts] = useState([]); // Make sure it's initialized as an array
-  const [answerParts, setAnswerParts] = useState([]);
-  const [options, setOptions] = useState({ a: '', b: '', c: '', d: '' });
-  const [correctAns, setCorrectAns] = useState('');
   const [selectedFile, setSelectedFile] = useState(null);
-  const [successMessage, setSuccessMessage] = useState('');
-  const [errorMessage, setErrorMessage] = useState('');
+  const [editingSubject, setEditingSubject] = useState(null);
+  const [showEditQuestionModal, setShowEditQuestionModal] = useState(false); // Or an appropriate initial value
+  const [editingQuestion, setEditingQuestion] = useState(null); // For the question being edited
+  const [updatedQuestion, setUpdatedQuestion] = useState({question: '', image: '', options: { a: '', b: '', c: '', d: '' }, correctAnswer: '', description: ''});
+  const [expandedQuestion, setExpandedQuestion] = useState({});
 
   useEffect(() => {
     fetchSubjects();
@@ -30,7 +27,7 @@ const Subject = () => {
   const fetchSubjects = async () => {
     setLoading(true);
     try {
-      const { data } = await axios.get('/api/subjects');
+      const { data } = await axios.get('https://edumocks.com/api/subjects');
       setSubjects(data);
     } catch (error) {
       console.error("Error fetching subjects:", error);
@@ -38,7 +35,7 @@ const Subject = () => {
       setLoading(false);
     }
   };
-  
+
   const handleAddSubject = async () => {
     if (!newSubjectName.trim()) {
       alert("Please enter a subject name.");
@@ -51,7 +48,7 @@ const Subject = () => {
     }
     setLoading(true);
     try {
-      await axios.post('/api/subjects', { name: newSubjectName, price: priceInDollars.toFixed(2),});
+      await axios.post('https://edumocks.com/api/subjects', { name: newSubjectName, price: priceInDollars.toFixed(2),});
       setNewSubjectName('');
       setNewSubjectPrice('');
       setShowAddSubjectModal(false);
@@ -73,7 +70,7 @@ const Subject = () => {
 
     setLoading(true);
     try {
-      await axios.put(`/api/subjects/${editingSubject._id}`, { name: editingSubject.name, price: editingSubject.price, });
+      await axios.put(`https://edumocks.com/api/subjects/${editingSubject._id}`, { name: editingSubject.name, price: editingSubject.price, });
       setShowEditSubjectModal(false);
       fetchSubjects();
     } catch (error) {
@@ -86,7 +83,7 @@ const Subject = () => {
   const handleDeleteSubject = async (id) => {
     if (window.confirm('Are you sure you want to delete this subject?')) {
       try {
-        await axios.delete(`/api/subjects/${id}`);
+        await axios.delete(`https://edumocks.com/api/subjects/${id}`);
         fetchSubjects();
       } catch (error) {
         console.error('Error deleting subject:', error);
@@ -94,129 +91,97 @@ const Subject = () => {
     }
   };
 
+  const handleUploadCSV = async () => {
+    if (!selectedFile || !currentSubjectId) {
+      alert("Please select a file and chapter.");
+      return;
+    }
+    // Optional: Add file type/size validation here (e.g., only CSV files)
+    if (selectedFile.type !== "text/csv") {
+      alert("Please upload a valid CSV file.");
+      return;
+    }
+
+    const formData = new FormData();
+    formData.append("file", selectedFile);
+  
+    try {
+      const response = await axios.post(
+        `https://edumocks.com/api/subjects/${currentSubjectId}/upload`,
+        formData,
+        { headers: { "Content-Type": "multipart/form-data" } }
+      );
+      console.log('File uploaded successfully:', response.data);
+      alert("File uploaded successfully!");
+      setShowUploadModal(false);
+      fetchSubjects();
+    } catch (error) {
+      if (error.response) {
+        console.error('Error response from server:', error.response.data);
+        alert(`Upload failed: ${error.response.data.message || 'Unknown error'}`);
+      } else if (error.request) {
+        console.error('No response received:', error.request);
+        alert("No response received from server. Please check your connection.");
+      } else {
+        console.error('Error setting up request:', error.message);
+        alert("An error occurred while setting up the request.");
+      }
+    }
+  };
+  
+  
+  const handleEditQuestion = (question, currentSubjectId) => {
+    setEditingQuestion(question); // Set the selected question to be edited
+    setCurrentSubjectId(currentSubjectId); // Set the chapter ID
+    setUpdatedQuestion({
+      question: question.question,
+      image: question.questionImage || '', // Set current image or empty
+      options: question.options || { a: '', b: '', c: '', d: '' },
+      correctAnswer: question.correctAns,
+      description: question.answerDescription,
+    });
+    setShowEditQuestionModal(true); // Show the edit question modal
+  };
+  
+  const handleUpdateQuestion = async () => {
+    if (!currentSubjectId || !editingQuestion?._id) {
+      console.error("Missing Subject ID or question ID");
+      return; // Return early if chapter or question ID is invalid
+    }setLoading(true);
+
+    try {
+      // Send PUT request to update the question with all its fields
+      const response = await axios.put(
+        `https://edumocks.com/api/subjects/${currentSubjectId}/questions/${editingQuestion._id}`,
+        {
+          question: updatedQuestion.question,
+          questionImage: updatedQuestion.image,
+          options: updatedQuestion.options,
+          correctAns: updatedQuestion.correctAnswer,
+          answerDescription: updatedQuestion.description,
+        }
+      );
+      console.log('Question updated:', response.data);
+      alert('Question updat Sucessfully');
+      setShowEditQuestionModal(false); // Close the modal after updating
+      fetchSubjects(); // Refresh the chapters list with the updated question
+    } catch (error) {
+      console.error('Error updating question:', error.response?.data || error);
+    }
+  };
+  
   const toggleSubjectExpansion = (subjectId) => {
     setExpandedSubject(expandedSubject === subjectId ? null : subjectId);
   };
- 
-  //Function to render table
-  const renderTable = (table, index, partType) => {
-   // Ensure table.data is an array, if not, initialize it
-    const data = Array.isArray(table.data) ? table.data : [];
-    return (
-      <div key={`table-${index}`} style={{ marginBottom: '10px' }}>
-        <div>
-          <label>Rows: </label>
-          <input  type="number"  value={table.rows}  min={1}  onChange={(e) => updateTable(index, partType, +e.target.value, table.columns)} />
-          <label style={{ marginLeft: '10px' }}>Columns: </label>
-          <input  type="number"  value={table.columns}  min={1}  onChange={(e) => updateTable(index, partType, table.rows, +e.target.value)} />
-        </div>
-        <div  style={{ display: 'grid', gridTemplateColumns: `repeat(${table.columns}, 1fr)`, gap: '5px', marginTop: '10px' }} >
-          {data.map((row, rowIndex) =>
-            row.map((cell, colIndex) => (
-              <input key={`cell-${rowIndex}-${colIndex}`} type="text" value={cell} onChange={(e) => {const newData = [...data];newData[rowIndex][colIndex] = e.target.value;updateTable(index, partType, table.rows, table.columns);}}/>
-            ))
-          )}
-        </div>
-      </div>
-    );
+
+  const toggleQuestionExpand = (questionId) => {
+    setExpandedQuestion((prevState) => ({ ...prevState, [questionId]: !prevState[questionId], }));
   };
-  // Function to update value
-  const updateValue = (index, value, partType) => {
-    const updatedParts = partType === 'question' ? [...questionParts] : [...answerParts];
-    updatedParts[index].value = value;
-    partType === 'question' ? setQuestionParts(updatedParts) : setAnswerParts(updatedParts);
-  };  
-  // Define reset form function
-  const resetForm = () => {
-    setQuestionParts([]); // Reset to an empty array
-    setOptions({ a: '', b: '', c: '', d: '' });
-    setCorrectAns('');
-    setAnswerParts([]);
-  };
-  // Function to update a table
-  const updateTable = (index, partType, rows, columns) => {
-    const parts = partType === 'question' ? [...questionParts] : [...answerParts];
-    const table = parts[index].value;
-    const newData = Array.from({ length: rows }, (_, i) =>
-      Array.from({ length: columns }, (_, j) => table.data[i]?.[j] || '')
-    );
-    parts[index].value = { rows, columns, data: newData };
-    partType === 'question' ? setQuestionParts(parts) : setAnswerParts(parts);
-  };
-  
- // Function to add question part
- const addQuestionPart = (type) => {
-  setQuestionParts([...questionParts, { type, value: type === 'table' ? { rows: 1, columns: 1, data: [['']] } : '' }]);
-};
-
-// Function to add answer part
-const addAnswerPart = (type) => {
-  setAnswerParts([...answerParts, { type, value: type === 'table' ? { rows: 1, columns: 1, data: [['']] } : '' }]);
-};
-
-const handleAddQuestion = async () => {
-  const questionData = {
-    question: questionParts,  // questionParts should be an array of objects like [{type: 'text', value: 'Question'}]
-    options,
-    correctAns,
-    answerDescription: answerParts,  // answerParts should be an array of objects like [{type: 'text', value: 'Explanation'}]
-    subjectId: currentSubjectId,
-  };
-
-  console.log("Sending question data:", questionData);  // Debug: check the data format before sending it
-
-  try {
-    const response = await axios.post(`/api/subjects/${currentSubjectId}/questions/add`, questionData, {
-      headers: { 'Content-Type': 'application/json' },
-    });
-    console.log("Question added successfully:", response.data);
-  } catch (error) {
-    if (error.response) {
-      
-      console.log(error.response.data);
-      console.log(error.response.status);
-      console.log(error.response.headers);
-    } else if (error.request) {
-      console.log(error.request);
-    } else {
-      // Something happened in setting up the request that triggered an Error
-      console.log('Error', error.message);
-    }
-    console.log(error.config);  // Log the error for debugging
-    setErrorMessage('An error occurred while adding the question. Please try again.');
-  }
-};
-
-const handleUploadCSV = async () => {
-  if (!selectedFile || !currentSubjectId) {
-    alert("Please select a file and chapter.");
-    return;
-  }
-  const formData = new FormData();
-  formData.append("file", selectedFile);
-  try {
-    await axios.post(`/api/subjects/${currentSubjectId}/upload`, formData, {
-      headers: { "Content-Type": "multipart/form-data" },
-    });
-    alert("File uploaded successfully!");
-    setShowUploadModal(false);
-    fetchSubjects();
-  } catch (error) {
-    console.error("Error uploading file:", error);
-  }
-};
-const removeQuestionPart = (index) => {
-  setQuestionParts((prevParts) => prevParts.filter((_, i) => i !== index));
-};
-
-const removeAnswerPart = (index) => {
-  setAnswerParts((prevParts) => prevParts.filter((_, i) => i !== index));
-};
-
 
   return (
     <div>
       <h2 style={{ textAlign: 'center', marginBottom: '20px', color: '#4CAF50' }}>Subject Details</h2>
+
       {/* Button to Add Subject */}
       <button onClick={() => setShowAddSubjectModal(true)} style={{ backgroundColor: '#4CAF50', color: 'white', padding: '10px 12px', fontSize: '14px', borderRadius: '8px', cursor: 'pointer' }}>
         <FontAwesomeIcon icon={faPlus} style={{ marginRight: '8px' }} /> Add Subject
@@ -261,6 +226,7 @@ const removeAnswerPart = (index) => {
           </div>
         </div>
       )}
+
       {/* List of Subjects */}
       {loading ? (
         <p>Loading...</p>
@@ -282,6 +248,7 @@ const removeAnswerPart = (index) => {
                 </button>
               </div>
             </div>
+
             {expandedSubject === subject._id && (
               <div style={{ marginTop: '10px' }}>
                 {/* <button onClick={() => { setCurrentSubjectId(subject._id); setShowUploadModal(true); }} style={{ backgroundColor: '#4CAF50', color: 'white', padding: '8px 16px', borderRadius: '5px', cursor: 'pointer' }} >
@@ -289,126 +256,58 @@ const removeAnswerPart = (index) => {
                 </button> */}
                 <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '20px' }}>
                   <button onClick={() => { setCurrentSubjectId(subject._id); setShowUploadModal(true); }} style={{ padding: '10px 20px', backgroundColor: '#007bff', color: '#fff', border: 'none', borderRadius: '4px', cursor: 'pointer' }}>
-                    Upload CSV
-                  </button>
-                  <button onClick={() =>{ setCurrentSubjectId(subject._id); setShowAddQuestionModal(true); }} style={{ padding: '10px 20px', backgroundColor: '#28a745', color: '#fff', border: 'none', borderRadius: '4px', cursor: 'pointer' }}>
-                    Add Question
+                    <FontAwesomeIcon icon={faUpload} />Upload CSV
                   </button>
                 </div>
+
+                {/* Questions here */}
+                <>
+              <ul style={{ paddingLeft: "20px" }}>
+                {subject.questions.map((question) => (
+                  <li key={question._id} style={{ marginBottom: "10px" }}>
+                    <div style={{ display: "flex", justifyContent: "space-between" }}>
+                      {/* Question Title */}
+                      <span onClick={() => toggleQuestionExpand(question._id)} style={{ cursor: "pointer", color: "blue", textDecoration: "underline" }} >
+                        Question {subject.questions.indexOf(question) + 1}
+                      </span>
+                      <div>
+                        {/* Edit Button */}
+                        <button onClick={() => handleEditQuestion(question, subject._id)} style={{ marginLeft: "5px", padding: "5px 12px", backgroundColor: "#4CAF50", color: "white", borderRadius: "5px", cursor: "pointer" }} >
+                          <FontAwesomeIcon icon={faEdit} />
+                        </button>
+                        {/* Delete Button */}
+                        <button style={{ marginLeft: "5px", padding: "5px 12px", backgroundColor: "#f44336", color: "white", borderRadius: "5px", cursor: "pointer" }} >
+                          <FontAwesomeIcon icon={faTrash} />
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Render Question Details Conditionally */}
+                    {expandedQuestion[question._id] && (
+                      <div style={{ marginTop: "10px", backgroundColor: "#f5f5f5", padding: "10px", borderRadius: "5px" }}>
+                        <p><strong>Question:</strong> {question.question}</p>
+                        {question.questionImage && (
+                          <img src={question.questionImage} alt="Question" style={{ maxWidth: "100%", borderRadius: "5px", marginBottom: "10px" }} />
+                        )}
+                        <p><strong>Options:</strong></p>
+                        <ul style={{ listStyleType: "none", paddingLeft: "10px" }}>
+                          <li>A. {question.options.a}</li>
+                          <li>B. {question.options.b}</li>
+                          <li>C. {question.options.c}</li>
+                          <li>D. {question.options.d}</li>
+                        </ul>
+                        <p><strong>Correct Answer:</strong> {question.correctAns}</p>
+                        <p><strong>Answer Description:</strong> {question.answerDescription}</p>
+                      </div>
+                    )}
+                  </li>
+                ))}
+              </ul>
+            </>
               </div>
             )}
           </div>
         ))
-      )}
-      {showAddQuestionModal && (
-        <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', backgroundColor: 'rgba(0,0,0,0.5)', overflow: 'auto', zIndex: 1000 }}>
-          <div style={{ backgroundColor: '#fff', padding: '30px', borderRadius: '12px', width: '80%', maxWidth: '800px', textAlign: 'center', position: 'relative', maxHeight: '90vh', overflowY: 'auto', boxShadow: '0px 4px 15px rgba(0, 0, 0, 0.1)', animation: 'fadeIn 0.3s ease-in-out' }}>
-            <span onClick={() => setShowAddQuestionModal(false)} style={{ position: 'absolute', top: '15px', right: '15px', cursor: 'pointer', fontSize: '24px', color: '#888', transition: 'color 0.3s' }} onMouseEnter={(e) => (e.target.style.color = '#f00')} onMouseLeave={(e) => (e.target.style.color = '#888')}>
-              <FontAwesomeIcon icon={faTimes} />
-            </span>
-            <h3 style={{ color: '#333', fontSize: '24px', marginBottom: '20px' }}>Add New Question</h3>
-
-            {/* Question Parts */}
-            <h4 style={{ color: '#555', marginBottom: '10px' }}>Question</h4>
-            {questionParts.map((part, index) => {
-              switch (part.type) {
-                case 'text':
-                  return (
-                    <div style={{ position: 'relative', marginBottom: '15px', border: '1px solid #ddd', borderRadius: '8px', padding: '10px' }}>
-                      <textarea  key={`question-${index}`}  value={part.value}  onChange={(e) => updateValue(index, e.target.value, 'question')}  placeholder="Enter text"  style={{ width: '100%', padding: '10px', fontSize: '16px', borderRadius: '8px', border: 'none', boxSizing: 'border-box' }}  onFocus={(e) => (e.target.style.border = '2px solid #4CAF50')}  onBlur={(e) => (e.target.style.border = 'none')} />
-                      <span  onClick={() => removeQuestionPart(index)}  style={{ position: 'absolute', top: '5px', right: '5px', cursor: 'pointer', fontSize: '18px', color: '#888', transition: 'color 0.3s' }}  onMouseEnter={(e) => (e.target.style.color = '#f00')}  onMouseLeave={(e) => (e.target.style.color = '#888')} >
-                        <FontAwesomeIcon icon={faTimes} />
-                      </span>
-                    </div>
-                  );
-                case 'image':
-                  return (
-                    <div key={`question-${index}`} style={{ marginBottom: '15px' }}>
-                      <input type="text" value={part.value} onChange={(e) => updateValue(index, e.target.value, 'question')} placeholder="Enter image URL" style={{ width: '100%', padding: '10px', fontSize: '16px', borderRadius: '8px', border: '1px solid #ddd', boxSizing: 'border-box', transition: 'border-color 0.3s' }} onFocus={(e) => (e.target.style.borderColor = '#4CAF50')} onBlur={(e) => (e.target.style.borderColor = '#ddd')}/>
-                      {part.value && (
-                        <img src={part.value} alt="Preview" style={{ width: '100%', maxHeight: '200px', objectFit: 'cover', marginTop: '10px', borderRadius: '8px' }}/>
-                      )}
-                      <span onClick={() => removeQuestionPart(index)} style={{ position: 'absolute', top: '5px', right: '5px', cursor: 'pointer', fontSize: '18px', color: '#888', transition: 'color 0.3s' }} onMouseEnter={(e) => (e.target.style.color = '#f00')} onMouseLeave={(e) => (e.target.style.color = '#888')}>
-                        <FontAwesomeIcon icon={faTimes} />
-                      </span>
-                    </div>
-                  );
-                case 'table':
-                  return renderTable(part.value, index, 'question');
-
-                default:
-                  return null;
-              }
-            })}
-            <div style={{ marginBottom: '20px' }}>
-              <button onClick={() => addQuestionPart('text')} style={{ padding: '10px 20px', backgroundColor: '#007bff', color: '#fff', border: 'none', borderRadius: '8px', cursor: 'pointer', margin: '5px' }}>Add Text</button>
-              <button onClick={() => addQuestionPart('image')} style={{ padding: '10px 20px', backgroundColor: '#007bff', color: '#fff', border: 'none', borderRadius: '8px', cursor: 'pointer', margin: '5px' }}>Add Image</button>
-              <button onClick={() => addQuestionPart('table')} style={{ padding: '10px 20px', backgroundColor: '#007bff', color: '#fff', border: 'none', borderRadius: '8px', cursor: 'pointer', margin: '5px' }}>Add Table</button>
-            </div>
-
-            {/* Options */}
-            <h4 style={{ color: '#555', marginBottom: '10px' }}>Options</h4>
-            {['a', 'b', 'c', 'd'].map((option) => (
-              <div key={option} style={{ marginBottom: '15px',display: 'flex', alignItems: 'center' }}>
-                <label style={{ fontSize: '16px', marginBottom: '5px',width: '80px' }}>{option.toUpperCase()}:</label>
-                <input type="text" value={options[option]} onChange={(e) => setOptions({ ...options, [option]: e.target.value })} placeholder={`Option ${option.toUpperCase()}`} style={{ width: '100%', padding: '10px', fontSize: '16px', borderRadius: '8px', border: '1px solid #ddd', boxSizing: 'border-box', transition: 'border-color 0.3s' }} onFocus={(e) => (e.target.style.borderColor = '#4CAF50')} onBlur={(e) => (e.target.style.borderColor = '#ddd')} />
-              </div>
-            ))}
-            <div>
-              <label style={{ fontSize: '16px', marginBottom: '5px', display: 'block' }}>Correct Answer: </label>
-              <select value={correctAns} onChange={(e) => setCorrectAns(e.target.value)} style={{ padding: '10px', fontSize: '16px', borderRadius: '8px', border: '1px solid #ddd', width: '100%', transition: 'border-color 0.3s' }} onFocus={(e) => (e.target.style.borderColor = '#4CAF50')} onBlur={(e) => (e.target.style.borderColor = '#ddd')}>
-                <option value="">Select correct answer</option>
-                <option value="a">A</option>
-                <option value="b">B</option>
-                <option value="c">C</option>
-                <option value="d">D</option>
-              </select>
-            </div>
-
-            {/* Answer Parts */}
-            <h4 style={{ color: '#555', marginBottom: '10px' }}>Answer Description</h4>
-            {answerParts.map((part, index) => {
-              switch (part.type) {
-                case 'text':
-                  return (
-                    <div key={`answer-${index}`} style={{ position: 'relative', marginBottom: '15px' }}>
-                      <textarea  value={part.value}  onChange={(e) => updateValue(index, e.target.value, 'answer')}  placeholder="Enter text"  style={{ width: '100%', padding: '10px', fontSize: '16px', borderRadius: '8px', border: '1px solid #ddd', boxSizing: 'border-box', transition: 'border-color 0.3s' }}  onFocus={(e) => (e.target.style.borderColor = '#4CAF50')}  onBlur={(e) => (e.target.style.borderColor = '#ddd')} />
-                      <span  onClick={() => removeAnswerPart(index)}  style={{ position: 'absolute', top: '5px', right: '5px', cursor: 'pointer', fontSize: '18px', color: '#888', transition: 'color 0.3s' }}  onMouseEnter={(e) => (e.target.style.color = '#f00')}  onMouseLeave={(e) => (e.target.style.color = '#888')}>
-                        <FontAwesomeIcon icon={faTimes} />
-                      </span>
-                    </div>
-
-                  );
-                case 'image':
-                  return (
-                    <div key={`answer-${index}`} style={{ position: 'relative', marginBottom: '15px' }}>
-                      <input  type="text"  value={part.value}  onChange={(e) => updateValue(index, e.target.value, 'answer')}  placeholder="Enter image URL"  style={{ width: '100%', padding: '10px', fontSize: '16px', borderRadius: '8px', border: '1px solid #ddd', boxSizing: 'border-box', transition: 'border-color 0.3s' }}  onFocus={(e) => (e.target.style.borderColor = '#4CAF50')}  onBlur={(e) => (e.target.style.borderColor = '#ddd')} />
-                      {part.value && (
-                        <img src={part.value} alt="Preview" style={{ width: '100%', maxHeight: '200px', objectFit: 'cover', marginTop: '10px', borderRadius: '8px' }} />
-                      )}
-                      <span  onClick={() => removeAnswerPart(index)}  style={{ position: 'absolute', top: '5px', right: '5px', cursor: 'pointer', fontSize: '18px', color: '#888', transition: 'color 0.3s' }}  onMouseEnter={(e) => (e.target.style.color = '#f00')}  onMouseLeave={(e) => (e.target.style.color = '#888')}>
-                        <FontAwesomeIcon icon={faTimes} />
-                      </span>
-                    </div>
-                  );
-                case 'table':
-                  return renderTable(part.value, index, 'answer');
-
-                default:
-                  return null;
-              }
-            })}
-            <div style={{ marginBottom: '20px' }}>
-              <button onClick={() => addAnswerPart('text')} style={{ padding: '10px 20px', backgroundColor: '#007bff', color: '#fff', border: 'none', borderRadius: '8px', cursor: 'pointer', margin: '5px' }}>Add Text</button>
-              <button onClick={() => addAnswerPart('image')} style={{ padding: '10px 20px', backgroundColor: '#007bff', color: '#fff', border: 'none', borderRadius: '8px', cursor: 'pointer', margin: '5px' }}>Add Image</button>
-              <button onClick={() => addAnswerPart('table')} style={{ padding: '10px 20px', backgroundColor: '#007bff', color: '#fff', border: 'none', borderRadius: '8px', cursor: 'pointer', margin: '5px' }}>Add Table</button>
-            </div>
-
-            <button onClick={handleAddQuestion} style={{ padding: '12px 25px', backgroundColor: '#28a745', color: '#fff', border: 'none', borderRadius: '8px', cursor: 'pointer', width: '100%', marginBottom: '10px', transition: 'background-color 0.3s' }} onMouseEnter={(e) => (e.target.style.backgroundColor = '#218838')} onMouseLeave={(e) => (e.target.style.backgroundColor = '#28a745')}>
-              Add Question
-            </button>
-          </div>
-        </div>
       )}
       {/* Upload CSV Modal */}
       {showUploadModal && (
@@ -420,13 +319,41 @@ const removeAnswerPart = (index) => {
             <h3>Upload CSV for Questions</h3>
             <input type="file" accept=".csv" onChange={(e) => setSelectedFile(e.target.files[0])} />
             <button onClick={handleUploadCSV} style={{ backgroundColor: '#4CAF50', color: 'white', padding: '10px 12px', fontSize: '14px', borderRadius: '8px', cursor: 'pointer' }}>
-              Upload CSV
+              <FontAwesomeIcon icon={faUpload} />Upload CSV
             </button>
           </div>
         </div>
       )}
-
+      {showEditQuestionModal && (
+        <Modal isOpen={showEditQuestionModal} onClose={() => setShowEditQuestionModal(false)} contentLabel="Edit Question" style={{ content: { maxWidth: '600px', margin: 'auto' } }}>
+          <h3>Edit Question</h3>
+          <input type="text" value={updatedQuestion.question} onChange={(e) => setUpdatedQuestion((prev) => ({ ...prev, question: e.target.value }))} placeholder="Question" style={{ padding: '10px', width: '100%', marginBottom: '10px' }}/>
+          <input type="text" value={updatedQuestion.image} onChange={(e) => setUpdatedQuestion((prev) => ({ ...prev, image: e.target.value })) } placeholder="Image URL (Optional)" style={{ padding: '10px', width: '100%', marginBottom: '10px' }}/>
+          {updatedQuestion.image && (
+            <img src={updatedQuestion.image}alt="Preview" style={{ maxWidth: '25%', maxHeight: '200px', borderRadius: '5px', marginBottom: '10px', }}/>
+          )}
+          {['a', 'b', 'c', 'd'].map((option) => (
+            <input key={option} type="text" value={updatedQuestion.options[option]} onChange={(e) => setUpdatedQuestion((prev) => ({  ...prev,  options: { ...prev.options, [option]: e.target.value }, })) } placeholder={`Option ${option.toUpperCase()}`} style={{ padding: '10px', width: '100%', marginBottom: '10px' }}/>
+          ))}
+          <input type="text" value={updatedQuestion.correctAnswer}onChange={(e) =>  setUpdatedQuestion((prev) => ({ ...prev, correctAnswer: e.target.value }))}placeholder="Correct Answer"style={{ padding: '10px', width: '100%', marginBottom: '10px' }}/>
+          <textarea value={updatedQuestion.description} onChange={(e) => setUpdatedQuestion((prev) => ({ ...prev, description: e.target.value })) }placeholder="Answer Description"style={{ padding: '10px', width: '100%', marginBottom: '10px' }} />
+          <button onClick={handleUpdateQuestion} style={{ backgroundColor: 'green', color: 'white', padding: '10px 15px', borderRadius: '4px',}} >
+            <FontAwesomeIcon icon={faEdit} style={{ marginRight: "5px" }} />Update Question
+          </button>
+        </Modal>
+      )}
     </div>
   );
 };
+const Modal = ({ title, children, onClose }) => (
+  <div style={{ position: "fixed", top: 0, left: 0, width: "100%", height: "100%", backgroundColor: "rgba(0,0,0,0.5)", display: "flex", justifyContent: "center", alignItems: "center", zIndex: 1000 }}>
+    <div style={{ backgroundColor: "#fff", padding: "20px", borderRadius: "8px", width: "400px", textAlign: "center", position: "relative" }}>
+      <span onClick={onClose} style={{ position: "absolute", top: "10px", right: "10px", cursor: "pointer", fontSize: "20px" }}>
+        <FontAwesomeIcon icon={faTimes} />
+      </span>
+      <h3>{title}</h3>
+      {children}
+    </div>
+  </div>
+);
 export default Subject;

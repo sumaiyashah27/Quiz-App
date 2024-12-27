@@ -78,68 +78,99 @@ router.get("/:id", async (req, res) => {
       res.status(500).json({ message: "Server error" });
     }
   });
-  
   router.post("/:id/upload", upload.single('file'), async (req, res) => {
     const { id } = req.params;
+
+    // Fixed header array: The headers your CSV file should have.
+    const expectedHeaders = [
+        "questionText1", "questionImage1", "questionTable1",
+        "questionText2", "questionImage2", "questionTable2",
+        "questionText3", "questionImage3", "questionTable3",
+        "a", "b", "c", "d", "correctAns",
+        "answerDescriptionText1", "answerDescriptionImage1", "answerDescriptionTable1",
+        "answerDescriptionText2", "answerDescriptionImage2", "answerDescriptionTable2",
+        "answerDescriptionText3", "answerDescriptionImage3", "answerDescriptionTable3"
+    ];
+
+    // Check if file is uploaded
     if (!req.file) {
-      return res.status(400).json({ message: "No file uploaded" });
+        return res.status(400).json({ message: "No file uploaded" });
     }
+
     const questionsData = [];
     const csvStream = new stream.Readable();
     csvStream.push(req.file.buffer.toString());
     csvStream.push(null);
-    csvStream
-      .pipe(csv())
-      .on("data", (row) => {
-        const { question, questionImage, a, b, c, d, correctAns, answerDescription } = row;
-        // Validation: Check if required fields exist
-        if (!question || !correctAns || !a || !b || !c || !d) {
-          console.error("Invalid row data:", row); // Log the invalid row
-          return; // Skip invalid row
-        }
-        questionsData.push({ subjectId: id, question: question?.trim(), questionImage: questionImage?.trim() || null, options: { a: a?.trim(), b: b?.trim(), c: c?.trim(), d: d?.trim() }, correctAns: correctAns?.trim(), answerDescription: answerDescription?.trim() || "", });
-      })
-      .on("end", async () => {
-        if (questionsData.length === 0) {
-          return res.status(400).json({ message: "No valid questions found in the file." });
-        }
-        try {
-          const insertedQuestions = await Question.insertMany(questionsData);
-          const questionIds = insertedQuestions.map((q) => q._id);
-          await Subject.findByIdAndUpdate(
-            id,
-            { $push: { questions: { $each: questionIds } } },
-            { new: true }
-          );
-          res.status(200).json({ message: "Questions uploaded successfully", insertedQuestions });
-        } catch (error) {
-          console.error("Error inserting questions:", error);
-          res.status(500).json({ message: "Failed to upload questions", error: error.message });
-        }
-      })
-      .on("error", (error) => {
-        console.error("Error parsing CSV:", error);
-        res.status(500).json({ message: "Failed to process CSV", error: error.message });
-      });
-  });
- 
-// Update question by ID
-router.put('/:subjectId/questions/:questionId', async (req, res) => {
-  const { subjectId, questionId } = req.params;
-  const updatedData = req.body;
-  try {
-    // Find the question by its ID
-    const question = await Question.findByIdAndUpdate(questionId, updatedData, { new: true });
-    if (!question) {
-      return res.status(404).json({ error: 'Question not found' });
-    }
 
-    res.status(200).json({ message: 'Question updated successfully', question });
-  } catch (error) {
-    console.error('Error updating question:', error);
-    res.status(500).json({ error: 'Failed to update question' });
-  }
+    let hasValidRow = false;
+    let isHeaderValid = true;
+
+    // Parse CSV and validate headers and rows
+    csvStream
+        .pipe(csv())
+        .on("headers", (headers) => {
+            // Validate headers
+            if (headers.length !== expectedHeaders.length || !headers.every((h, i) => h.trim() === expectedHeaders[i])) {
+                isHeaderValid = false;
+            }
+        })
+        .on("data", (row) => {
+            // Skip processing if headers are invalid
+            if (!isHeaderValid) return;
+
+            // Check if the row is empty (i.e., all fields are empty or whitespace)
+            const isEmptyRow = Object.values(row).every(value => !value.trim());
+            if (!isEmptyRow) {
+                hasValidRow = true; // At least one valid row
+                // Push valid question data to questionsData array
+                questionsData.push({ ...row, subjectId: id });
+            }
+        })
+        .on("end", async () => {
+            // If the headers are invalid
+            if (!isHeaderValid) {
+                return res.status(400).json({ message: "Invalid file headers. Please upload a valid CSV file." });
+            }
+
+            // If no valid rows are found
+            if (!hasValidRow) {
+                return res.status(400).json({ message: "File contains no valid rows after header." });
+            }
+
+            try {
+                // Insert questions into the database
+                const insertedQuestions = await Question.insertMany(questionsData);
+                const questionIds = insertedQuestions.map(q => q._id);
+
+                // Update the Subject with new question IDs
+                await Subject.findByIdAndUpdate(
+                    id,
+                    { $push: { questions: { $each: questionIds } } },
+                    { new: true }
+                );
+
+                // Return a success response
+                res.status(200).json({
+                    message: "Questions uploaded successfully",
+                    insertedQuestions,
+                });
+            } catch (error) {
+                console.error("Error inserting questions:", error);
+                res.status(500).json({
+                    message: "Failed to upload questions",
+                    error: error.message,
+                });
+            }
+        })
+        .on("error", (error) => {
+            console.error("Error parsing CSV:", error);
+            res.status(500).json({
+                message: "Failed to process CSV",
+                error: error.message,
+            });
+        });
 });
+  
 // Example of returning an array of questions
 router.get("/questions", async (req, res) => {
   const subjectId = req.query.subjectId;
@@ -165,73 +196,27 @@ router.get("/questions", async (req, res) => {
 });
 
 // Route to fetch questions for a subject
-// router.get('/subjects/:subjectId/questions', async (req, res) => {
-//   const { subjectId } = req.params;  // Ensure subjectId is a valid ObjectId
+router.get('/subjects/:subjectId/questions', async (req, res) => {
+  const { subjectId } = req.params;  // Ensure subjectId is a valid ObjectId
   
-//   try {
-//     // Ensure subjectId is a valid ObjectId
-//     if (!mongoose.Types.ObjectId.isValid(subjectId)) {
-//       return res.status(400).json({ error: 'Invalid subjectId' });
-//     }
-
-//     // Fetch subject by subjectId
-//     const subject = await Subject.findById(subjectId).populate('questions');
-    
-//     if (!subject) {
-//       return res.status(404).json({ error: 'Subject not found' });
-//     }
-
-//     res.json(subject.questions);
-//   } catch (err) {
-//     console.error(err);
-//     res.status(500).json({ error: 'Error fetching questions' });
-//   }
-// });
-
-
-// Add a new question for a subject (with image upload)
-router.post('/subjects/:subjectId/questions/add', async (req, res) => {
   try {
-    // Validate incoming data
-    validateQuestionData(req.body);
+    // Ensure subjectId is a valid ObjectId
+    if (!mongoose.Types.ObjectId.isValid(subjectId)) {
+      return res.status(400).json({ error: 'Invalid subjectId' });
+    }
 
-    // Create a new question
-    const newQuestion = new Question({
-      question: req.body.question,
-      options: req.body.options,
-      correctAns: req.body.correctAns,
-      answerDescription: req.body.answerDescription,
-      subject: req.params.subjectId,
-    });
+    // Fetch subject by subjectId
+    const subject = await Subject.findById(subjectId).populate('questions');
+    
+    if (!subject) {
+      return res.status(404).json({ error: 'Subject not found' });
+    }
 
-    // Save the question to the database
-    await newQuestion.save();
-    res.status(201).json(newQuestion);
-  } catch (error) {
-    res.status(400).json({ error: error.message });
+    res.json(subject.questions);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Error fetching questions' });
   }
 });
-// Function to validate the incoming question data
-const validateQuestionData = (data) => {
-  if (!data.question || !Array.isArray(data.question)) {
-    throw new Error('Question is required and should be an array');
-  }
-
-  if (!data.options || typeof data.options !== 'object') {
-    throw new Error('Options should be an object with keys a, b, c, d');
-  }
-
-  if (!['a', 'b', 'c', 'd'].includes(data.correctAns)) {
-    throw new Error('Correct answer should be one of a, b, c, or d');
-  }
-
-  if (!data.answerDescription || !Array.isArray(data.answerDescription)) {
-    throw new Error('Answer description is required and should be an array');
-  }
-
-  if (!data.subjectId) {
-    throw new Error('Subject ID is required');
-  }
-};
 
 module.exports = router;
