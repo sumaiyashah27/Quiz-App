@@ -1,7 +1,9 @@
 const express = require('express');
 const multer = require('multer');
 const Question = require('../models/question-model'); // Initialize the router
-const upload = multer(); // For handling file uploads
+const upload = multer({
+  limits: { fileSize: 10 * 1024 * 1024 }, // Adjust file size limit to 10MB (or higher)
+}); // For handling file uploads
 const csv = require('csv-parser');
 const stream = require('stream');
 const Subject = require("../models/subject-model");
@@ -74,6 +76,7 @@ router.get("/:id", async (req, res) => {
       res.status(500).json({ message: "Server error" });
     }
   });
+  
   // Upload route for questions CSV file
 router.post("/:id/upload", upload.single("file"), async (req, res) => {
   const { id } = req.params; // Get the subject ID from the route parameter
