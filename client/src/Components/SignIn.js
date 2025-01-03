@@ -32,7 +32,7 @@ const SignIn = () => {
   
     try {
       const response = await axios.post(
-        "http://localhost:5000/api/users/signin",
+        "/api/users/signin",
         { email, password }
       );
   
@@ -57,7 +57,7 @@ const SignIn = () => {
         }
       }
     } catch (error) {
-      console.error("Login error:", error.response ? error.response.data : error.message);
+      //console.error("Login error:", error.response ? error.response.data : error.message);
       setError("Login failed. Please check your credentials.");
     } finally {
       setLoading(false);
