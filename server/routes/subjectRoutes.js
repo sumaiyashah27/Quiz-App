@@ -1,9 +1,11 @@
 const express = require('express');
 const multer = require('multer');
 const Question = require('../models/question-model'); // Initialize the router
-const upload = multer({
-  limits: { fileSize: 10 * 1024 * 1024 }, // Adjust file size limit to 10MB (or higher)
-}); // For handling file uploads
+const storage = multer.memoryStorage();
+const upload = multer({ 
+  storage: storage, 
+  limits: { fileSize: 10 * 1024 * 1024 } // Adjust file size limit
+});// For handling file uploads
 const csv = require('csv-parser');
 const stream = require('stream');
 const Subject = require("../models/subject-model");
