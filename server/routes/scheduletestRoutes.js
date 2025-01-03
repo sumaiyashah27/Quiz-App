@@ -1,5 +1,7 @@
 const express = require('express');
 const router = express.Router();
+require('dotenv').config();
+const nodemailer = require('nodemailer');
 const ScheduleTest = require('../models/scheduletest-model');
 const Subject = require('../models/subject-model');
 const User = require('../models/user-model') // Assuming this is the Subject model
@@ -102,7 +104,6 @@ router.get("/", async (req, res) => {
   }
 });
 
-// Endpoint to update test status to "Completed"
 // Endpoint to update test status to "Completed" and set the score
 router.post('/updateTestStatus', async (req, res) => {
   const { userId, selectedCourse, selectedSubject, score } = req.body;
@@ -214,6 +215,62 @@ router.put('/', async (req, res) => {
   }
 });
 
+// Fetch test details for the given user, course, and subject
+router.get('/', async (req, res) => {
+  const { userMongoId, course, subject } = req.query;
+  try {
+    const testDetails = await ScheduleTest.findOne({
+      userMongoId,
+      selectedCourse: course,
+      selectedSubject: subject,
+    }).populate('selectedCourse selectedSubject'); // Populate course and subject fields
+    if (!testDetails) {
+      return res.status(404).json({ message: 'Test not found' });
+    }
+    return res.json({
+      questionSet: testDetails.questionSet,
+      testDate: testDetails.testDate,
+      testTime: testDetails.testTime,
+    });
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ message: 'Server error' });
+  }
+});
 
+// Send welcome email route
+// Route to send email
+router.post('/send-email', async (req, res) => {
+  const { email, subject, message, testDate, testTime } = req.body;
+
+  // Validate received data
+  if (!email || !subject || !message || !testDate || !testTime) {
+    return res.status(400).json({ message: 'All fields are required.' });
+  }
+
+  // Create email transporter
+  const transporter = nodemailer.createTransport({
+    service: 'gmail',
+    auth: {
+      user: process.env.GMAIL_USER,  // Your Gmail account
+      pass: process.env.GMAIL_PASS,  // Your Gmail app password
+    },
+  });
+
+  const mailOptions = {
+    from: process.env.GMAIL_USER,
+    to: email,
+    subject: subject,
+    text: `${message} - Test Date: ${new Date(testDate).toLocaleString()} at ${testTime}`,
+  };
+
+  try {
+    await transporter.sendMail(mailOptions);
+    res.status(200).send('Email sent successfully!');
+  } catch (error) {
+    console.error('Error sending email:', error);
+    res.status(500).send('Failed to send email.');
+  }
+});
 
 module.exports = router;

@@ -15,18 +15,18 @@ const Home = () => {
         </div>
         <div className="home-text-section">
           {firstName && (
-            <h2 className="welcome-text">Hello, {firstName}!</h2> // Welcome message
+            <h2 className="welcome-text" style={{ color: '#C80D18' }}>Hello, {firstName}!</h2>
           )}
-          <h1 className="primary-heading">Conquer Your CFA Level Exam!</h1>
+          <h1 className="primary-heading" style={{ fontSize: '2.1rem', color: '#100B5C', margin: '20px 0' }}>Ace Your CFA Exam with Confidence!</h1>
           <p className="primary-text">
-            Boost your confidence with our engaging mock tests. Prepare smarter, not harder!
+          Start your journey to becoming a CFA charterholder today. Join thousands of successful candidates who trusted us to achieve their goals.
           </p>
           <button className="about-buttons-container">
             <Link
               to={firstName ? "#bookcourse" : "/sign-in"} // Update button link
               className="secondary-button"
             >
-              {firstName ? "Book Your Test" : "Start Now"} <FiArrowRight />
+              {firstName ? "Book Test" : "Book Your Test Now"} <FiArrowRight />
             </Link>
           </button>
         </div>

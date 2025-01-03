@@ -24,9 +24,12 @@ const Userpanel = () => {
   const [selectedTest, setSelectedTest] = useState(null);
   const [errorMessage, setErrorMessage] = useState(null);
   const [error, setError] = useState(null);
-  // New state variables for storing courses and subjects
   const [courses, setCourses] = useState([]);
   const [subjects, setSubjects] = useState([]);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [hasSent24hReminder, setHasSent24hReminder] = useState(false);
+  const [hasSent1hReminder, setHasSent1hReminder] = useState(false);
+
 
   // Fetch user details, quiz enrollment data, and scheduled tests
   useEffect(() => {
@@ -46,7 +49,6 @@ const Userpanel = () => {
 
     const fetchQuizEnrollmentData = async (userMongoId) => {
       if (!userMongoId) return;
-
       try {
         const response = await axios.get(`/api/quizenroll/${userMongoId}`);
         if (Array.isArray(response.data)) {
@@ -116,6 +118,55 @@ const Userpanel = () => {
   };
   const completedTests = scheduledTests.filter(test => test.testStatus === 'Completed');
 
+   // Define the state variables
+   const [selectTest, setSelectTest] = useState(null);
+   const [remainingTime, setRemainingTime] = useState('');
+   const [showEnterButton, setShowEnterButton] = useState(false);
+
+   useEffect(() => {
+    if (selectTest?.testDate && selectTest?.testTime) {
+      // Extract the date part (date part of testDate)
+      const testDate = new Date(selectTest.testDate); 
+      const testTime = selectTest.testTime; // Time in HH:mm format
+  
+      // Split the time into hours and minutes
+      const [hours, minutes] = testTime.split(':');
+  
+      // Set the hours and minutes of the testDate to match testTime
+      testDate.setHours(hours);
+      testDate.setMinutes(minutes);
+      testDate.setSeconds(0); // Set seconds to 0 if required
+  
+      console.log('Test Date:', testDate); // Log the final test date-time object
+  
+      if (isNaN(testDate.getTime())) {
+        console.error('Invalid test date-time:', testDate); // If invalid date-time
+        return; // Return if invalid date-time to avoid further calculations
+      }
+
+      const updateRemainingTime = () => {
+        const now = new Date();
+        const timeDiff = testDate - now;
+  
+        if (timeDiff <= 0) {
+          setRemainingTime('');
+          setShowEnterButton(true); // Show Enter Room button
+        } else {
+          setShowEnterButton(false); // Hide Enter Room button
+          const hoursRemaining = Math.floor(timeDiff / (1000 * 60 * 60));
+          const minutesRemaining = Math.floor((timeDiff % (1000 * 60 * 60)) / (1000 * 60));
+          const secondsRemaining = Math.floor((timeDiff % (1000 * 60)) / 1000);
+          setRemainingTime(`${hoursRemaining}h ${minutesRemaining}m ${secondsRemaining}s`);
+        }
+      };
+  
+      updateRemainingTime();
+      const interval = setInterval(updateRemainingTime, 1000);
+  
+      return () => clearInterval(interval); // Cleanup on unmount
+    }
+  }, [selectTest]);
+
   const handleConfirmSchedule = async () => {
     // Validate if the selected time is in the past
     const selectedDateTime = new Date(`${testDate}T${testTime}`);
@@ -183,41 +234,6 @@ const Userpanel = () => {
       },
     });
 };
-
-  const handleAttendTest = async (course, subject) => {
-    try {
-      // Make a DELETE request to remove the specific subject from the backend
-      const response = await axios.delete(`/api/quizenroll/${userMongoId}/${course}/${subject}`);
-      if (response.status === 200) {
-        console.log('Subject removed successfully:', response.data);
-  
-        // Update the local state to reflect the change
-        setQuizEnrollmentData((prevData) =>
-          prevData.map((enrollment) =>
-            enrollment.selectedCourse === course
-              ? {
-                  ...enrollment,
-                  selectedSubject: enrollment.selectedSubject.filter((sub) => sub !== subject),
-                }
-              : enrollment
-          )
-        );
-        // Check if subjects for this course are empty, and if so, remove the entire enrollment entry
-        setQuizEnrollmentData((prevData) =>
-          prevData.filter((enrollment) =>
-            enrollment.selectedCourse !== course || enrollment.selectedSubject.length > 0
-          )
-        );
-        // Redirect to the test page
-        navigate(`/test/${course}/${subject}`, {
-          state: { userId: userMongoId, userName, userEmail, selectedCourse: course, selectedSubject: subject },
-        });
-      }
-    } catch (error) {
-      console.error('Error removing subject:', error);
-      alert('Failed to remove subject. Please try again later.');
-    }
-  };
   // Modify the isTestScheduled function
   const isTestScheduled = (course, subject) => {
     // Check if the test is scheduled or completed for the current user and selected course/subject
@@ -245,6 +261,93 @@ const Userpanel = () => {
     const subject = subjects.find(s => s._id === subjectId);
     return subject ? subject.name : 'Unknown Subject';
   };
+;
+
+const handleAttendTest = (course, subject) => {
+  console.log('Attending Test for:', course, subject);
+
+  // Find the scheduled test that matches the clicked course and subject
+  const scheduledTest = scheduledTests.find(
+    (test) => test.selectedCourse === course && test.selectedSubject === subject && test.testStatus === 'Scheduled'
+  );
+
+  if (scheduledTest) {
+    setSelectTest(scheduledTest);
+    // If a match is found, update the modal with the test details
+    setQuestionSet(scheduledTest.questionSet);
+    setTestTime(scheduledTest.testTime);
+    setTestDate(scheduledTest.testDate);
+
+    // Open the modal
+    setIsModalOpen(true);
+  } else {
+    console.error('Test not found for the given course and subject.');
+  }
+};
+
+const handleCloseModal = () => {
+  setIsModalOpen(false); // Close the modal
+};
+
+const handleEnterRoom = async (course, subject) => {
+  console.log('selectTest object:', selectTest);
+
+  try {
+    // Make a DELETE request to remove the specific subject from the backend
+    const response = await axios.delete(`/api/quizenroll/${userMongoId}/${course}/${subject}`);
+    if (response.status === 200) {
+      console.log('Subject removed successfully:', response.data);
+
+      // Update the local state to reflect the change
+      setQuizEnrollmentData((prevData) =>
+        prevData.map((enrollment) =>
+          enrollment.selectedCourse === course
+            ? {
+                ...enrollment,
+                selectedSubject: enrollment.selectedSubject.filter((sub) => sub !== subject),
+              }
+            : enrollment
+        )
+      );
+      // Check if subjects for this course are empty, and if so, remove the entire enrollment entry
+      setQuizEnrollmentData((prevData) =>
+        prevData.filter((enrollment) =>
+          enrollment.selectedCourse !== course || enrollment.selectedSubject.length > 0
+        )
+      );
+      // Redirect to the test page
+      navigate(`/test/${course}/${subject}`, {
+        state: { userId: userMongoId, userName, userEmail, selectedCourse: course, selectedSubject: subject },
+      });
+    }
+  } catch (error) {
+    console.error('Error removing subject:', error);
+    alert('Failed to remove subject. Please try again later.');
+  }
+};
+
+const sendTestReminderEmails = async () => {
+  try {
+    console.log('Sending test reminder emails...');
+    const response = await axios.post('/api/email/send-reminder-email');
+    
+    // Log the success response
+    console.log('Response:', response.data);
+
+    if (response.data.message) {
+      console.log(response.data.message);  // Notify user about the success
+    } else {
+      console.log('Something went wrong. Please try again later.');
+    }
+  } catch (error) {
+    console.error('Error sending reminder emails:', error.response ? error.response.data : error.message);
+  }
+};
+
+useEffect(() => {
+  sendTestReminderEmails();
+}, []); 
+  // You can call this based on your conditions (e.g., when the page loads or after a certain event)
   
   return (
     <div style={{ padding: '30px', maxWidth: '1200px', margin: '0 auto', backgroundColor: '#f4f4f9'}}>
@@ -273,25 +376,6 @@ const Userpanel = () => {
           <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'center', gap: '20px' }}>
             {activeTests.map((test, index) => {
               const isScheduled = isTestScheduled(test.course, test.subject);
-              const currentDateTime = new Date(); // Current time
-              const testDateTime = new Date(`${test.testDate}T${test.testTime}`); // Test time
-              const timeDifference = testDateTime - currentDateTime; // Time difference in milliseconds
-
-              // Determine if the test is in the past or future
-              const isPastTest = timeDifference < 0; // Past test check
-              const isFutureTest = timeDifference > 0; // Future test check
-              
-              // Countdown logic for future tests
-              const calculateTimeLeft = () => {
-                const days = Math.floor(timeDifference / (1000 * 60 * 60 * 24));
-                const hours = Math.floor((timeDifference / (1000 * 60 * 60)) % 24);
-                const minutes = Math.floor((timeDifference / (1000 * 60)) % 60);
-                const seconds = Math.floor((timeDifference / 1000) % 60);
-                return `${days}d ${hours}h ${minutes}m ${seconds}s`;
-              };
-
-              const timeLeft = isFutureTest ? calculateTimeLeft() : null; // Countdown for future tests
-
               return (
                 <div key={index} style={{ padding: '20px', backgroundColor: '#ffffff', borderRadius: '15px', boxShadow: '0 6px 15px rgba(0, 0, 0, 0.15)', width: '300px', textAlign: 'center', transition: 'transform 0.3s, box-shadow 0.3s', overflow: 'hidden' }} onMouseEnter={(e) => { e.currentTarget.style.transform = 'scale(1.05)'; e.currentTarget.style.boxShadow = '0 8px 20px rgba(0, 0, 0, 0.3)'; }} onMouseLeave={(e) => { e.currentTarget.style.transform = 'scale(1)'; e.currentTarget.style.boxShadow = '0 6px 15px rgba(0, 0, 0, 0.15)'; }}>
                   <div style={{ fontSize: '1.2rem', fontWeight: 'bold', color: '#34495e', marginBottom: '15px' }}>
@@ -299,36 +383,15 @@ const Userpanel = () => {
                     <p>{getSubjectName(test.subject)}</p>
                   </div>
                   <div style={{ display: 'flex', justifyContent: 'center', gap: '10px' }}>
-                    {isScheduled && !isPastTest && !isFutureTest ? (
-                      // Test scheduled, and matching the current time
+                    {isScheduled ? (
                       <>
-                        <button style={{ fontSize: '1rem', backgroundColor: '#3498db', color: 'white', padding: '10px 10px', border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold', transition: 'background-color 0.3s, transform 0.2s', display: 'flex', alignItems: 'center', gap: '8px' }}   onMouseEnter={(e) => (e.target.style.backgroundColor = '#2980b9')}   onMouseLeave={(e) => (e.target.style.backgroundColor = '#3498db')}   onClick={() => handleAttendTest(test.course, test.subject)}>
-                          <FontAwesomeIcon icon={faEdit} style={{ animation: 'bounce 1s ease-in-out infinite' }} /> Attend Test
-                        </button>
-                        <button style={{ fontSize: '1rem', backgroundColor: '#2ecc71', color: 'white', padding: '10px 10px', border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold', transition: 'background-color 0.3s, transform 0.2s', display: 'flex', alignItems: 'center', gap: '8px' }}  onMouseEnter={(e) => (e.target.style.backgroundColor = '#27ae60')}  onMouseLeave={(e) => (e.target.style.backgroundColor = '#2ecc71')}  onClick={() => handleDelayTest(test.course, test.subject)}>
-                          <FontAwesomeIcon icon={faClock} style={{ animation: 'spin 1s linear infinite' }} /> Delay Test
-                        </button>
-                      </>
-                    ) : isFutureTest ? (
-                      // Future test, show countdown instead of "Attend Test"
-                      <>
-                        <p style={{ fontSize: '1rem', color: '#16a085', fontWeight: 'bold' }}>Time Left: {timeLeft}</p>
-                        <button style={{ fontSize: '1rem', backgroundColor: '#2ecc71', color: 'white', padding: '10px 10px', border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold', transition: 'background-color 0.3s, transform 0.2s', display: 'flex', alignItems: 'center', gap: '8px' }}  onMouseEnter={(e) => (e.target.style.backgroundColor = '#27ae60')}  onMouseLeave={(e) => (e.target.style.backgroundColor = '#2ecc71')}  onClick={() => handleDelayTest(test.course, test.subject)}>
-                          <FontAwesomeIcon icon={faClock} style={{ animation: 'spin 1s linear infinite' }} /> Delay Test
-                        </button>
-                      </>
-                    ) : isPastTest ? (
-                      // Past test, show "Schedule your test" button
-                      <>
-                        <p style={{ fontSize: '1rem', color: '#e74c3c', fontWeight: 'bold' }}>Schedule your test</p>
-                        <button style={{ fontSize: '1rem', backgroundColor: '#2ecc71', color: 'white', padding: '10px 10px', border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold', transition: 'background-color 0.3s, transform 0.2s', display: 'flex', alignItems: 'center', gap: '8px' }}  onMouseEnter={(e) => (e.target.style.backgroundColor = '#27ae60')}  onMouseLeave={(e) => (e.target.style.backgroundColor = '#2ecc71')}  onClick={() => handleDelayTest(test.course, test.subject)}>
-                          <FontAwesomeIcon icon={faClock} style={{ animation: 'spin 1s linear infinite' }} /> Delay Test
-                        </button>
+                        <button style={{ fontSize: '1rem', backgroundColor: '#3498db', color: 'white', padding: '10px 10px', border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold', transition: 'background-color 0.3s, transform 0.2s', display: 'flex', alignItems: 'center', gap: '8px' }} onMouseEnter={(e) => (e.target.style.backgroundColor = '#2980b9')} onMouseLeave={(e) => (e.target.style.backgroundColor = '#3498db')} onClick={() => handleAttendTest(test.course, test.subject)}><FontAwesomeIcon icon={faEdit} style={{ animation: 'bounce 1s ease-in-out infinite' }} /> Attend Test</button>
+                        <button style={{ fontSize: '1rem', backgroundColor: '#2ecc71', color: 'white', padding: '10px 10px', border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold', transition: 'background-color 0.3s, transform 0.2s', display: 'flex', alignItems: 'center', gap: '8px' }} onMouseEnter={(e) => (e.target.style.backgroundColor = '#27ae60')} onMouseLeave={(e) => (e.target.style.backgroundColor = '#2ecc71')} onClick={() => handleDelayTest(test.course, test.subject)}><FontAwesomeIcon icon={faClock} style={{ animation: 'spin 1s linear infinite' }} /> Delay Test</button>
                       </>
                     ) : (
-                      <button style={{ fontSize: '1rem', backgroundColor: '#f1c40f', color: 'white', padding: '10px 15px', border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold', transition: 'background-color 0.3s, transform 0.2s', display: 'flex', alignItems: 'center', gap: '8px' }}  onMouseEnter={(e) => (e.target.style.backgroundColor = '#f39c12')}  onMouseLeave={(e) => (e.target.style.backgroundColor = '#f1c40f')}  onClick={() => handleScheduleTest(test.course, test.subject)}>
-                        <FontAwesomeIcon icon={faCalendarPlus} style={{ animation: 'pulse 1.5s infinite' }} /> Schedule Test
-                      </button>
+                      <>
+                        <button style={{ fontSize: '1rem', backgroundColor: '#f1c40f', color: 'white', padding: '10px 15px', border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold', transition: 'background-color 0.3s, transform 0.2s', display: 'flex', alignItems: 'center', gap: '8px' }} onMouseEnter={(e) => (e.target.style.backgroundColor = '#f39c12')} onMouseLeave={(e) => (e.target.style.backgroundColor = '#f1c40f')} onClick={() => handleScheduleTest(test.course, test.subject)}><FontAwesomeIcon icon={faCalendarPlus} style={{ animation: 'pulse 1.5s infinite' }} /> Schedule Test</button>
+                      </>
                     )}
                   </div>
                 </div>
@@ -337,6 +400,30 @@ const Userpanel = () => {
           </div>
         )}
       </div>
+       {isModalOpen && (
+        <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0, 0, 0, 0.5)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 1000 }}>
+          <div style={{ backgroundColor: '#fff', padding: '20px', borderRadius: '8px', maxWidth: '500px', width: '100%', boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)', textAlign: 'center' }}>
+            <h2>Test Details</h2>
+            <p><strong>Course:</strong> {selectTest.selectedCourse}</p>
+            <p><strong>Subject:</strong> {selectTest.selectedSubject}</p>
+            <p><strong>Question Set:</strong> {selectTest.questionSet}</p>
+            <p><strong>Test Time:</strong> {selectTest.testTime}</p>
+            <p><strong>Test Date:</strong> {new Date(selectTest.testDate).toLocaleDateString()}</p>
+            {!showEnterButton && remainingTime && <p style={{ color: 'red', fontWeight: 'bold' }}>Countdown: {remainingTime}</p>}
+            {showEnterButton && (
+              <button onClick={() => handleEnterRoom(selectTest.selectedCourse, selectTest.selectedSubject)} 
+                style={{ padding: '10px 20px', backgroundColor: '#3498db', color: 'white', border: 'none', borderRadius: '8px', cursor: 'pointer', fontSize: '1rem', marginTop: '20px' }}>
+                Enter Room
+              </button>
+            )}
+            <button onClick={handleCloseModal} 
+              style={{ padding: '10px 20px', backgroundColor: '#e74c3c', color: 'white', border: 'none', borderRadius: '8px', cursor: 'pointer', fontSize: '1rem', marginTop: '10px', marginLeft: '10px' }}>
+              Close
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* Modal for scheduling the test */}
       {modalOpen && (
         <div style={{ position: 'fixed', top: '0', left: '0', right: '0', bottom: '0', backgroundColor: 'rgba(0, 0, 0, 0.5)', display: 'flex', justifyContent: 'center', alignItems: 'center', padding: '20px' }}>
@@ -364,8 +451,8 @@ const Userpanel = () => {
                 style={{ width: '100%', padding: '8px', marginTop: '10px', border: '1px solid #ddd', borderRadius: '6px', fontSize: '1rem', color: '#333', backgroundColor: '#f9f9f9', boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)' }}
               >
                 <option value="30">30 Questions</option>
+                <option value="60">60 Questions</option>
                 <option value="90">90 Questions</option>
-                <option value="120">120 Questions</option>
               </select>
             </div>
 
@@ -399,8 +486,7 @@ const Userpanel = () => {
                 style={{ fontSize: '1.1rem', backgroundColor: '#28a745', color: 'white', padding: '12px 20px', border: 'none', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold', width: '100%', transition: 'transform 0.3s ease' }}
                 onMouseEnter={(e) => (e.target.style.transform = 'scale(1.05)')}
                 onMouseLeave={(e) => (e.target.style.transform = 'scale(1)')}
-              >
-                Confirm
+              >Confirm
               </button>
             </div>
           </div>
@@ -445,34 +531,78 @@ const Userpanel = () => {
       )}
       {/* Display past attempts (Completed tests) */}
       <div style={{ marginTop: '20px' }}>
-        <h3 style={{ fontSize: '1.7rem', fontWeight: 'bold', color: '#333', textAlign: 'center' }}>Past Attempts</h3>
-        <table style={{ width: '100%', borderCollapse: 'collapse', marginTop: '20px' }}>
+        <h3 style={{ fontSize: '2rem', fontWeight: 'bold', color: '#333', textAlign: 'center', marginBottom: '20px', textTransform: 'uppercase' }}>
+          Past Attempts
+        </h3>
+        <table style={{ width: '100%', borderCollapse: 'collapse', marginTop: '20px', borderRadius: '8px', boxShadow: '0px 4px 8px rgba(0, 0, 0, 0.1)', overflow: 'hidden' }}>
           <thead>
-            <tr>
-              <th style={{ fontSize: '1.2rem', padding: '8px 10px', textAlign: 'center', borderBottom: '2px solid #ddd' }}>Course</th>
-              <th style={{ fontSize: '1.2rem', padding: '8px 10px', textAlign: 'center', borderBottom: '2px solid #ddd' }}>Subject</th>
-              <th style={{ fontSize: '1.2rem', padding: '8px 10px', textAlign: 'center', borderBottom: '2px solid #ddd' }}>Score</th>
+            <tr style={{ backgroundColor: '#100B5C', color: '#FFDC5C', textAlign: 'center', fontSize: '1.2rem', padding: '12px', textTransform: 'uppercase' }}>
+              <th style={{ padding: '12px', fontWeight: 'bold', borderBottom: '2px solid #ddd' }}>Course</th>
+              <th style={{ padding: '12px', fontWeight: 'bold', borderBottom: '2px solid #ddd' }}>Subject</th>
+              <th style={{ padding: '12px', fontWeight: 'bold', borderBottom: '2px solid #ddd' }}>Score</th>
+              <th style={{ padding: '12px', fontWeight: 'bold', borderBottom: '2px solid #ddd' }}>Grade</th>
+              <th style={{ padding: '12px', fontWeight: 'bold', borderBottom: '2px solid #ddd' }}>Status</th>
             </tr>
           </thead>
           <tbody>
             {completedTests.length === 0 ? (
               <tr>
-                <td colSpan="3" style={{ textAlign: 'center', padding: '10px' }}>No past attempts found</td>
+                <td colSpan="5" style={{ textAlign: 'center', padding: '15px', color: '#777' }}>No past attempts found</td>
               </tr>
             ) : (
-              completedTests.map((test, index) => (
-                <tr key={index} style={{ borderBottom: '1px solid #ddd' }}>
-                  <td style={{ fontSize: '1.1rem', padding: '8px 10px', textAlign: 'center' }}>
-                    {getCourseName(test.selectedCourse)}
-                  </td>
-                  <td style={{ fontSize: '1.1rem', padding: '8px 10px', textAlign: 'center' }}>
-                    {getSubjectName(test.selectedSubject)}
-                  </td>
-                  <td style={{ fontSize: '1.1rem', padding: '8px 10px', textAlign: 'center' }}>
-                    {test.score} {/* Display the score for completed tests */}
-                  </td>
-                </tr>
-              ))
+              completedTests.map((test, index) => {
+                const totalQuestions = test.questionSet;
+                const solvedPercentage = (test.score / totalQuestions) * 100;
+
+                let grade = '';
+                let status = '';
+                let gradeColor = '';
+                if (solvedPercentage > 90) {
+                  grade = 'AAA';
+                  status = 'Exceptional performance';
+                  gradeColor = '#4CAF50'; // Green
+                } else if (solvedPercentage >= 80) {
+                  grade = 'AA';
+                  status = 'Outstanding Effort';
+                  gradeColor = '#8BC34A'; // Light Green
+                } else if (solvedPercentage >= 70) {
+                  grade = 'BBB';
+                  status = 'Passed with confidence';
+                  gradeColor = '#FFC107'; // Yellow
+                } else if (solvedPercentage >= 60) {
+                  grade = 'BB';
+                  status = 'Borderline safe';
+                  gradeColor = '#FF9800'; // Orange
+                } else if (solvedPercentage >= 50) {
+                  grade = 'C';
+                  status = 'Needs improvement';
+                  gradeColor = '#FF5722'; // Deep Orange
+                } else {
+                  grade = 'D';
+                  status = 'Reassess and rebuild';
+                  gradeColor = '#F44336'; // Red
+                }
+
+                return (
+                  <tr key={index} style={{ backgroundColor: index % 2 === 0 ? '#FFDC5C' : '#FFFFFF', transition: 'background-color 0.3s ease', cursor: 'pointer' }}>
+                    <td style={{ fontSize: '1.1rem', padding: '12px', textAlign: 'center', backgroundColor: '#f9f9f9', color: '#333', fontWeight: 'bold' }}>
+                      {getCourseName(test.selectedCourse)} <br />
+                    </td>
+                    <td style={{ fontSize: '1.1rem', padding: '12px', textAlign: 'center', backgroundColor: '#f9f9f9', color: '#333' }}>
+                      {getSubjectName(test.selectedSubject)}
+                    </td>
+                    <td style={{ fontSize: '1.1rem', padding: '12px', textAlign: 'center', backgroundColor: '#f9f9f9', color: '#333' }}>
+                      {test.score} / {totalQuestions}
+                    </td>
+                    <td style={{ fontSize: '1.1rem', padding: '12px', textAlign: 'center', backgroundColor: '#f9f9f9', color: gradeColor, fontWeight: 'bold' }}>
+                      {grade}
+                    </td>
+                    <td style={{ fontSize: '1.1rem', padding: '12px', textAlign: 'center', backgroundColor: '#f9f9f9', color: '#333' }}>
+                      {status}
+                    </td>
+                  </tr>
+                );
+              })
             )}
           </tbody>
         </table>

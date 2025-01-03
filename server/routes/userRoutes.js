@@ -147,4 +147,73 @@ router.get('/', async (req, res) => {
     }
 });
 
+router.post('/send-email', async (req, res) => {
+    const { email, firstName } = req.body;
+  
+    const transporter = nodemailer.createTransport({
+      host: 'smtp.yourhosting.com',
+      port: 587,
+      secure: false,
+      auth: {
+        user: 'kunal@edumocks.com',
+        pass: 'fjbs tkuu slig zmum',
+      },
+    });
+  
+    const mailOptions = {
+      from: '"Edumocks" <kunal@edumocks.com>',
+      to: email,
+      subject: 'Welcome to Edumocks!',
+      html: `<p>Hi ${firstName},</p><p>Welcome to Edumocks! Start practicing CFA level exams today at <a href="https://edumocks.com">Edumocks</a>.</p>`,
+    };
+  
+    try {
+      await transporter.sendMail(mailOptions);
+      res.status(200).send({ message: 'Welcome email sent!' });
+    } catch (error) {
+      console.error('Error sending email:', error);
+      res.status(500).send({ message: 'Failed to send email' });
+    }
+  });
+
+// Email verification route
+router.post("/verify-email", async (req, res) => {
+    const { email } = req.body;
+
+    try {
+        const user = await User.findOne({ email });
+        if (!user) {
+            return res.status(404).json({ message: "Email not found" });
+        }
+
+        res.status(200).json({ success: true, message: "Email verified successfully." });
+    } catch (error) {
+        console.error("Error during email verification:", error);
+        res.status(500).json({ message: "Server error during email verification", error: error.message });
+    }
+});
+
+// Password reset route
+router.post("/reset-password", async (req, res) => {
+    const { email, newPassword } = req.body;
+
+    try {
+        // Find the user by email
+        const user = await User.findOne({ email });
+        if (!user) {
+            return res.status(404).json({ message: "Email not found" });
+        }
+
+        // If you don't want to re-hash, just directly store the newPassword
+        user.password = newPassword;
+
+        // Save the user with the new password (no hashing)
+        await user.save();
+
+        res.status(200).json({ message: "Password reset successfully." });
+    } catch (error) {
+        console.error("Error during password reset:", error);
+        res.status(500).json({ message: "Server error during password reset", error: error.message });
+    }
+});
 module.exports = router;

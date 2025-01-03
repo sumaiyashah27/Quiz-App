@@ -22,7 +22,7 @@ const Adminpanel = () => {
     { name: 'Student', panel: 'student', icon: faUser },
     { name: 'Course', panel: 'course', icon: faBook },
     { name: 'Subject', panel: 'subject', icon: faChalkboardTeacher },
-    { name: 'Images', panel: 'images', icon: faImage }, 
+    { name: 'Images', panel: 'images', icon: faImage },
     { name: 'QuizEnroll', panel: 'quizenroll', icon: faClipboardList },
   ];
 

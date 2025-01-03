@@ -20,7 +20,8 @@ const SignUp = () => {
 
   const handleFocus = (field) => setInputBg((prev) => ({ ...prev, [field]: '#e8f0fe' }));
   const handleBlur = (field) => setInputBg((prev) => ({ ...prev, [field]: '#fff' }));
-
+  const [error, setError] = useState('');
+  
   const handleInputs = (e) => {
     let name = e.target.name;
     let value = e.target.value;
@@ -37,7 +38,7 @@ const SignUp = () => {
     e.preventDefault();
 
     if (user.password !== user.confirmPassword) {
-      alert('Passwords do not match!');
+      setError('Passwords do not match!');
       return;
     }
 
@@ -55,15 +56,40 @@ const SignUp = () => {
 
       const data = await response.json();
       if (response.ok) {
-        alert(data.message); // Successful registration
+        setError(''); // Successful registration
+        await sendWelcomeEmail(user.email, user.firstName);
         navigate('/sign-in'); // Redirect to sign-in page after successful signup
       } else {
-        alert(data.message || 'Registration failed');
+        setError(data.message || 'Registration failed');
       }
     } catch (error) {
       console.error('Error during registration:', error);
+      setError('An error occurred during registration');
     }
   };
+  // Send the welcome email via backend API call
+  const sendWelcomeEmail = async (email, firstName) => {
+    try {
+      console.log('Sending welcome email to:', email, 'with first name:', firstName); // Add this log
+      const response = await fetch('/api/email/send-email', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email: email, firstName: firstName }),
+      });
+  
+      const data = await response.json();
+      if (!response.ok) {
+        console.error('Failed to send welcome email:', data.message);
+      } else {
+        console.log('Welcome email sent successfully:', data.message);
+      }
+    } catch (error) {
+      console.error('Error sending welcome email:', error);
+    }
+  };
+  
 
   const responseGoogle = (credentialResponse) => {
     if (credentialResponse.credential) {
@@ -124,6 +150,7 @@ const SignUp = () => {
           </div>
           <button type="submit" onClick={PostData} style={buttonStyles}>Sign Up</button>
         </form>   
+        {error && <p style={{ color: 'red', textAlign: 'center' }}>{error}</p>} {/* Error message display */}
 
         <div style={googleButtonContainerStyles}>
           <GoogleLogin onSuccess={responseGoogle}  onError={responseGoogle}  style={googleButtonStyles} />

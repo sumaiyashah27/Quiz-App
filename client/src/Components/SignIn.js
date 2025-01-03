@@ -12,6 +12,7 @@ const SignIn = () => {
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
   const location = useLocation(); // Capture state passed with navigation
+  const [error, setError] = useState('');
 
   const togglePasswordVisibility = () => {
     setShowPassword((prev) => !prev);
@@ -30,7 +31,10 @@ const SignIn = () => {
     setLoading(true);
   
     try {
-      const response = await axios.post("/api/users/signin", { email, password });
+      const response = await axios.post(
+        "http://localhost:5000/api/users/signin",
+        { email, password }
+      );
   
       if (response.data.message === "Login successful") {
         const { userId, firstName } = response.data;
@@ -53,8 +57,8 @@ const SignIn = () => {
         }
       }
     } catch (error) {
-      console.error("Login error:", error.message);
-      alert("Login failed. Please check your credentials.");
+      console.error("Login error:", error.response ? error.response.data : error.message);
+      setError("Login failed. Please check your credentials.");
     } finally {
       setLoading(false);
     }
@@ -88,6 +92,7 @@ const SignIn = () => {
     <GoogleOAuthProvider clientId="1066864495489-a36j2vv904kp4tkptnvo80gsp40stnca.apps.googleusercontent.com">
       <div style={{ padding: '20px', maxWidth: '400px', margin: 'auto' }}>
         <h1 style={{ textAlign: 'center' }}>Sign In</h1>
+        {error && <div style={{ color: 'red', textAlign: 'center', marginBottom: '15px' }}>{error}</div>} {/* Display error */}
         <form style={{ display: 'flex', flexDirection: 'column' }} onSubmit={handleLogin}>
           <div style={{ marginBottom: '15px' }}>
             <input

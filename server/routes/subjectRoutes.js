@@ -1,15 +1,12 @@
 const express = require('express');
+const multer = require('multer');
 const Question = require('../models/question-model'); // Initialize the router
-const Subject = require('../models/subject-model');
+const upload = multer(); // For handling file uploads
 const csv = require('csv-parser');
 const stream = require('stream');
-const path = require('path');
-const multer = require('multer');
+const Subject = require("../models/subject-model");
 
 const router = express.Router();
-// Set up storage configuration
-const storage = multer.memoryStorage();  // Use memory storage for in-memory file handling
-const upload = multer({ storage: storage });  
 
 // Get all subjects with questions
 router.get("/", async (req, res) => {
@@ -21,7 +18,6 @@ router.get("/", async (req, res) => {
         res.status(500).json({ message: "Error fetching subjects", error: error.message });
     }
 });
-
  // Add a new subject
 router.post("/", async (req, res) => {
     const { name, price, questions = [] } = req.body; // Removed chapters, now using questions
@@ -37,7 +33,6 @@ router.post("/", async (req, res) => {
       res.status(500).json({ message: "Error adding subject", error: error.message });
     }
   });
-
 // Update a subject by ID
 router.put("/:id", async (req, res) => {
   const { id } = req.params;
@@ -79,99 +74,156 @@ router.get("/:id", async (req, res) => {
       res.status(500).json({ message: "Server error" });
     }
   });
-  router.post("/:id/upload", upload.single('file'), async (req, res) => {
-    const { id } = req.params;
+  // Upload route for questions CSV file
+router.post("/:id/upload", upload.single("file"), async (req, res) => {
+  const { id } = req.params; // Get the subject ID from the route parameter
 
-    // Fixed header array: The headers your CSV file should have.
-    const expectedHeaders = [
-        "questionText1", "questionImage1", "questionTable1",
-        "questionText2", "questionImage2", "questionTable2",
-        "questionText3", "questionImage3", "questionTable3",
-        "a", "b", "c", "d", "correctAns",
-        "answerDescriptionText1", "answerDescriptionImage1", "answerDescriptionTable1",
-        "answerDescriptionText2", "answerDescriptionImage2", "answerDescriptionTable2",
-        "answerDescriptionText3", "answerDescriptionImage3", "answerDescriptionTable3"
-    ];
+  // Validate uploaded file
+  if (!req.file) {
+      return res.status(400).json({ message: "No file uploaded" });
+  }
 
-    // Check if file is uploaded
-    if (!req.file) {
-        return res.status(400).json({ message: "No file uploaded" });
+  const questionsData = [];
+  const csvStream = new stream.Readable();
+  csvStream.push(req.file.buffer.toString());
+  csvStream.push(null);
+
+  let isHeaderValid = true;
+  let hasValidRow = false;
+
+  // Parse the CSV
+  csvStream
+      .pipe(csv())
+      .on("headers", (headers) => {
+          // Validate if the headers match your schema (without 'subject' field in CSV)
+          const expectedHeaders = [
+              "questionText1", "questionImage1", "questionTable1",
+              "questionText2", "questionImage2", "questionTable2",
+              "questionText3", "questionImage3", "questionTable3",
+              "a", "b", "c", "d", "correctAns",
+              "answerDescriptionText1", "answerDescriptionImage1", "answerDescriptionTable1",
+              "answerDescriptionText2", "answerDescriptionImage2", "answerDescriptionTable2",
+              "answerDescriptionText3", "answerDescriptionImage3", "answerDescriptionTable3"
+          ];
+
+          if (
+              headers.length !== expectedHeaders.length ||
+              !headers.every((h, i) => h.trim() === expectedHeaders[i])
+          ) {
+              isHeaderValid = false;
+          }
+      })
+      .on("data", (row) => {
+          if (!isHeaderValid) return;
+
+          // Skip empty rows
+          const isEmptyRow = Object.values(row).every((value) => !value.trim());
+          if (!isEmptyRow) {
+              hasValidRow = true;
+
+              // Transform CSV row to match the schema, without the 'subject' field from CSV
+              const question = {
+                questionText1: row.questionText1 || null,
+                questionImage1: row.questionImage1 || null,
+                questionTable1: row.questionTable1 || null,
+              
+                questionText2: row.questionText2 || null,
+                questionImage2: row.questionImage2 || null,
+                questionTable2: row.questionTable2 || null,
+              
+                questionText3: row.questionText3 || null,
+                questionImage3: row.questionImage3 || null,
+                questionTable3: row.questionTable3 || null,
+              
+                options: {
+                  a: row.a || null,
+                  b: row.b || null,
+                  c: row.c || null,
+                  d: row.d || null,
+                },
+                correctAns: row.correctAns || null,
+              
+                answerDescriptionText1: row.answerDescriptionText1 || null,
+                answerDescriptionImage1: row.answerDescriptionImage1 || null,
+                answerDescriptionTable1: row.answerDescriptionTable1 || null,
+              
+                answerDescriptionText2: row.answerDescriptionText2 || null,
+                answerDescriptionImage2: row.answerDescriptionImage2 || null,
+                answerDescriptionTable2: row.answerDescriptionTable2 || null,
+              
+                answerDescriptionText3: row.answerDescriptionText3 || null,
+                answerDescriptionImage3: row.answerDescriptionImage3 || null,
+                answerDescriptionTable3: row.answerDescriptionTable3 || null,
+              
+                subjectId: id,  // Correctly set to `subjectId` based on the schema
+              };              
+
+              questionsData.push(question);
+          }
+      })
+      .on("end", async () => {
+          if (!isHeaderValid) {
+              return res.status(400).json({
+                  message: "Invalid file headers. Please upload a valid CSV file.",
+              });
+          }
+
+          if (!hasValidRow) {
+              return res.status(400).json({
+                  message: "No valid rows found in the file.",
+              });
+          }
+
+          try {
+              // Insert questions into the database
+              const insertedQuestions = await Question.insertMany(questionsData);
+
+              // Update the subject with new questions
+              const questionIds = insertedQuestions.map((q) => q._id);
+              await Subject.findByIdAndUpdate(
+                  id,
+                  { $push: { questions: { $each: questionIds } } },
+                  { new: true }
+              );
+
+              res.status(200).json({
+                  message: "Questions uploaded successfully",
+                  insertedQuestions,
+              });
+          } catch (error) {
+              console.error("Error inserting questions:", error);
+              res.status(500).json({
+                  message: "Failed to upload questions",
+                  error: error.message,
+              });
+          }
+      })
+      .on("error", (error) => {
+          console.error("Error parsing CSV:", error);
+          res.status(500).json({
+              message: "Failed to process CSV",
+              error: error.message,
+          });
+      });
+});
+ 
+// Update question by ID
+router.put('/:subjectId/questions/:questionId', async (req, res) => {
+  const { subjectId, questionId } = req.params;
+  const updatedData = req.body;
+  try {
+    // Find the question by its ID
+    const question = await Question.findByIdAndUpdate(questionId, updatedData, { new: true });
+    if (!question) {
+      return res.status(404).json({ error: 'Question not found' });
     }
 
-    const questionsData = [];
-    const csvStream = new stream.Readable();
-    csvStream.push(req.file.buffer.toString());
-    csvStream.push(null);
-
-    let hasValidRow = false;
-    let isHeaderValid = true;
-
-    // Parse CSV and validate headers and rows
-    csvStream
-        .pipe(csv())
-        .on("headers", (headers) => {
-            // Validate headers
-            if (headers.length !== expectedHeaders.length || !headers.every((h, i) => h.trim() === expectedHeaders[i])) {
-                isHeaderValid = false;
-            }
-        })
-        .on("data", (row) => {
-            // Skip processing if headers are invalid
-            if (!isHeaderValid) return;
-
-            // Check if the row is empty (i.e., all fields are empty or whitespace)
-            const isEmptyRow = Object.values(row).every(value => !value.trim());
-            if (!isEmptyRow) {
-                hasValidRow = true; // At least one valid row
-                // Push valid question data to questionsData array
-                questionsData.push({ ...row, subjectId: id });
-            }
-        })
-        .on("end", async () => {
-            // If the headers are invalid
-            if (!isHeaderValid) {
-                return res.status(400).json({ message: "Invalid file headers. Please upload a valid CSV file." });
-            }
-
-            // If no valid rows are found
-            if (!hasValidRow) {
-                return res.status(400).json({ message: "File contains no valid rows after header." });
-            }
-
-            try {
-                // Insert questions into the database
-                const insertedQuestions = await Question.insertMany(questionsData);
-                const questionIds = insertedQuestions.map(q => q._id);
-
-                // Update the Subject with new question IDs
-                await Subject.findByIdAndUpdate(
-                    id,
-                    { $push: { questions: { $each: questionIds } } },
-                    { new: true }
-                );
-
-                // Return a success response
-                res.status(200).json({
-                    message: "Questions uploaded successfully",
-                    insertedQuestions,
-                });
-            } catch (error) {
-                console.error("Error inserting questions:", error);
-                res.status(500).json({
-                    message: "Failed to upload questions",
-                    error: error.message,
-                });
-            }
-        })
-        .on("error", (error) => {
-            console.error("Error parsing CSV:", error);
-            res.status(500).json({
-                message: "Failed to process CSV",
-                error: error.message,
-            });
-        });
+    res.status(200).json({ message: 'Question updated successfully', question });
+  } catch (error) {
+    console.error('Error updating question:', error);
+    res.status(500).json({ error: 'Failed to update question' });
+  }
 });
-  
 // Example of returning an array of questions
 router.get("/questions", async (req, res) => {
   const subjectId = req.query.subjectId;
@@ -196,50 +248,24 @@ router.get("/questions", async (req, res) => {
   }
 });
 
-// Route to fetch questions for a subject
-router.get('/subjects/:subjectId/questions', async (req, res) => {
-  const { subjectId } = req.params;  // Ensure subjectId is a valid ObjectId
+router.get('/:subjectId/questions', async (req, res) => {
+  const { subjectId } = req.params;
 
   try {
-    // Ensure subjectId is a valid ObjectId
-    if (!mongoose.Types.ObjectId.isValid(subjectId)) {
-      return res.status(400).json({ error: 'Invalid subjectId' });
-    }
-
-    // Fetch subject by subjectId
+    // Find the subject by ID and populate its questions
     const subject = await Subject.findById(subjectId).populate('questions');
-    
+
     if (!subject) {
-      return res.status(404).json({ error: 'Subject not found' });
+      return res.status(404).json({ message: 'Subject not found' });
     }
 
+    // Return the questions of the subject
     res.json(subject.questions);
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: 'Error fetching questions' });
+  } catch (error) {
+    console.error('Error fetching questions:', error);
+    res.status(500).json({ message: 'Server error' });
   }
 });
 
-// Add a new question for a subject (with image upload)
-router.post('api/subjects/:subjectId/questions/add', async (req, res) => {
-  try {
-    // Ensure subjectId is a valid ObjectId
-    if (!mongoose.Types.ObjectId.isValid(subjectId)) {
-      return res.status(400).json({ error: 'Invalid subjectId' });
-    }
-
-    // Fetch subject by subjectId
-    const subject = await Subject.findById(subjectId).populate('questions');
-    
-    if (!subject) {
-      return res.status(404).json({ error: 'Subject not found' });
-    }
-
-    res.json(subject.questions);
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: 'Error fetching questions' });
-  }
-});
 
 module.exports = router;

@@ -27,7 +27,7 @@ const Subject = () => {
   const fetchSubjects = async () => {
     setLoading(true);
     try {
-      const { data } = await axios.get('https://edumocks.com/api/subjects');
+      const { data } = await axios.get('/api/subjects');
       setSubjects(data);
     } catch (error) {
       console.error("Error fetching subjects:", error);
@@ -48,7 +48,7 @@ const Subject = () => {
     }
     setLoading(true);
     try {
-      await axios.post('https://edumocks.com/api/subjects', { name: newSubjectName, price: priceInDollars.toFixed(2),});
+      await axios.post('/api/subjects', { name: newSubjectName, price: priceInDollars.toFixed(2),});
       setNewSubjectName('');
       setNewSubjectPrice('');
       setShowAddSubjectModal(false);
@@ -70,7 +70,7 @@ const Subject = () => {
 
     setLoading(true);
     try {
-      await axios.put(`https://edumocks.com/api/subjects/${editingSubject._id}`, { name: editingSubject.name, price: editingSubject.price, });
+      await axios.put(`/api/subjects/${editingSubject._id}`, { name: editingSubject.name, price: editingSubject.price, });
       setShowEditSubjectModal(false);
       fetchSubjects();
     } catch (error) {
@@ -83,7 +83,7 @@ const Subject = () => {
   const handleDeleteSubject = async (id) => {
     if (window.confirm('Are you sure you want to delete this subject?')) {
       try {
-        await axios.delete(`https://edumocks.com/api/subjects/${id}`);
+        await axios.delete(`/api/subjects/${id}`);
         fetchSubjects();
       } catch (error) {
         console.error('Error deleting subject:', error);
@@ -91,85 +91,117 @@ const Subject = () => {
     }
   };
 
+  const [successMessage, setSuccessMessage] = useState("");
+  const [errorMessage, setErrorMessage] = useState("");
+
   const handleUploadCSV = async () => {
     if (!selectedFile || !currentSubjectId) {
       alert("Please select a file and chapter.");
       return;
     }
-    // Optional: Add file type/size validation here (e.g., only CSV files)
-    if (selectedFile.type !== "text/csv") {
-      alert("Please upload a valid CSV file.");
-      return;
-    }
-
     const formData = new FormData();
     formData.append("file", selectedFile);
-  
     try {
-      const response = await axios.post(
-        `https://edumocks.com/api/subjects/${currentSubjectId}/upload`,
-        formData,
-        { headers: { "Content-Type": "multipart/form-data" } }
-      );
-      console.log('File uploaded successfully:', response.data);
-      alert("File uploaded successfully!");
+      await axios.post(`/api/subjects/${currentSubjectId}/upload`, formData, {
+        headers: { "Content-Type": "multipart/form-data" },
+      });
+      setSuccessMessage("File uploaded successfully!");
       setShowUploadModal(false);
       fetchSubjects();
     } catch (error) {
-      if (error.response) {
-        console.error('Error response from server:', error.response.data);
-        alert(`Upload failed: ${error.response.data.message || 'Unknown error'}`);
-      } else if (error.request) {
-        console.error('No response received:', error.request);
-        alert("No response received from server. Please check your connection.");
-      } else {
-        console.error('Error setting up request:', error.message);
-        alert("An error occurred while setting up the request.");
-      }
+      console.error("Error uploading file:", error);
+      setErrorMessage("Error uploading file, please try again.");
     }
   };
   
-  
   const handleEditQuestion = (question, currentSubjectId) => {
     setEditingQuestion(question); // Set the selected question to be edited
-    setCurrentSubjectId(currentSubjectId); // Set the chapter ID
+    setCurrentSubjectId(currentSubjectId); // Set the subject ID
+  
     setUpdatedQuestion({
-      question: question.question,
-      image: question.questionImage || '', // Set current image or empty
+      questionText1: question.questionText1 || '',
+      questionImage1: question.questionImage1 || '',
+      questionTable1: question.questionTable1 || [],
+      
+      questionText2: question.questionText2 || '',
+      questionImage2: question.questionImage2 || '',
+      questionTable2: question.questionTable2 || [],
+      
+      questionText3: question.questionText3 || '',
+      questionImage3: question.questionImage3 || '',
+      questionTable3: question.questionTable3 || [],
+      
       options: question.options || { a: '', b: '', c: '', d: '' },
-      correctAnswer: question.correctAns,
-      description: question.answerDescription,
+      correctAnswer: question.correctAns || '',
+      
+      answerDescriptionText1: question.answerDescriptionText1 || '',
+      answerDescriptionImage1: question.answerDescriptionImage1 || '',
+      answerDescriptionTable1: question.answerDescriptionTable1 || [],
+      
+      answerDescriptionText2: question.answerDescriptionText2 || '',
+      answerDescriptionImage2: question.answerDescriptionImage2 || '',
+      answerDescriptionTable2: question.answerDescriptionTable2 || [],
+      
+      answerDescriptionText3: question.answerDescriptionText3 || '',
+      answerDescriptionImage3: question.answerDescriptionImage3 || '',
+      answerDescriptionTable3: question.answerDescriptionTable3 || [],
     });
+  
     setShowEditQuestionModal(true); // Show the edit question modal
   };
   
   const handleUpdateQuestion = async () => {
     if (!currentSubjectId || !editingQuestion?._id) {
       console.error("Missing Subject ID or question ID");
-      return; // Return early if chapter or question ID is invalid
-    }setLoading(true);
-
+      return; // Return early if subject or question ID is invalid
+    }
+    setLoading(true);
+  
     try {
       // Send PUT request to update the question with all its fields
       const response = await axios.put(
-        `https://edumocks.com/api/subjects/${currentSubjectId}/questions/${editingQuestion._id}`,
+        `/api/subjects/${currentSubjectId}/questions/${editingQuestion._id}`,
         {
-          question: updatedQuestion.question,
-          questionImage: updatedQuestion.image,
+          questionText1: updatedQuestion.questionText1,
+          questionImage1: updatedQuestion.questionImage1,
+          questionTable1: updatedQuestion.questionTable1,
+          
+          questionText2: updatedQuestion.questionText2,
+          questionImage2: updatedQuestion.questionImage2,
+          questionTable2: updatedQuestion.questionTable2,
+          
+          questionText3: updatedQuestion.questionText3,
+          questionImage3: updatedQuestion.questionImage3,
+          questionTable3: updatedQuestion.questionTable3,
+          
           options: updatedQuestion.options,
           correctAns: updatedQuestion.correctAnswer,
-          answerDescription: updatedQuestion.description,
+          
+          answerDescriptionText1: updatedQuestion.answerDescriptionText1,
+          answerDescriptionImage1: updatedQuestion.answerDescriptionImage1,
+          answerDescriptionTable1: updatedQuestion.answerDescriptionTable1,
+          
+          answerDescriptionText2: updatedQuestion.answerDescriptionText2,
+          answerDescriptionImage2: updatedQuestion.answerDescriptionImage2,
+          answerDescriptionTable2: updatedQuestion.answerDescriptionTable2,
+          
+          answerDescriptionText3: updatedQuestion.answerDescriptionText3,
+          answerDescriptionImage3: updatedQuestion.answerDescriptionImage3,
+          answerDescriptionTable3: updatedQuestion.answerDescriptionTable3,
         }
       );
+  
       console.log('Question updated:', response.data);
-      alert('Question updat Sucessfully');
+      alert('Question updated successfully');
       setShowEditQuestionModal(false); // Close the modal after updating
-      fetchSubjects(); // Refresh the chapters list with the updated question
+      fetchSubjects(); // Refresh the subjects list with the updated question
     } catch (error) {
       console.error('Error updating question:', error.response?.data || error);
+    } finally {
+      setLoading(false); // Ensure loading state is reset
     }
   };
-  
+
   const toggleSubjectExpansion = (subjectId) => {
     setExpandedSubject(expandedSubject === subjectId ? null : subjectId);
   };
@@ -177,6 +209,27 @@ const Subject = () => {
   const toggleQuestionExpand = (questionId) => {
     setExpandedQuestion((prevState) => ({ ...prevState, [questionId]: !prevState[questionId], }));
   };
+
+  function generateTableData(rows, cols) {
+  return {
+    rows,
+    cols,
+    data: Array.from({ length: rows }, () =>
+      Array.from({ length: cols }, () => "")
+    ),
+  };
+}
+// Update a specific cell in the table
+function updateTableCell(question, index, rowIndex, colIndex, value) {
+  const tableKey = `questionTable${index}`;
+  const updatedTable = { ...question[tableKey] };
+  updatedTable.data[rowIndex][colIndex] = value;
+
+  setUpdatedQuestion((prev) => ({
+    ...prev,
+    [tableKey]: updatedTable,
+  }));
+}
 
   return (
     <div>
@@ -251,15 +304,9 @@ const Subject = () => {
 
             {expandedSubject === subject._id && (
               <div style={{ marginTop: '10px' }}>
-                {/* <button onClick={() => { setCurrentSubjectId(subject._id); setShowUploadModal(true); }} style={{ backgroundColor: '#4CAF50', color: 'white', padding: '8px 16px', borderRadius: '5px', cursor: 'pointer' }} >
+                <button onClick={() => { setCurrentSubjectId(subject._id); setShowUploadModal(true); }} style={{ backgroundColor: '#4CAF50', color: 'white', padding: '8px 16px', borderRadius: '5px', cursor: 'pointer' }} >
                   <FontAwesomeIcon icon={faUpload} style={{ marginRight: '8px' }} /> Upload CSV
-                </button> */}
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '20px' }}>
-                  <button onClick={() => { setCurrentSubjectId(subject._id); setShowUploadModal(true); }} style={{ padding: '10px 20px', backgroundColor: '#007bff', color: '#fff', border: 'none', borderRadius: '4px', cursor: 'pointer' }}>
-                    <FontAwesomeIcon icon={faUpload} />Upload CSV
-                  </button>
-                </div>
-
+                </button>
                 {/* Questions here */}
                 <>
               <ul style={{ paddingLeft: "20px" }}>
@@ -285,26 +332,213 @@ const Subject = () => {
                     {/* Render Question Details Conditionally */}
                     {expandedQuestion[question._id] && (
                       <div style={{ marginTop: "10px", backgroundColor: "#f5f5f5", padding: "10px", borderRadius: "5px" }}>
-                        <p><strong>Question:</strong> {question.question}</p>
-                        {question.questionImage && (
-                          <img src={question.questionImage} alt="Question" style={{ maxWidth: "100%", borderRadius: "5px", marginBottom: "10px" }} />
+                        
+                        {/* Question Text 1 */}
+                        {question.questionText1 && (
+                          <p>{question.questionText1}</p>
                         )}
+                        
+                        {/* Question Image 1 */}
+                        {question.questionImage1 && (
+                          <div>
+                            <img src={question.questionImage1} style={{ maxWidth: "100%", borderRadius: "5px", marginBottom: "10px", boxShadow: "0 4px 8px rgba(0, 0, 0, 0.1)" }} />
+                          </div>
+                        )}
+
+                        {/* Question Table 1 */}
+                        {question.questionTable1 && Array.isArray(question.questionTable1.data) && question.questionTable1.data.length > 0 && (
+                          <div>
+                            <table style={{ width: "100%", borderCollapse: "collapse", marginBottom: "10px" }}>
+                              <tbody>
+                                {question.questionTable1.data.map((row, rowIndex) => (
+                                  <tr key={rowIndex}>
+                                    {row.map((cell, colIndex) => (
+                                      <td key={colIndex} style={{ padding: "8px", border: "1px solid #ddd", textAlign: "center" }}>
+                                        {cell}
+                                      </td>
+                                    ))}
+                                  </tr>
+                                ))}
+                              </tbody>
+                            </table>
+                          </div>
+                        )}
+                        {/* Question Text 2 */}
+                        {question.questionText2 && (
+                          <p> {question.questionText2}</p>
+                        )}
+
+                        {/* Question Image 2 */}
+                        {question.questionImage2 && (
+                          <div>
+                            <img src={question.questionImage2} style={{ maxWidth: "100%", borderRadius: "5px", marginBottom: "10px", boxShadow: "0 4px 8px rgba(0, 0, 0, 0.1)" }} />
+                          </div>
+                        )}
+
+                        {/* Question Table 2 */}
+                        {question.questionTable2 && Array.isArray(question.questionTable2.data) && question.questionTable2.data.length > 0 && (
+                          <div>
+                            <table style={{ width: "100%", borderCollapse: "collapse", marginBottom: "10px" }}>
+                              <tbody>
+                                {question.questionTable2.data.map((row, rowIndex) => (
+                                  <tr key={rowIndex}>
+                                    {row.map((cell, colIndex) => (
+                                      <td key={colIndex} style={{ padding: "8px", border: "1px solid #ddd", textAlign: "center" }}>
+                                        {cell}
+                                      </td>
+                                    ))}
+                                  </tr>
+                                ))}
+                              </tbody>
+                            </table>
+                          </div>
+                        )}
+                        {/* Question Text 3 */}
+                        {question.questionText3 && (
+                          <p> {question.questionText3}</p>
+                        )}
+
+                        {/* Question Image 3 */}
+                        {question.questionImage3 && (
+                          <div>
+                            <img src={question.questionImage3} style={{ maxWidth: "100%", borderRadius: "5px", marginBottom: "10px", boxShadow: "0 4px 8px rgba(0, 0, 0, 0.1)" }} />
+                          </div>
+                        )}
+
+                        {/* Question Table 3 */}
+                        {question.questionTable3 && Array.isArray(question.questionTable3.data) && question.questionTable3.data.length > 0 && (
+                          <div>
+                            <table style={{ width: "100%", borderCollapse: "collapse", marginBottom: "10px" }}>
+                              <tbody>
+                                {question.questionTable3.data.map((row, rowIndex) => (
+                                  <tr key={rowIndex}>
+                                    {row.map((cell, colIndex) => (
+                                      <td key={colIndex} style={{ padding: "8px", border: "1px solid #ddd", textAlign: "center" }}>
+                                        {cell}
+                                      </td>
+                                    ))}
+                                  </tr>
+                                ))}
+                              </tbody>
+                            </table>
+                          </div>
+                        )}
+                        {/* Options */}
                         <p><strong>Options:</strong></p>
                         <ul style={{ listStyleType: "none", paddingLeft: "10px" }}>
-                          <li>A. {question.options.a}</li>
-                          <li>B. {question.options.b}</li>
-                          <li>C. {question.options.c}</li>
-                          <li>D. {question.options.d}</li>
+                          {question.options.a && <li>A. {question.options.a}</li>}
+                          {question.options.b && <li>B. {question.options.b}</li>}
+                          {question.options.c && <li>C. {question.options.c}</li>}
+                          {question.options.d && <li>D. {question.options.d}</li>}
                         </ul>
-                        <p><strong>Correct Answer:</strong> {question.correctAns}</p>
-                        <p><strong>Answer Description:</strong> {question.answerDescription}</p>
+
+                        {/* Correct Answer */}
+                        {question.correctAns && (
+                          <p><strong>Correct Answer:</strong> {question.correctAns}</p>
+                        )}
+
+                        {/* Answer Description */}
+                        <p><strong>Answer Description:</strong></p>
+
+                        {/* Answer Description Text 1 */}
+                        {question.answerDescriptionText1 && (
+                          <p>{question.answerDescriptionText1}</p>
+                        )}
+
+                        {/* Answer Description Image 1 */}
+                        {question.answerDescriptionImage1 && (
+                          <div>
+                            <img src={question.answerDescriptionImage1} style={{ maxWidth: "100%", borderRadius: "5px", marginBottom: "10px", boxShadow: "0 4px 8px rgba(0, 0, 0, 0.1)" }} />
+                          </div>
+                        )}
+
+                        {/* Answer Description Table 1 */}
+                        {question.answerDescriptionTable1 && Array.isArray(question.answerDescriptionTable1.data) && question.answerDescriptionTable1.data.length > 0 && (
+                          <div>
+                            <table style={{ width: "100%", borderCollapse: "collapse", marginBottom: "10px" }}>
+                              <tbody>
+                                {question.answerDescriptionTable1.data.map((row, rowIndex) => (
+                                  <tr key={rowIndex}>
+                                    {row.map((cell, colIndex) => (
+                                      <td key={colIndex} style={{ padding: "8px", border: "1px solid #ddd", textAlign: "center" }}>
+                                        {cell}
+                                      </td>
+                                    ))}
+                                  </tr>
+                                ))}
+                              </tbody>
+                            </table>
+                          </div>
+                        )}
+
+                        {/* Answer Description Text 2 */}
+                        {question.answerDescriptionText2 && (
+                          <p>{question.answerDescriptionText2}</p>
+                        )}
+
+                        {/* Answer Description Image 2 */}
+                        {question.answerDescriptionImage2 && (
+                          <div>
+                            <img src={question.answerDescriptionImage2} style={{ maxWidth: "100%", borderRadius: "5px", marginBottom: "10px", boxShadow: "0 4px 8px rgba(0, 0, 0, 0.1)" }} />
+                          </div>
+                        )}
+
+                        {/* Answer Description Table 2 */}
+                        {question.answerDescriptionTable2 && Array.isArray(question.answerDescriptionTable2.data) && question.answerDescriptionTable1.data.length > 0 && (
+                          <div>
+                            <table style={{ width: "100%", borderCollapse: "collapse", marginBottom: "10px" }}>
+                              <tbody>
+                                {question.answerDescriptionTable2.data.map((row, rowIndex) => (
+                                  <tr key={rowIndex}>
+                                    {row.map((cell, colIndex) => (
+                                      <td key={colIndex} style={{ padding: "8px", border: "1px solid #ddd", textAlign: "center" }}>
+                                        {cell}
+                                      </td>
+                                    ))}
+                                  </tr>
+                                ))}
+                              </tbody>
+                            </table>
+                          </div>
+                        )}
+
+                        {/* Answer Description Text 3 */}
+                        {question.answerDescriptionText3 && (
+                          <p>{question.answerDescriptionText3}</p>
+                        )}
+
+                        {/* Answer Description Image 3 */}
+                        {question.answerDescriptionImage3 && (
+                          <div>
+                            <img src={question.answerDescriptionImage3} style={{ maxWidth: "100%", borderRadius: "5px", marginBottom: "10px", boxShadow: "0 4px 8px rgba(0, 0, 0, 0.1)" }} />
+                          </div>
+                        )}
+
+                        {/* Answer Description Table 3 */}
+                        {question.answerDescriptionTable3 && Array.isArray(question.answerDescriptionTable3.data) && question.answerDescriptionTable3.data.length > 0 && (
+                          <div>
+                            <table style={{ width: "100%", borderCollapse: "collapse", marginBottom: "10px" }}>
+                              <tbody>
+                                {question.answerDescriptionTable3.data.map((row, rowIndex) => (
+                                  <tr key={rowIndex}>
+                                    {row.map((cell, colIndex) => (
+                                      <td key={colIndex} style={{ padding: "8px", border: "1px solid #ddd", textAlign: "center" }}>
+                                        {cell}
+                                      </td>
+                                    ))}
+                                  </tr>
+                                ))}
+                              </tbody>
+                            </table>
+                          </div>
+                        )}
                       </div>
                     )}
                   </li>
                 ))}
               </ul>
             </>
-              </div>
+            </div>
             )}
           </div>
         ))
@@ -319,32 +553,242 @@ const Subject = () => {
             <h3>Upload CSV for Questions</h3>
             <input type="file" accept=".csv" onChange={(e) => setSelectedFile(e.target.files[0])} />
             <button onClick={handleUploadCSV} style={{ backgroundColor: '#4CAF50', color: 'white', padding: '10px 12px', fontSize: '14px', borderRadius: '8px', cursor: 'pointer' }}>
-              <FontAwesomeIcon icon={faUpload} />Upload CSV
+              Upload CSV
             </button>
           </div>
         </div>
       )}
+      {successMessage && (
+        <div style={{ color: "green", marginTop: "10px" }}>
+          {successMessage}
+        </div>
+      )}
+
+      {errorMessage && (
+        <div style={{ color: "red", marginTop: "10px" }}>
+          {errorMessage}
+        </div>
+      )}  
+
       {showEditQuestionModal && (
-        <Modal isOpen={showEditQuestionModal} onClose={() => setShowEditQuestionModal(false)} contentLabel="Edit Question" style={{ content: { maxWidth: '600px', margin: 'auto' } }}>
+        <Modal isOpen={showEditQuestionModal} onClose={() => setShowEditQuestionModal(false)} contentLabel="Edit Question"  style={{overlay: { display: 'flex', justifyContent: 'center', alignItems: 'center', backgroundColor: 'rgba(0, 0, 0, 0.5)', }, content: { position: 'relative', maxWidth: '500px', maxHeight: '80vh', margin: '0 auto', padding: '20px', overflow: 'hidden', borderRadius: '10px', }, }}>
           <h3>Edit Question</h3>
-          <input type="text" value={updatedQuestion.question} onChange={(e) => setUpdatedQuestion((prev) => ({ ...prev, question: e.target.value }))} placeholder="Question" style={{ padding: '10px', width: '100%', marginBottom: '10px' }}/>
-          <input type="text" value={updatedQuestion.image} onChange={(e) => setUpdatedQuestion((prev) => ({ ...prev, image: e.target.value })) } placeholder="Image URL (Optional)" style={{ padding: '10px', width: '100%', marginBottom: '10px' }}/>
-          {updatedQuestion.image && (
-            <img src={updatedQuestion.image}alt="Preview" style={{ maxWidth: '25%', maxHeight: '200px', borderRadius: '5px', marginBottom: '10px', }}/>
-          )}
-          {['a', 'b', 'c', 'd'].map((option) => (
-            <input key={option} type="text" value={updatedQuestion.options[option]} onChange={(e) => setUpdatedQuestion((prev) => ({  ...prev,  options: { ...prev.options, [option]: e.target.value }, })) } placeholder={`Option ${option.toUpperCase()}`} style={{ padding: '10px', width: '100%', marginBottom: '10px' }}/>
-          ))}
-          <input type="text" value={updatedQuestion.correctAnswer}onChange={(e) =>  setUpdatedQuestion((prev) => ({ ...prev, correctAnswer: e.target.value }))}placeholder="Correct Answer"style={{ padding: '10px', width: '100%', marginBottom: '10px' }}/>
-          <textarea value={updatedQuestion.description} onChange={(e) => setUpdatedQuestion((prev) => ({ ...prev, description: e.target.value })) }placeholder="Answer Description"style={{ padding: '10px', width: '100%', marginBottom: '10px' }} />
-          <button onClick={handleUpdateQuestion} style={{ backgroundColor: 'green', color: 'white', padding: '10px 15px', borderRadius: '4px',}} >
-            <FontAwesomeIcon icon={faEdit} style={{ marginRight: "5px" }} />Update Question
-          </button>
+          {/* Question Fields */}
+          <div style={{ maxHeight: 'calc(80vh - 50px)', overflowY: 'auto', paddingRight: '10px',}}>
+            {[1, 2, 3].map((index) => (
+              <div key={`question-set-${index}`}>
+                <input type="text" value={updatedQuestion[`questionText${index}`]}
+                  onChange={(e) =>
+                    setUpdatedQuestion((prev) => ({
+                      ...prev,
+                      [`questionText${index}`]: e.target.value,
+                    }))
+                  } placeholder={`Question Text ${index}`} style={{ padding: '10px', width: '100%', marginBottom: '10px' }}
+                />
+                <input type="text" value={updatedQuestion[`questionImage${index}`]}
+                  onChange={(e) =>
+                    setUpdatedQuestion((prev) => ({
+                      ...prev,
+                      [`questionImage${index}`]: e.target.value,
+                    }))
+                  } placeholder={`Question Image ${index} URL`} style={{ padding: '10px', width: '100%', marginBottom: '10px' }}
+                />
+                {updatedQuestion[`questionImage${index}`] && (
+                  <img src={updatedQuestion[`questionImage${index}`]} alt={`Preview ${index}`} style={{ maxWidth: '25%', maxHeight: '200px', borderRadius: '5px', marginBottom: '10px', }}/>
+                )}
+                {/* Table Editor */}
+                <div>
+                  <div style={{ display: 'flex', gap: '10px', marginBottom: '10px' }}>
+                    <input type="number" min="1" placeholder="Rows"
+                      value={
+                        updatedQuestion[`questionTable${index}`]?.rows || 0
+                      }
+                      onChange={(e) =>
+                        setUpdatedQuestion((prev) => {
+                          const rows = parseInt(e.target.value) || 0;
+                          const cols = updatedQuestion[`questionTable${index}`]?.cols || 0;
+                          return {
+                            ...prev,
+                            [`questionTable${index}`]: generateTableData(rows, cols),
+                          };
+                        })
+                      } style={{ width: '50%', padding: '10px' }}
+                    />
+                    <input type="number" min="1" placeholder="Columns"
+                      value={
+                        updatedQuestion[`questionTable${index}`]?.cols || 0
+                      }
+                      onChange={(e) =>
+                        setUpdatedQuestion((prev) => {
+                          const rows =
+                            updatedQuestion[`questionTable${index}`]?.rows || 0;
+                          const cols = parseInt(e.target.value) || 0;
+                          return {
+                            ...prev,
+                            [`questionTable${index}`]: generateTableData(rows, cols),
+                          };
+                        })
+                      } style={{ width: '50%', padding: '10px' }}
+                    />
+                  </div>
+                  <table border="1" style={{ width: '100%', textAlign: 'center', marginBottom: '10px', }} >
+                    <tbody>
+                      {updatedQuestion[`questionTable${index}`]?.data?.map(
+                        (row, rowIndex) => (
+                          <tr key={`row-${rowIndex}`}>
+                            {row.map((cell, colIndex) => (
+                              <td key={`cell-${rowIndex}-${colIndex}`}>
+                                <input
+                                  type="text"
+                                  value={cell}
+                                  onChange={(e) =>
+                                    updateTableCell( updatedQuestion, index, rowIndex, colIndex, e.target.value )
+                                  }
+                                  style={{ width: '100%', padding: '5px', }}
+                                />
+                              </td>
+                            ))}
+                          </tr>
+                        )
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            ))}
+
+            {/* Options */}
+            {['a', 'b', 'c', 'd'].map((option) => (
+              <input key={option} type="text" value={updatedQuestion.options[option]}
+                onChange={(e) =>
+                  setUpdatedQuestion((prev) => ({
+                    ...prev,
+                    options: { ...prev.options, [option]: e.target.value },
+                  }))
+                }
+                placeholder={`Option ${option.toUpperCase()}`}
+                style={{ padding: '10px', width: '100%', marginBottom: '10px' }}
+              />
+            ))}
+
+            {/* Correct Answer */}
+            <input type="text" value={updatedQuestion.correctAns}
+              onChange={(e) =>
+                setUpdatedQuestion((prev) => ({
+                  ...prev,
+                  correctAns: e.target.value,
+                }))
+              } placeholder="Correct Answer (a, b, c, or d)" style={{ padding: '10px', width: '100%', marginBottom: '10px' }}
+            />
+            {/* Answer Description Fields */}
+            {[1, 2, 3].map((index) => (
+              <div key={`answer-description-${index}`}>
+                <textarea
+                  value={updatedQuestion[`answerDescriptionText${index}`]}
+                  onChange={(e) =>
+                    setUpdatedQuestion((prev) => ({
+                      ...prev,
+                      [`answerDescriptionText${index}`]: e.target.value,
+                    }))
+                  }
+                  placeholder={`Answer Description Text ${index}`}
+                  style={{ padding: '10px', width: '100%', marginBottom: '10px' }}
+                />
+                <input
+                  type="text"
+                  value={updatedQuestion[`answerDescriptionImage${index}`]}
+                  onChange={(e) =>
+                    setUpdatedQuestion((prev) => ({
+                      ...prev,
+                      [`answerDescriptionImage${index}`]: e.target.value,
+                    }))
+                  }
+                  placeholder={`Answer Description Image ${index} URL`}
+                  style={{ padding: '10px', width: '100%', marginBottom: '10px' }}
+                />
+                {updatedQuestion[`answerDescriptionImage${index}`] && (
+                  <img
+                    src={updatedQuestion[`answerDescriptionImage${index}`]}
+                    alt={`Answer Description Preview ${index}`}
+                    style={{
+                      maxWidth: '25%',
+                      maxHeight: '200px',
+                      borderRadius: '5px',
+                      marginBottom: '10px',
+                    }}
+                  />
+                )}
+                <div>
+                  <div style={{ display: 'flex', gap: '10px', marginBottom: '10px' }}>
+                    <input type="number" min="1" placeholder="Rows"
+                      value={
+                        updatedQuestion[`answerDescriptionTable${index}`]?.rows || 0
+                      }
+                      onChange={(e) =>
+                        setUpdatedQuestion((prev) => {
+                          const rows = parseInt(e.target.value) || 0;
+                          const cols = updatedQuestion[`answerDescriptionTable${index}`]?.cols || 0;
+                          return {
+                            ...prev,
+                            [`answerDescriptionTable${index}`]: generateTableData(rows, cols),
+                          };
+                        })
+                      } style={{ width: '50%', padding: '10px' }}
+                    />
+                    <input type="number" min="1" placeholder="Columns"
+                      value={
+                        updatedQuestion[`answerDescriptionTable${index}`]?.cols || 0
+                      }
+                      onChange={(e) =>
+                        setUpdatedQuestion((prev) => {
+                          const rows =
+                            updatedQuestion[`answerDescriptionTable${index}`]?.rows || 0;
+                          const cols = parseInt(e.target.value) || 0;
+                          return {
+                            ...prev,
+                            [`answerDescriptionTable${index}`]: generateTableData(rows, cols),
+                          };
+                        })
+                      } style={{ width: '50%', padding: '10px' }}
+                    />
+                  </div>
+                  <table border="1" style={{ width: '100%', textAlign: 'center', marginBottom: '10px', }} >
+                    <tbody>
+                      {updatedQuestion[`answerDescriptionTable${index}`]?.data?.map(
+                        (row, rowIndex) => (
+                          <tr key={`row-${rowIndex}`}>
+                            {row.map((cell, colIndex) => (
+                              <td key={`cell-${rowIndex}-${colIndex}`}>
+                                <input
+                                  type="text"
+                                  value={cell}
+                                  onChange={(e) =>
+                                    updateTableCell( updatedQuestion, index, rowIndex, colIndex, e.target.value )
+                                  }
+                                  style={{ width: '100%', padding: '5px', }}
+                                />
+                              </td>
+                            ))}
+                          </tr>
+                        )
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            ))}
+            {/* Update Button */}
+            <button onClick={handleUpdateQuestion} style={{ backgroundColor: 'green', color: 'white', padding: '10px 15px', borderRadius: '4px', }} >
+              <FontAwesomeIcon icon={faEdit} style={{ marginRight: '5px' }} />
+              Update Question
+            </button>
+          </div>
         </Modal>
       )}
     </div>
   );
 };
+
 const Modal = ({ title, children, onClose }) => (
   <div style={{ position: "fixed", top: 0, left: 0, width: "100%", height: "100%", backgroundColor: "rgba(0,0,0,0.5)", display: "flex", justifyContent: "center", alignItems: "center", zIndex: 1000 }}>
     <div style={{ backgroundColor: "#fff", padding: "20px", borderRadius: "8px", width: "400px", textAlign: "center", position: "relative" }}>

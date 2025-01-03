@@ -58,7 +58,7 @@ nav {
   display: none;
 }
 .navbar-links-container a {
-  margin-right: 3rem;
+  margin-right: 2rem;
   text-decoration: none;
   color: black;
   font-size: 1.1rem;
@@ -88,7 +88,7 @@ nav {
 .home-banner-container {
   position: relative;
   display: flex;
-  padding-top: 3rem;
+  padding-top: 2rem;
 }
 .home-bannerImage-container {
   position: absolute;
@@ -109,24 +109,24 @@ nav {
   align-items: flex-start;
 }
 .primary-heading {
-  font-size: clamp(2rem, 5vw, 4rem);
-  color: #4c4c4c;
+  font-size: clamp(2rem, 5vw, 3rem);
+  color: #202021;
   /* line-height: 5rem; */
-  max-width: 600px;
+  max-width: 800px;
 }
 .primary-text {
-  font-size: clamp(1rem, 3vw, 1.5rem);
+  font-size: clamp(1rem, 3vw, 1.4rem);
   max-width: 500px;
   color: #6a6a6a;
   margin: 1.5rem 0rem;
 }
 .secondary-button {
-  padding: 1rem 2.5rem;
+  padding: 0.6rem 1.5rem;
   text-decoration: none;
-  background-color: #fe9e0d;
+  background-color: #C80D18;
   outline: none;
   border: none;
-  border-radius: 5rem;
+  border-radius: 5px;
   font-size: 1.1rem;
   cursor: pointer;
   font-weight: 600;
@@ -144,7 +144,7 @@ nav {
   background-color: #e48f0f;
 }
 .about-section-container {
-  margin-top: 20rem;
+  margin-top: 3rem;
   position: relative;
   display: flex;
   align-items: center;
@@ -167,11 +167,11 @@ nav {
 }
 .primary-subheading {
   font-weight: 700;
-  color: #fe9e0d;
+  color: #C80D18;
   font-size: 1.15rem;
 }
 .about-buttons-container {
-  margin-top: 2rem;
+  margin-top: 1rem;
   display: flex;
 }
 .watch-video-button {
@@ -227,7 +227,7 @@ nav {
   margin-top: 10rem;
 }
 .footer-logo-container {
-  max-width: 110px;
+  max-width: 250px;
 }
 .footer-icons {
   margin-top: 2.5rem;
@@ -235,7 +235,7 @@ nav {
 .footer-icons svg {
   font-size: 1.5rem;
   margin-right: 1.25rem;
-  color: #585858;
+  color: #C80D18;
 }
 /* .footer-section-one {
   border: 2px solid blue;
@@ -287,7 +287,7 @@ nav {
   margin-top: 1.5rem;
 }
 .work-section-wrapper {
-  margin-top: 15rem;
+  margin-top: 90px;
 }
 .work-section-top p {
   text-align: center;
@@ -347,7 +347,7 @@ nav {
 }
 @media (max-width: 800px) {
   .nav-logo-container {
-    max-width: 140px;
+    max-width: 250px;
   }
   .navbar-links-container {
     display: none;
@@ -374,7 +374,7 @@ nav {
   }
   .primary-heading {
     text-align: center;
-    max-width: 90%;
+    max-width: 50%;
   }
   .primary-text {
     text-align: center;
@@ -392,7 +392,7 @@ nav {
     cursor: pointer;
   }
   .about-section-container {
-    margin-top: 5rem !important;
+    margin-top: 2rem !important;
   }
   .about-buttons-container {
     justify-content: center;
@@ -413,7 +413,7 @@ nav {
     margin-right: 0rem !important;
   }
   .work-section-wrapper {
-    margin-top: 5rem !important;
+    margin-top: 2rem !important;
   }
   .work-section-bottom {
     margin-top: 1rem !important;

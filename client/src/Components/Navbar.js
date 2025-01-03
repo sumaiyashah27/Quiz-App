@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import Logo from "../Assets/Logo.svg";
+import Logo from "../Assets/edulogo.png";
 import HomeIcon from "@mui/icons-material/Home";
 import InfoIcon from "@mui/icons-material/Info";
 import CommentRoundedIcon from "@mui/icons-material/CommentRounded";
@@ -40,25 +40,26 @@ const Navbar = () => {
     <nav style={{justifyContent: "space-between",alignItems: "center",display: openMenu ? "none" : "flex",}} >
       <div className="nav-logo-container">
         <Link to="/">
-          <img src={Logo} alt="Logo" />
+        <img src={Logo} alt="Logo" style={{ width: 'auto', height: '110px', position: 'relative', left: '20px', top: '2px' }} />
         </Link>
       </div>
       <div className="navbar-links-container" style={{ alignItems: "center",fontWeight: 'bold' }}>
-        {menuOptions.map((item) => (
-          <a key={item.text} href={item.link} style={{ textDecoration: "none", color: "#333" }}>
-            {item.text}
-          </a>
-        ))}
+      {menuOptions.map((item) => (
+        <a key={item.text} href={item.link} style={{ textDecoration: "none", color: "#fff", backgroundColor: "#C80D18", padding: "10px 15px", borderRadius: "5px", display: "inline-block" }}>
+          {item.text}
+        </a>
+      ))}
+
         {firstName ? (
-          <div style={{ display: "inline-block", color: "#333", borderRadius: "10px", textDecoration: "none",}} onMouseEnter={() => setDropdownOpen(true)} onMouseLeave={() => setDropdownOpen(false)}>
-            <h3 onClick={() => setDropdownOpen(!dropdownOpen)} style={{ cursor: "pointer", color: "#333" }} >
+          <div style={{ display: "inline-block", color: "#333", borderRadius: "10px", textDecoration: "none", backgroundColor: "#C80D18", padding: "10px 15px", borderRadius: "5px", display: "inline-block"}} onMouseEnter={() => setDropdownOpen(true)} onMouseLeave={() => setDropdownOpen(false)}>
+            <h3 onClick={() => setDropdownOpen(!dropdownOpen)} style={{ cursor: "pointer", color: "#fff" }} >
               <FaUser /> Hello, {firstName}
             </h3>
 
             {dropdownOpen && (
               <div onMouseEnter={() => setDropdownOpen(true)} onMouseLeave={() => setDropdownOpen(false)} style={{ display: "inline-block", position: "absolute", backgroundColor: "white", boxShadow: "0px 4px 6px rgba(0, 0, 0, 0.1)", borderRadius: "4px", overflow: "hidden", zIndex: "10", }}>
                 {/* Admin Panel Link */}
-                {email === "kunal@edumocks.com" && (
+                {email === "support@eduinvest.in" && (
                   <Link to="/admin-panel"onClick={() => setDropdownOpen(false)}
                     style={{ display: "block", padding: "10px 20px", textDecoration: "none", color: "#333", backgroundColor: "#fff", textAlign: "left",}}>
                     <FaUserCog /> Admin Panel
@@ -78,7 +79,7 @@ const Navbar = () => {
             )}
           </div>
         ) : (
-          <Link to="/sign-in" className="primary-button"onClick={() => setDropdownOpen(false)}>
+          <Link to="/sign-in" className="primary-button" onClick={() => setDropdownOpen(false)} style={{textDecoration: "none", color: "#fff", backgroundColor: "#100B5C", padding: "10px 15px", borderRadius: "5px", border: "2px solid #C80D18", display: "inline-block"}}>
             Sign In
           </Link>
         )}

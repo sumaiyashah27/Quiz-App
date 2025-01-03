@@ -63,7 +63,7 @@ const handleUploadCSV = async () => {
           console.log("Filtered users data:", usersData); // Log the filtered data
 
           try {
-              const response = await axios.post("http://localhost:5000/api/users/upload-users", usersData, {
+              const response = await axios.post("/api/users/upload-users", usersData, {
                   headers: { 'Content-Type': 'application/json' }
               });
 
