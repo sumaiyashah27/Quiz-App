@@ -25,9 +25,8 @@
 }
 
 .scroll-up:hover {
-  background-color: #0056b3;
+  background-color: #100B5C;
 }
-
 
 img {
   max-width: 100%;
@@ -52,7 +51,7 @@ nav {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  min-height: 90px;
+  min-height: 40px;
 }
 .navbar-menu-container {
   display: none;
@@ -65,7 +64,7 @@ nav {
   font-weight: 600;
 }
 .primary-button {
-  padding: 0.9rem 1.75rem;
+  padding: 5px 5px;
   background-color: white;
   outline: none;
   border: none;
@@ -92,10 +91,23 @@ nav {
 }
 .home-bannerImage-container {
   position: absolute;
-  top: -100px;
+  top: -150px;
   right: -170px;
+  left: -100px;
   z-index: -2;
-  max-width: 700px;
+  max-width: auto;
+  opacity: 1; /* Make the image visible in responsive mode */
+  transition: opacity 0.3s ease; /* Smooth transition */
+}
+.home-bannerImage-container::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(32, 32, 33, 0.81); /* Overlay with red color */
+  z-index: 1;
 }
 .home-image-section {
   max-width: 600px;
@@ -120,6 +132,18 @@ nav {
   color: #6a6a6a;
   margin: 1.5rem 0rem;
 }
+.primary-heading-mob {
+  font-size: clamp(2rem, 5vw, 3rem);
+  color: #fff;
+  /* line-height: 5rem; */
+  max-width: 800px;
+}
+.primary-text-mob {
+  font-size: clamp(1rem, 3vw, 1.4rem);
+  max-width: 500px;
+  color: #fff;
+  margin: 1.5rem 0rem;
+}
 .secondary-button {
   padding: 0.6rem 1.5rem;
   text-decoration: none;
@@ -141,7 +165,7 @@ nav {
   font-size: 1.5rem;
 }
 .secondary-button:hover {
-  background-color: #e48f0f;
+  background-color: #100B5C;
 }
 .about-section-container {
   margin-top: 3rem;
@@ -225,9 +249,12 @@ nav {
   margin: 6rem 0rem;
   display: flex;
   margin-top: 10rem;
+  background-color: #100B5C;
+  flex-direction: column;
+  padding: 2rem;
 }
 .footer-logo-container {
-  max-width: 250px;
+  max-width: 180px;
 }
 .footer-icons {
   margin-top: 2.5rem;
@@ -335,14 +362,14 @@ nav {
 
 @media (max-width: 1000px) {
   .navbar-links-container a {
-    margin-right: 1rem;
+    margin-right: 10px;;
     font-size: 1rem;
   }
   .primary-button {
     font-size: 1rem;
   }
   .home-bannerImage-container {
-    max-width: 600px;
+    max-width: auto;
   }
 }
 @media (max-width: 800px) {
@@ -355,11 +382,37 @@ nav {
   .navbar-menu-container {
     display: flex;
   }
+  .primary-heading-mob {
+    font-size: clamp(2rem, 5vw, 3rem);
+    color: #202021;
+    /* line-height: 5rem; */
+    max-width: 800px;
+  }
+  .primary-text-mob {
+    font-size: clamp(1rem, 3vw, 1.4rem);
+    max-width: 500px;
+    color: #6a6a6a;
+    margin: 1.5rem 0rem;
+  }
   .home-bannerImage-container {
-    max-width: 450px;
+    max-width: auto; /* Make the image fit the container */
+    left: -150px; /* Adjust positioning */
+    right: -120px;
+    opacity: 1.8; /* Make the image visible */
+  }
+  .home-bannerImage-container::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(32, 32, 33, 0.6); /* Red overlay */
+    z-index: 1;
   }
   .home-banner-container,
   .about-section-container {
+    max-width: auto;
     flex-direction: column-reverse;
     align-items: center;
     justify-content: center;
@@ -447,7 +500,33 @@ nav {
   }
 }
 @media (max-width: 600px) {
-  .home-bannerImage-container,
+  .home-bannerImage-container{max-width: auto; /* Make the image fit the container */
+    left: -150px; /* Adjust positioning */
+    right: -120px;
+    opacity: 1.8; /* Make the image visible */
+  }
+  .home-bannerImage-container::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(32, 32, 33, 0.6); /* Red overlay */
+    z-index: 1;
+  }
+  .primary-heading-mob {
+    font-size: clamp(2rem, 5vw, 3rem);
+    color: #202021;
+    /* line-height: 5rem; */
+    max-width: 800px;
+  }
+  .primary-text-mob {
+    font-size: clamp(1rem, 3vw, 1.4rem);
+    max-width: 500px;
+    color: #6a6a6a;
+    margin: 1.5rem 0rem;
+  }
   .about-background-image-container {
     display: none;
   }

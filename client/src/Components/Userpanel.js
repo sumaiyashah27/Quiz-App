@@ -27,8 +27,7 @@ const Userpanel = () => {
   const [courses, setCourses] = useState([]);
   const [subjects, setSubjects] = useState([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [hasSent24hReminder, setHasSent24hReminder] = useState(false);
-  const [hasSent1hReminder, setHasSent1hReminder] = useState(false);
+  const [testStatus, setTestStatus] = useState('Scheduled');
 
 
   // Fetch user details, quiz enrollment data, and scheduled tests
@@ -136,6 +135,19 @@ const Userpanel = () => {
       testDate.setHours(hours);
       testDate.setMinutes(minutes);
       testDate.setSeconds(0); // Set seconds to 0 if required
+
+      // Check if the test is within 24 hours and trigger the email reminder
+      const now = new Date();
+      const testDateTime = new Date(selectTest.testDate);
+      const timeDiff = testDateTime - now;
+      if (timeDiff > 0 && timeDiff <= 86400000) { // 86400000 ms = 24 hours
+        sendTestReminder24Hours(); // Send reminder 24 hours before
+      }
+
+      if (timeDiff > 0 && timeDiff <= 3600000) {
+        // Trigger email reminder 1 hour before
+        sendTestReminder();
+      }
   
       console.log('Test Date:', testDate); // Log the final test date-time object
   
@@ -147,10 +159,14 @@ const Userpanel = () => {
       const updateRemainingTime = () => {
         const now = new Date();
         const timeDiff = testDate - now;
-  
         if (timeDiff <= 0) {
           setRemainingTime('');
           setShowEnterButton(true); // Show Enter Room button
+          // Hide the "Enter Room" button after 1 hour
+          setTimeout(() => {
+            setShowEnterButton(false); // Hide the button after 1 hour
+            updateTestStatus();
+          }, 3600000); 
         } else {
           setShowEnterButton(false); // Hide Enter Room button
           const hoursRemaining = Math.floor(timeDiff / (1000 * 60 * 60));
@@ -197,6 +213,25 @@ const Userpanel = () => {
       console.error('Error scheduling test:', error);
       setScheduledTests(scheduledTests); // Revert to previous state if the request fails
       alert('Failed to schedule test.');
+    }
+  };
+
+  // Function to update test status to "Delay" after 1 hour
+  const updateTestStatus = async () => {
+    try {
+      const response = await axios.put('/api/scheduleTest/delay', {
+        userId: selectTest.userMongoId,
+        selectedCourse: selectTest.selectedCourse,
+        selectedSubject: selectTest.selectedSubject,
+        testDate: testDate,
+      });
+
+      if (response.data) {
+        setTestStatus('Delay'); // Update the status in frontend
+        console.log('Test status updated to Delay');
+      }
+    } catch (error) {
+      console.error('Error updating test status:', error);
     }
   };
 
@@ -251,6 +286,34 @@ const Userpanel = () => {
     // If the test status is 'Scheduled', return true, else return false (for Completed tests)
     return testStatusScheduled;
   };  
+
+  const sendTestReminder = async () => {
+    try {
+      await axios.post('/api/scheduleTest/sendReminder', {
+        userId: selectTest.userMongoId,
+        selectedCourse: selectTest.selectedCourse,
+        selectedSubject: selectTest.selectedSubject,
+        testDate: selectTest.testDate,
+        testTime: selectTest.testTime,
+      });
+    } catch (error) {
+      console.error('Error sending test reminder:', error);
+    }
+  };
+  // Function to send a 24-hour reminder email
+  const sendTestReminder24Hours = async () => {
+    try {
+      await axios.post('/api/scheduleTest/sendReminder24Hours', {
+        userId: selectTest.userMongoId,
+        selectedCourse: selectTest.selectedCourse,
+        selectedSubject: selectTest.selectedSubject,
+        testDate: selectTest.testDate,
+        testTime: selectTest.testTime,
+      });
+    } catch (error) {
+      console.error('Error sending 24-hour test reminder:', error);
+    }
+  };
 
   const getCourseName = (courseId) => {
     const course = courses.find(c => c._id === courseId);
@@ -404,8 +467,8 @@ useEffect(() => {
         <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0, 0, 0, 0.5)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 1000 }}>
           <div style={{ backgroundColor: '#fff', padding: '20px', borderRadius: '8px', maxWidth: '500px', width: '100%', boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)', textAlign: 'center' }}>
             <h2>Test Details</h2>
-            <p><strong>Course:</strong> {selectTest.selectedCourse}</p>
-            <p><strong>Subject:</strong> {selectTest.selectedSubject}</p>
+            {/* <p><strong>Course:</strong> {selectTest.selectedCourse}</p>
+            <p><strong>Subject:</strong> {selectTest.selectedSubject}</p> */}
             <p><strong>Question Set:</strong> {selectTest.questionSet}</p>
             <p><strong>Test Time:</strong> {selectTest.testTime}</p>
             <p><strong>Test Date:</strong> {new Date(selectTest.testDate).toLocaleDateString()}</p>

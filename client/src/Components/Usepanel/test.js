@@ -186,24 +186,222 @@ const Test = () => {
     }
   };
 
+  // const generatePDF = useCallback(() => {
+  //   const doc = new jsPDF('p', 'mm', 'a4'); // Set A4 size
+  //   doc.setFont("helvetica", "normal"); // Use Helvetica font
+  //   doc.setFontSize(12);
+
+  //   // Watermark properties
+  //   const watermark = '/Assets/edumock logo.JPG'; // Replace with your watermark image path
+  //   const watermarkWidth = 100; // Adjust the size of the watermark
+  //   const watermarkHeight = 50;
+
+  //   // Function to add watermark to the page
+  //   const addWatermark = () => {
+  //       const pageWidth = doc.internal.pageSize.width;
+  //       const pageHeight = doc.internal.pageSize.height;
+  //       const xPosition = (pageWidth - watermarkWidth) / 2; // Center horizontally
+  //       const yPosition = (pageHeight - watermarkHeight) / 2; // Center vertically
+  //       doc.addImage(watermark, 'JPEG', xPosition, yPosition, watermarkWidth, watermarkHeight, undefined, 'FAST');
+  //   };addWatermark();
+  
+  //   // Title section
+  //   doc.setFontSize(16);
+  //   doc.setTextColor(0, 123, 255); // Blue for title
+  //   doc.text('Test Results', 105, 20, { align: 'center' }); // Title at the top center
+  //   doc.setFontSize(12);
+  //   doc.setTextColor(0, 0, 0); // Reset text color to black
+  
+  //   // Basic Info Section
+  //   doc.text(`Course: ${courseName}`, 10, 40);
+  //   doc.text(`Subject: ${subjectName}`, 10, 50);
+  
+  //   let yPosition = 60;
+  
+  //   // Loop through all questions and add them to the PDF
+  //   quizquestionSet.forEach((question, index) => {
+  //     if (yPosition > 270) {
+  //       doc.addPage();
+  //       yPosition = 10;
+  //       addWatermark();
+  //     }
+  
+  //     // Add Question Heading
+  //     doc.setFontSize(14);
+  //     doc.setTextColor(0, 0, 0); // Black color for headings
+  //     doc.text(`Question ${index + 1}:`, 10, yPosition);
+  //     yPosition += 10;
+  
+  //     // Question Text, Image, and Table
+  //     const questionFields = [
+  //       { text: question.questionText1, image: question.questionImage1, table: question.questionTable1 },
+  //       { text: question.questionText2, image: question.questionImage2, table: question.questionTable2 },
+  //       { text: question.questionText3, image: question.questionImage3, table: question.questionTable3 },
+  //     ];
+  
+  //     questionFields.forEach(({ text, image, table }) => {
+  //       if (text || image || table) {
+  //         if (text) {
+  //           doc.setFontSize(12);
+  //           const words = text.split(' '); // Split the text into words
+  //           let line = '';
+  //           let yPositionIncrement = 10;
+          
+  //           for (let i = 0; i < words.length; i++) {
+  //             line += words[i] + ' '; // Append the word to the current line
+  //             if (line.split(' ').length > 5 || i === words.length - 1) {
+  //               doc.text(line.trim(), 10, yPosition, { maxWidth: 180 });
+  //               yPosition += yPositionIncrement; // Move to the next line
+  //               line = ''; // Reset the line for the next chunk
+  //             }
+  //           }
+  //         }
+  //         if (image) {
+  //           const imgWidth = 25;
+  //           const imgHeight = 25;
+  //           const imgX = (doc.internal.pageSize.width - imgWidth) / 2; // Center the image horizontally
+  //           doc.addImage(image, 'JPEG', imgX, yPosition, imgWidth, imgHeight);
+  //           yPosition += imgHeight + 10; // Adjust yPosition after the image
+  //         }
+  //         if (table && table.data) {
+  //           table.data.forEach((row) => {
+  //             let xPosition = 10;
+  //             row.forEach((cell) => {
+  //               doc.rect(xPosition, yPosition, 30, 10); // Draw cell
+  //               doc.text(String(cell), xPosition + 2, yPosition + 7); // Add text to cell
+  //               xPosition += 30;
+  //             });
+  //             yPosition += 10;
+  //           });
+  //           yPosition += 5; // Add spacing after the table
+  //         }
+  //       }
+  //     });
+  
+  //     // Options
+  //     doc.setFontSize(14);
+  //     doc.text("Options:", 10, yPosition);
+  //     yPosition += 10;
+  
+  //     doc.setFontSize(12);
+  //     Object.entries(question.options).forEach(([key, value]) => {
+  //       if (yPosition > 270) {
+  //         doc.addPage();
+  //         yPosition = 10;
+  //         addWatermark();
+  //       }
+  //       doc.text(`${key.toUpperCase()}: ${value}`, 10, yPosition);
+  //       yPosition += 10;
+  //     });
+  
+  //     // Selected and Correct Answers
+  //     doc.setTextColor(0, 123, 0); // Green for selected answer
+  //     doc.text(`Your Answer: ${selectedOptions[question._id] || 'None'}`, 10, yPosition);
+  //     yPosition += 10;
+  
+  //     doc.setTextColor(255, 0, 0); // Red for correct answer
+  //     doc.text(`Correct Answer: ${question.correctAns}`, 10, yPosition);
+  //     yPosition += 10;
+  
+  //     // Explanation
+  //     doc.setFontSize(14);
+  //     doc.setTextColor(0, 0, 0); // Black color for heading
+  //     doc.text("Answer Description:", 10, yPosition);
+  //     yPosition += 10;
+  
+  //     const explanationFields = [
+  //       { text: question.answerDescriptionText1, image: question.answerDescriptionImage1, table: question.answerDescriptionTable1 },
+  //       { text: question.answerDescriptionText2, image: question.answerDescriptionImage2, table: question.answerDescriptionTable2 },
+  //       { text: question.answerDescriptionText3, image: question.answerDescriptionImage3, table: question.answerDescriptionTable3 },
+  //     ];
+  
+  //     explanationFields.forEach(({ text, image, table }) => {
+  //       if (text || image || table) {
+  //         if (yPosition > 270) {
+  //           doc.addPage();
+  //           yPosition = 10;
+  //           addWatermark();
+  //         }
+  //         if (text) {
+  //           doc.setTextColor(0, 0, 0); // Default black color for explanation text
+  //           const words = text.split(' '); // Split the text into words
+  //           let line = '';
+  //           let yPositionIncrement = 10;
+          
+  //           for (let i = 0; i < words.length; i++) {
+  //             line += words[i] + ' '; // Append the word to the current line
+  //             if (line.split(' ').length > 5 || i === words.length - 1) {
+  //               doc.text(line.trim(), 10, yPosition, { maxWidth: 180 });
+  //               yPosition += yPositionIncrement; // Move to the next line
+  //               line = ''; // Reset the line for the next chunk
+  //             }
+  //           }
+  //         }
+  //         if (image) {
+  //           const imgWidth = 25;
+  //           const imgHeight = 25;
+  //           const imgX = (doc.internal.pageSize.width - imgWidth) / 2;
+  //           doc.addImage(image, 'JPEG', imgX, yPosition, imgWidth, imgHeight);
+  //           yPosition += imgHeight + 10;
+  //         }
+  //         if (table && table.data) {
+  //           table.data.forEach((row) => {
+  //             let xPosition = 10;
+  //             row.forEach((cell) => {
+  //               doc.rect(xPosition, yPosition, 30, 10);
+  //               doc.text(String(cell), xPosition + 2, yPosition + 7);
+  //               xPosition += 30;
+  //             });
+  //             yPosition += 10;
+  //           });
+  //           yPosition += 5; // Add spacing after the table
+  //         }
+  //       }
+  //     });
+  
+  //     // Add a separator line
+  //     doc.setDrawColor(0, 0, 0);
+  //     doc.line(10, yPosition, doc.internal.pageSize.width - 10, yPosition);
+  //     yPosition += 10;
+  //   });
+  
+  //   // Save the generated PDF
+  //   const pdfBlob = doc.output('blob'); // Get PDF as Blob
+  //   return pdfBlob;
+  //   //doc.save('exam_results.pdf');
+  // }, [courseName, subjectName, quizquestionSet, selectedOptions]);
+
   const generatePDF = useCallback(() => {
     const doc = new jsPDF('p', 'mm', 'a4'); // Set A4 size
     doc.setFont("helvetica", "normal"); // Use Helvetica font
     doc.setFontSize(12);
-
+  
+    // Logo properties (assuming the logo path is correct)
+    const logoPath = '/Assets/website-logo.png'; // Replace with your website logo path
+    const logoWidth = 40; // Adjust logo width as needed
+    const logoHeight = 20; // Adjust logo height as needed
+    const logoX = 10; // X position for logo
+    const logoY = 10; // Y position for logo
+  
     // Watermark properties
-    const watermark = '/Assets/edumock logo.JPG'; // Replace with your watermark image path
+    const watermark = '/Assets/edumock-logo.JPG'; // Replace with your watermark image path
     const watermarkWidth = 100; // Adjust the size of the watermark
     const watermarkHeight = 50;
-
+  
     // Function to add watermark to the page
     const addWatermark = () => {
-        const pageWidth = doc.internal.pageSize.width;
-        const pageHeight = doc.internal.pageSize.height;
-        const xPosition = (pageWidth - watermarkWidth) / 2; // Center horizontally
-        const yPosition = (pageHeight - watermarkHeight) / 2; // Center vertically
-        doc.addImage(watermark, 'JPEG', xPosition, yPosition, watermarkWidth, watermarkHeight, undefined, 'FAST');
-    };addWatermark();
+      const pageWidth = doc.internal.pageSize.width;
+      const pageHeight = doc.internal.pageSize.height;
+      const xPosition = (pageWidth - watermarkWidth) / 2; // Center horizontally
+      const yPosition = (pageHeight - watermarkHeight) / 2; // Center vertically
+      doc.addImage(watermark, 'JPEG', xPosition, yPosition, watermarkWidth, watermarkHeight, undefined, 'FAST');
+    };
+  
+    // Add Logo at the top of the document
+    doc.addImage(logoPath, 'PNG', logoX, logoY, logoWidth, logoHeight);
+  
+    // Add watermark to the first page
+    addWatermark();
   
     // Title section
     doc.setFontSize(16);
@@ -330,7 +528,7 @@ const Test = () => {
           
             for (let i = 0; i < words.length; i++) {
               line += words[i] + ' '; // Append the word to the current line
-              if (line.split(' ').length > 5 || i === words.length - 1) {
+              if (line.split(' ').length > 7 || i === words.length - 1) { 
                 doc.text(line.trim(), 10, yPosition, { maxWidth: 180 });
                 yPosition += yPositionIncrement; // Move to the next line
                 line = ''; // Reset the line for the next chunk
@@ -368,9 +566,8 @@ const Test = () => {
     // Save the generated PDF
     const pdfBlob = doc.output('blob'); // Get PDF as Blob
     return pdfBlob;
-    //doc.save('exam_results.pdf');
   }, [courseName, subjectName, quizquestionSet, selectedOptions]);
-
+  
  // Submit quiz and calculate the score
  const handleSubmitQuiz = useCallback(() => {
   const pendingQuestions = quizquestionSet.reduce((acc, question, index) => {

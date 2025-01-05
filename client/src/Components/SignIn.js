@@ -53,6 +53,7 @@ const SignIn = () => {
           navigate(location.state.from, { state: location.state });
         } else {
           // Default navigation for regular users
+          setLoading(true);
           navigate("/");
         }
       }

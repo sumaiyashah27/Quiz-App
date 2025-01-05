@@ -448,7 +448,7 @@ function updateTableCell(question, index, rowIndex, colIndex, value) {
                         {/* Answer Description Image 1 */}
                         {question.answerDescriptionImage1 && (
                           <div>
-                            <img src={question.answerDescriptionImage1} style={{ maxWidth: "100%", borderRadius: "5px", marginBottom: "10px", boxShadow: "0 4px 8px rgba(0, 0, 0, 0.1)" }} />
+                            <img src={question.answerDescriptionImage1} style={{ maxWidth: "75%", borderRadius: "5px", marginBottom: "10px", boxShadow: "0 4px 8px rgba(0, 0, 0, 0.1)" }} />
                           </div>
                         )}
 

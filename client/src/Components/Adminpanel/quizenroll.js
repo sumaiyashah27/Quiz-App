@@ -13,6 +13,8 @@ const QuizEnroll = () => {
   const [orderId, setOrderId] = useState('');
   const [modalOpen, setModalOpen] = useState(false);
   const [selectedUser, setSelectedUser] = useState('');
+  const [successMessage, setSuccessMessage] = useState(''); // State for success message
+  const [errorMessage, setErrorMessage] = useState('');
 
 
   // Fetch users and courses
@@ -56,10 +58,10 @@ const QuizEnroll = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-  
+
     // Collecting form data from state variables
     const enrollmentData = {
-      userId: selectedUser,  // Use selectedUser from state
+      userId: selectedUser, // Use selectedUser from state
       selectedCourse: selectedCourse,
       selectedSubject: selectedSubjects,
       paymentStatus: paymentStatus,
@@ -67,94 +69,66 @@ const QuizEnroll = () => {
       amount: amount,
       order_id: orderId,
     };
-  
+
     try {
       await axios.post('/api/quizenroll', enrollmentData); // Backend URL
-      alert("User for quizenroll added successfully");
+      setSuccessMessage('User successfully enrolled for the quiz!'); // Show success message
+      setErrorMessage(''); // Clear any previous error message
       setModalOpen(false);
     } catch (error) {
       console.error("Error adding user:", error);
-      alert("Error adding user");
+      setErrorMessage('Error enrolling user. Please try again later.'); // Show error message
+      setSuccessMessage(''); // Clear any previous success message
     }
   };
-  
-  
 
   return (
     <div>
       <h2>Enroll in a Quiz</h2>
-      <button onClick={() => setModalOpen(true)}>Enroll User in Quiz</button>
-
+      <button onClick={() => setModalOpen(true)} style={{ padding: '10px 20px', backgroundColor: '#C80D18', color: 'white', border: 'none', borderRadius: '5px', cursor: 'pointer', fontSize: '16px', fontWeight: 'bold', transition: 'background-color 0.3s ease, transform 0.3s ease', boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)' }} onMouseEnter={(e) => e.target.style.backgroundColor = '#FFDC5C'} onMouseLeave={(e) => e.target.style.backgroundColor = '#C80D18'} onMouseDown={(e) => e.target.style.transform = 'scale(0.98)'} onMouseUp={(e) => e.target.style.transform = 'scale(1)'}>Enroll User in Quiz</button>
       {/* Modal for enrollment */}
       {modalOpen && (
         <div>
-          <h3>Enroll User</h3>
-          <form onSubmit={handleSubmit}>
+          <form onSubmit={handleSubmit} style={{ maxWidth: '600px', margin: '0 auto', padding: '20px', backgroundColor: '#fff', borderRadius: '8px', boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)', marginTop: '20px' }}>
             {/* User Dropdown */}
-            <div>
-              <label htmlFor="user-dropdown">Select User:</label>
-              <select
-                id="user-dropdown"
-                value={selectedUser}  // Bind to selectedUser state
-                onChange={(e) => setSelectedUser(e.target.value)}  // Update state on change
-                required
-              >
-                 <option value="">-- Select user --</option>
+            <div style={{ marginBottom: '20px' }}>
+              <label htmlFor="user-dropdown" style={{ display: 'block', fontSize: '16px', color: '#333', marginBottom: '8px' }}>Select User:</label>
+              <select id="user-dropdown" value={selectedUser} onChange={(e) => setSelectedUser(e.target.value)} required style={{ width: '100%', padding: '10px', fontSize: '16px', border: '1px solid #ddd', borderRadius: '4px', outline: 'none', transition: 'border-color 0.3s' }}>
+                <option value="">-- Select user --</option>
                 {users.map((user) => (
-                  <option key={user._id} value={user._id}>
-                    {user.firstName} {user.lastName}
-                  </option>
+                  <option key={user._id} value={user._id}>{user.firstName} {user.lastName}</option>
                 ))}
               </select>
             </div>
 
             {/* Course Dropdown */}
-            <div>
-              <label htmlFor="course-dropdown">Select Course:</label>
-              <select
-                id="course-dropdown"
-                onChange={handleCourseChange}
-                value={selectedCourse}
-                required
-              >
+            <div style={{ marginBottom: '20px' }}>
+              <label htmlFor="course-dropdown" style={{ display: 'block', fontSize: '16px', color: '#333', marginBottom: '8px' }}>Select Course:</label>
+              <select id="course-dropdown" onChange={handleCourseChange} value={selectedCourse} required style={{ width: '100%', padding: '10px', fontSize: '16px', border: '1px solid #ddd', borderRadius: '4px', outline: 'none', transition: 'border-color 0.3s' }}>
                 <option value="">-- Select Course --</option>
                 {courses.map((course) => (
-                  <option key={course._id} value={course._id}>
-                    {course.name}
-                  </option>
+                  <option key={course._id} value={course._id}>{course.name}</option>
                 ))}
               </select>
             </div>
 
             {/* Subjects Checkboxes */}
             {selectedCourse && (
-              <div>
-                <label>Select Subjects</label>
-                {courses
-                  .find((course) => course._id === selectedCourse)
-                  ?.subjects.map((subject) => (
-                    <div key={subject._id}>
-                      <input
-                        type="checkbox"
-                        value={subject._id}
-                        checked={selectedSubjects.includes(subject._id)}
-                        onChange={() => handleSubjectChange(subject._id)}
-                      />
-                      <label>{subject.name}</label>
-                    </div>
-                  ))}
+              <div style={{ marginBottom: '20px' }}>
+                <label style={{ display: 'block', fontSize: '16px', color: '#333', marginBottom: '8px' }}>Select Subjects:</label>
+                {courses.find((course) => course._id === selectedCourse)?.subjects.map((subject) => (
+                  <div key={subject._id} style={{ marginBottom: '10px' }}>
+                    <input type="checkbox" value={subject._id} checked={selectedSubjects.includes(subject._id)} onChange={() => handleSubjectChange(subject._id)} style={{ marginRight: '10px' }} />
+                    <label>{subject.name}</label>
+                  </div>
+                ))}
               </div>
             )}
 
             {/* Payment Status */}
-            <div>
-              <label htmlFor="paymentStatus">Payment Status:</label>
-              <select
-                id="paymentStatus"
-                value={paymentStatus}
-                onChange={(e) => setPaymentStatus(e.target.value)}
-                required
-              >
+            <div style={{ marginBottom: '20px' }}>
+              <label htmlFor="paymentStatus" style={{ display: 'block', fontSize: '16px', color: '#333', marginBottom: '8px' }}>Payment Status:</label>
+              <select id="paymentStatus" value={paymentStatus} onChange={(e) => setPaymentStatus(e.target.value)} required style={{ width: '100%', padding: '10px', fontSize: '16px', border: '1px solid #ddd', borderRadius: '4px', outline: 'none', transition: 'border-color 0.3s' }}>
                 <option value="">Select Payment Status</option>
                 <option value="pending">Pending</option>
                 <option value="success">Success</option>
@@ -163,40 +137,28 @@ const QuizEnroll = () => {
             </div>
 
             {/* Payment Details */}
-            <div>
-              <label htmlFor="paymentId">Payment ID:</label>
-              <input
-                id="paymentId"
-                type="text"
-                value={paymentId}
-                onChange={(e) => setPaymentId(e.target.value)}
-                required={paymentStatus === 'success'}
-              />
+            <div style={{ marginBottom: '20px' }}>
+              <label htmlFor="paymentId" style={{ display: 'block', fontSize: '16px', color: '#333', marginBottom: '8px' }}>Payment ID:</label>
+              <input id="paymentId" type="text" value={paymentId} onChange={(e) => setPaymentId(e.target.value)} required={paymentStatus === 'success'} style={{ width: '100%', padding: '10px', fontSize: '16px', border: '1px solid #ddd', borderRadius: '4px', outline: 'none', transition: 'border-color 0.3s' }} />
             </div>
-            <div>
-              <label htmlFor="amount">Amount:</label>
-              <input
-                id="amount"
-                type="number"
-                value={amount}
-                onChange={(e) => setAmount(e.target.value)}
-                required
-              />
+
+            <div style={{ marginBottom: '20px' }}>
+              <label htmlFor="amount" style={{ display: 'block', fontSize: '16px', color: '#333', marginBottom: '8px' }}>Amount:</label>
+              <input id="amount" type="number" value={amount} onChange={(e) => setAmount(e.target.value)} required style={{ width: '100%', padding: '10px', fontSize: '16px', border: '1px solid #ddd', borderRadius: '4px', outline: 'none', transition: 'border-color 0.3s' }} />
             </div>
-            <div>
-              <label htmlFor="orderId">Order ID:</label>
-              <input
-                id="orderId"
-                type="text"
-                value={orderId}
-                onChange={(e) => setOrderId(e.target.value)}
-                required
-              />
+
+            <div style={{ marginBottom: '20px' }}>
+              <label htmlFor="orderId" style={{ display: 'block', fontSize: '16px', color: '#333', marginBottom: '8px' }}>Order ID:</label>
+              <input id="orderId" type="text" value={orderId} onChange={(e) => setOrderId(e.target.value)} required style={{ width: '100%', padding: '10px', fontSize: '16px', border: '1px solid #ddd', borderRadius: '4px', outline: 'none', transition: 'border-color 0.3s' }} />
             </div>
 
             {/* Submit Button */}
-            <button type="submit">Enroll</button>
+            <button type="submit" style={{ backgroundColor: '#c80d18', color: '#fff', padding: '12px 20px', fontSize: '16px', border: 'none', borderRadius: '4px', cursor: 'pointer', width: '100%', transition: 'background-color 0.3s ease' }} onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#ffdc5c'} onMouseOut={(e) => e.currentTarget.style.backgroundColor = '#c80d18'}>
+              Enroll
+            </button>
           </form>
+          {successMessage && <div style={{ color: 'green', marginTop: '10px' }}>{successMessage}</div>}
+          {errorMessage && <div style={{ color: 'red', marginTop: '10px' }}>{errorMessage}</div>}
         </div>
       )}
     </div>

@@ -3,7 +3,7 @@ const cors = require('cors');
 const multer = require("multer");
 const path = require("path"); // Import path module
 const connectDB = require("./utils/db");
-require('dotenv').config();
+const dotenv = require("dotenv");
 
 const userRoutes = require("./routes/userRoutes");
 const courseRoutes = require("./routes/courseRoutes");
@@ -20,6 +20,8 @@ const stripe = require("stripe")(process.env.STRIPE_SECRET_KEY);
 const delayTestRoutes = require('./routes/delayTestRoutes');
 const app = express();
 
+// Load environment variables
+dotenv.config();
 
 app.use(cors({
     origin: ["https://edumocks.com", "https://www.edumocks.com", "http://localhost:3000"],
@@ -47,6 +49,8 @@ app.use("/api/delayTest",delayTestRoutes);
 
 const PORT = process.env.PORT || 5000;
 connectDB().then(() => {
+    // Start cron job
+    require("./services/emailService");
     app.listen(PORT,'0.0.0.0', () => {
         console.log(`Server is now running on port ${PORT}`);
     });

@@ -84,10 +84,7 @@ function App() {
         </Routes>
         <Footer />
         {showScrollButton && (
-          <button
-            className="scroll-up"
-            onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
-          >
+          <button className="scroll-up" onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}>
             ↑
           </button>
         )}

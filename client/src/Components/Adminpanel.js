@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faTachometerAlt, faUser, faBook, faChalkboardTeacher, faImage, faClipboardList } from '@fortawesome/free-solid-svg-icons';
 import Dashboard from './Adminpanel/dashbord';
@@ -7,10 +7,22 @@ import Course from './Adminpanel/course';
 import Subject from './Adminpanel/subject';
 import Images from './Adminpanel/images';
 import QuizEnroll from './Adminpanel/quizenroll';
+import { useNavigate } from 'react-router-dom';
 
 const Adminpanel = () => {
   const [activePanel, setActivePanel] = useState('dashboard');
   const [sidebarOpen, setSidebarOpen] = useState(true);
+  const navigate = useNavigate();
+
+  // Fetch user's email from localStorage
+  const userEmail = localStorage.getItem("email"); 
+
+  useEffect(() => {
+    if (userEmail !== "kunal@edumocks.com") {
+      // Redirect to homepage if the email doesn't match
+      navigate('/'); 
+    }
+  }, [userEmail, navigate]);
 
   const handlePanelChange = (panel) => {
     setActivePanel(panel);
@@ -38,12 +50,10 @@ const Adminpanel = () => {
     }
   };
 
-  // Pulse animation styles
   const pulseAnimation = {
     animation: 'pulse 1.5s infinite',
   };
 
-  // Keyframes for pulse animation
   const keyframes = `
     @keyframes pulse {
       0% { transform: scale(1); opacity: 0.7; }
@@ -52,7 +62,6 @@ const Adminpanel = () => {
     }
   `;
 
-  // Add keyframes to the page dynamically
   const styleTag = document.createElement('style');
   styleTag.innerHTML = keyframes;
   document.head.appendChild(styleTag);
@@ -71,8 +80,8 @@ const Adminpanel = () => {
             <ul style={{ listStyleType: 'none', padding: 0 }}>
               {menuItems.map((item) => (
                 <li key={item.panel} style={{ marginBottom: '15px' }}>
-                  <button onClick={() => handlePanelChange(item.panel)} style={{ display: 'flex', alignItems: 'center', padding: '12px', backgroundColor: activePanel === item.panel ? '#1abc9c' : '#34495e', border: 'none', color: 'white', textAlign: 'left', borderRadius: '5px', cursor: 'pointer', fontSize: '18px', justifyContent: 'flex-start', width: sidebarOpen ? '100%' : '50px', transition: 'background-color 0.3s ease', }} >
-                    <FontAwesomeIcon icon={item.icon} style={{ marginRight: '10px', fontSize: '20px', color: 'white', transition: 'transform 0.2s ease', transform: 'scale(1)', ...pulseAnimation, }}/>
+                  <button onClick={() => handlePanelChange(item.panel)} style={{ display: 'flex', alignItems: 'center', padding: '12px', backgroundColor: activePanel === item.panel ? '#1abc9c' : '#34495e', border: 'none', color: 'white', textAlign: 'left', borderRadius: '5px', cursor: 'pointer', fontSize: '18px', justifyContent: 'flex-start', width: sidebarOpen ? '100%' : '50px', transition: 'background-color 0.3s ease' }} >
+                    <FontAwesomeIcon icon={item.icon} style={{ marginRight: '10px', fontSize: '20px', color: 'white', transition: 'transform 0.2s ease', transform: 'scale(1)', ...pulseAnimation }} />
                     {sidebarOpen && item.name}
                   </button>
                 </li>

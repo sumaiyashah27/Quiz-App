@@ -1,18 +1,20 @@
 import React from "react";
-import AboutBackground from "../Assets/about-background.png";
 import { FiArrowRight } from "react-icons/fi";
-import AboutBackgroundImage from "../Assets/about-background-image.png";
 import { Link } from "react-router-dom";
 
 const About = () => {
   const firstName = localStorage.getItem("firstName"); // Retrieve user data
+  // Function to scroll to the bookcourse section
+  const scrollToBookCourse = () => {
+    const bookcourseSection = document.getElementById("bookcourse");
+    if (bookcourseSection) {
+      bookcourseSection.scrollIntoView({ behavior: "smooth" });
+    }
+  };
 
   return (
-    <div className="about-section-container"  style={{ position: 'relative', overflow: 'hidden' }}>
-      <div style={{ width: '100%', height: 'auto', filter: 'blur(5px)', position: 'absolute', top: 0, left: 0, zIndex: -1 }}>
-        <img src={AboutBackground} alt="About Background" style={{ width: '100%' }} />
-      </div>
-      <div style={{ textAlign: 'center', padding: '50px 20px', backgroundColor: 'rgba(255, 255, 255, 0.9)', borderRadius: '15px', boxShadow: '0 4px 10px rgba(0, 0, 0, 0.1)', maxWidth: '1200px', margin: '0 auto' }}>
+    <div className="about-section-container"  style={{ position: 'relative', overflow: 'hidden', }}>
+      <div style={{ textAlign: 'center', padding: '50px 20px', backgroundColor: 'rgba(255, 255, 255, 0.9)', borderRadius: '15px', boxShadow: '0 4px 10px rgba(0, 0, 0, 0.1)', }}>
         <p style={{ fontSize: '1.2rem', color: '#C80D18', fontWeight: 'bold' }}>Why Choose Us?</p>
         <h1 style={{ fontSize: '2.1rem', color: '#100B5C', margin: '20px 0' }}>Why Thousands of CFA Candidates Choose Us</h1>
         <p style={{ fontSize: '1.1rem', color: '#555', marginBottom: '30px', lineHeight: '1.6' }}>Join thousands of successful candidates who have relied on our resources to enhance their exam readiness. Let’s make your CFA journey smoother and more effective!</p>
@@ -38,9 +40,11 @@ const About = () => {
         </div>
 
         <div style={{ marginTop: '40px' }} >
-          <Link to={firstName ? "#bookcourse" : "/sign-in"} style={{ backgroundColor: '#100B5C', padding: '15px 30px', fontSize: '1.1rem', color: '#fff', textDecoration: 'none', borderRadius: '5px', transition: 'background-color 0.3s ease', display: 'inline-block' }}>
-            {firstName ? "Book Your Test" : "Student Sign In"} <FiArrowRight   style={{ fontSize: "1.5rem",  marginLeft: "8px",  verticalAlign: "middle",}}/>
-          </Link>
+          <button  onClick={scrollToBookCourse}>
+            <span className="secondary-button">
+              {firstName ? "Book Your Test Now" : "Sign In"} <FiArrowRight  style={{ fontSize: "1.5rem",  marginLeft: "8px",  verticalAlign: "middle",}}/>
+            </span>
+          </button>
         </div>
       </div>
     </div>

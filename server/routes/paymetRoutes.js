@@ -5,6 +5,7 @@ const User = require("../models/user-model");
 const Course = require("../models/course-model");
 const stripe = require("stripe")(process.env.STRIPE_SECRET_KEY);
 const Razorpay = require('razorpay');
+require('dotenv').config();
 
 // const razorpayInstance = new Razorpay({
 //   key_id: 'rzp_live_fqff2XESMLOL6K',

@@ -10,7 +10,7 @@
     "bcrypt": "^5.1.1",
     "cors": "^2.8.5",
     "csv-parser": "^3.0.0",
-    "dotenv": "^16.4.5",
+    "dotenv": "^16.4.7",
     "express": "^4.21.1",
     "fast-csv": "^5.0.2",
     "fs": "^0.0.1-security",
@@ -21,8 +21,10 @@
     "mongoose-sequence": "^6.0.1",
     "morgan": "^1.10.0",
     "multer": "^1.4.5-lts.1",
+    "node-cron": "^3.0.3",
     "nodemailer": "^6.9.16",
     "papaparse": "^5.4.1",
+    "razorpay": "^2.9.5",
     "stripe": "^17.4.0"
   },
   "devDependencies": {

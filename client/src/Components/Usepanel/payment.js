@@ -206,7 +206,7 @@ const Payment = () => {
           </button>
           {/* Razorpay Payment */}
           <button onClick={handleRazorpayPayment} style={{ width: "100%", padding: "15px", backgroundColor: "#007bff", color: "white", border: "none", borderRadius: "8px", fontSize: "18px", marginTop: "20px", fontWeight: "600" }}>
-            Pay with Razorpay
+          Proceed to Razorpay
           </button>
           {paymentStatus === "success" && (
             <p style={{ color: "#4CAF50", fontSize: "16px", textAlign: "center", marginTop: "20px", fontWeight: "600" }}>
