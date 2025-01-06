@@ -18,6 +18,7 @@ const quizResultsRoutes = require('./routes/quizResultsRoutes');
 const testEnrollRoutes = require("./routes/testenrollRoutes");
 const stripe = require("stripe")(process.env.STRIPE_SECRET_KEY);
 const delayTestRoutes = require('./routes/delayTestRoutes');
+const emailRoutes = require("./routes/emailRoutes");
 const app = express();
 
 // Load environment variables
@@ -46,6 +47,7 @@ app.use("/api", quizEnrollRoutes);
 app.use('/api/quizResults', quizResultsRoutes);
 app.use("/api/testEnroll", testEnrollRoutes);
 app.use("/api/delayTest",delayTestRoutes);
+app.use("/api/email", emailRoutes);
 
 const PORT = process.env.PORT || 5000;
 connectDB().then(() => {

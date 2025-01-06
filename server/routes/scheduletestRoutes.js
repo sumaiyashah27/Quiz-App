@@ -238,7 +238,6 @@ router.get('/', async (req, res) => {
   }
 });
 
-// Send welcome email route
 // Route to send email
 router.post('/send-email', async (req, res) => {
   const { email, subject, message, testDate, testTime } = req.body;

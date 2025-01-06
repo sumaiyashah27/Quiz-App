@@ -7,7 +7,8 @@ import { FaFacebookF } from "react-icons/fa";
 
 const Footer = () => {
   return (
-    <footer style={{ backgroundColor: '#100B5C', color: '#fff', padding: '20px 0', fontFamily: 'Arial, sans-serif', width: '100%' }}>
+    <footer  style={{ backgroundColor: '#100B5C', color: '#fff', padding: '20px 0', fontFamily: 'Arial, sans-serif', width: '100%' }}>
+    {/* Content Wrapper */}
       <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '0 20px' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap' }}>
           {/* Left Section */}
@@ -39,6 +40,7 @@ const Footer = () => {
           </div>
         </div>
       </div>
+      {/* Footer Bottom */}
       <div style={{ textAlign: 'center', marginTop: '20px', fontSize: '0.9rem', color: '#ddd' }}>
         <p>&copy; 2025 EduMocks. All rights reserved.</p>
       </div>

@@ -8,8 +8,8 @@ const User = require('../models/user-model');
 const transporter = nodemailer.createTransport({
   service: 'gmail', // Replace with your email service
   auth: {
-    user: 'kunal@edumocks.com', // From your .env file
-    pass: 'cndj pksf rztc jyqi', // App-specific password from .env
+    user: 'sumaiyashaha27@gmail.com', // From your .env file
+    pass: 'pjgm ugej bytp pkak', // App-specific password from .env
   },
 });
 

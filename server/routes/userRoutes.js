@@ -92,6 +92,7 @@ router.get("/users", async (req, res) => {
 });
 
 // Delete user by userId
+// Delete user by userId
 router.delete("/user/:userId", async (req, res) => {
     const { userId } = req.params;
 
@@ -147,35 +148,6 @@ router.get('/', async (req, res) => {
     }
 });
 
-router.post('/send-email', async (req, res) => {
-    const { email, firstName } = req.body;
-  
-    const transporter = nodemailer.createTransport({
-      host: 'smtp.yourhosting.com',
-      port: 587,
-      secure: false,
-      auth: {
-        user: 'kunal@edumocks.com',
-        pass: 'fjbs tkuu slig zmum',
-      },
-    });
-  
-    const mailOptions = {
-      from: '"Edumocks" <kunal@edumocks.com>',
-      to: email,
-      subject: 'Welcome to Edumocks!',
-      html: `<p>Hi ${firstName},</p><p>Welcome to Edumocks! Start practicing CFA level exams today at <a href="https://edumocks.com">Edumocks</a>.</p>`,
-    };
-  
-    try {
-      await transporter.sendMail(mailOptions);
-      res.status(200).send({ message: 'Welcome email sent!' });
-    } catch (error) {
-      console.error('Error sending email:', error);
-      res.status(500).send({ message: 'Failed to send email' });
-    }
-  });
-
 // Email verification route
 router.post("/verify-email", async (req, res) => {
     const { email } = req.body;
@@ -216,4 +188,5 @@ router.post("/reset-password", async (req, res) => {
         res.status(500).json({ message: "Server error during password reset", error: error.message });
     }
 });
+
 module.exports = router;

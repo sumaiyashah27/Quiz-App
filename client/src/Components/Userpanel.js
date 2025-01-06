@@ -116,7 +116,6 @@ const Userpanel = () => {
     setModalOpen(true);
   };
   const completedTests = scheduledTests.filter(test => test.testStatus === 'Completed');
-
    // Define the state variables
    const [selectTest, setSelectTest] = useState(null);
    const [remainingTime, setRemainingTime] = useState('');
@@ -143,7 +142,6 @@ const Userpanel = () => {
       if (timeDiff > 0 && timeDiff <= 86400000) { // 86400000 ms = 24 hours
         sendTestReminder24Hours(); // Send reminder 24 hours before
       }
-
       if (timeDiff > 0 && timeDiff <= 3600000) {
         // Trigger email reminder 1 hour before
         sendTestReminder();
@@ -155,10 +153,10 @@ const Userpanel = () => {
         console.error('Invalid test date-time:', testDate); // If invalid date-time
         return; // Return if invalid date-time to avoid further calculations
       }
-
       const updateRemainingTime = () => {
         const now = new Date();
         const timeDiff = testDate - now;
+
         if (timeDiff <= 0) {
           setRemainingTime('');
           setShowEnterButton(true); // Show Enter Room button
@@ -216,25 +214,6 @@ const Userpanel = () => {
     }
   };
 
-  // Function to update test status to "Delay" after 1 hour
-  const updateTestStatus = async () => {
-    try {
-      const response = await axios.put('/api/scheduleTest/delay', {
-        userId: selectTest.userMongoId,
-        selectedCourse: selectTest.selectedCourse,
-        selectedSubject: selectTest.selectedSubject,
-        testDate: testDate,
-      });
-
-      if (response.data) {
-        setTestStatus('Delay'); // Update the status in frontend
-        console.log('Test status updated to Delay');
-      }
-    } catch (error) {
-      console.error('Error updating test status:', error);
-    }
-  };
-
   const handleDelayTest = (course, subject) => {
     const test = scheduledTests.find(
       (test) => test.selectedCourse === course && test.selectedSubject === subject
@@ -287,34 +266,6 @@ const Userpanel = () => {
     return testStatusScheduled;
   };  
 
-  const sendTestReminder = async () => {
-    try {
-      await axios.post('/api/scheduleTest/sendReminder', {
-        userId: selectTest.userMongoId,
-        selectedCourse: selectTest.selectedCourse,
-        selectedSubject: selectTest.selectedSubject,
-        testDate: selectTest.testDate,
-        testTime: selectTest.testTime,
-      });
-    } catch (error) {
-      console.error('Error sending test reminder:', error);
-    }
-  };
-  // Function to send a 24-hour reminder email
-  const sendTestReminder24Hours = async () => {
-    try {
-      await axios.post('/api/scheduleTest/sendReminder24Hours', {
-        userId: selectTest.userMongoId,
-        selectedCourse: selectTest.selectedCourse,
-        selectedSubject: selectTest.selectedSubject,
-        testDate: selectTest.testDate,
-        testTime: selectTest.testTime,
-      });
-    } catch (error) {
-      console.error('Error sending 24-hour test reminder:', error);
-    }
-  };
-
   const getCourseName = (courseId) => {
     const course = courses.find(c => c._id === courseId);
     return course ? course.name : 'Unknown Course';
@@ -328,12 +279,10 @@ const Userpanel = () => {
 
 const handleAttendTest = (course, subject) => {
   console.log('Attending Test for:', course, subject);
-
   // Find the scheduled test that matches the clicked course and subject
   const scheduledTest = scheduledTests.find(
     (test) => test.selectedCourse === course && test.selectedSubject === subject && test.testStatus === 'Scheduled'
   );
-
   if (scheduledTest) {
     setSelectTest(scheduledTest);
     // If a match is found, update the modal with the test details
@@ -360,7 +309,6 @@ const handleEnterRoom = async (course, subject) => {
     const response = await axios.delete(`/api/quizenroll/${userMongoId}/${course}/${subject}`);
     if (response.status === 200) {
       console.log('Subject removed successfully:', response.data);
-
       // Update the local state to reflect the change
       setQuizEnrollmentData((prevData) =>
         prevData.map((enrollment) =>
@@ -388,29 +336,74 @@ const handleEnterRoom = async (course, subject) => {
     alert('Failed to remove subject. Please try again later.');
   }
 };
-
-const sendTestReminderEmails = async () => {
+ // Function to update test status to "Delay" after 1 hour
+ const updateTestStatus = async () => {
   try {
-    console.log('Sending test reminder emails...');
-    const response = await axios.post('/api/email/send-reminder-email');
-    
-    // Log the success response
-    console.log('Response:', response.data);
+    const response = await axios.put('/api/scheduleTest/delay', {
+      userId: selectTest.userMongoId,
+      selectedCourse: selectTest.selectedCourse,
+      selectedSubject: selectTest.selectedSubject,
+      testDate: testDate,
+    });
 
-    if (response.data.message) {
-      console.log(response.data.message);  // Notify user about the success
-    } else {
-      console.log('Something went wrong. Please try again later.');
+    if (response.data) {
+      setTestStatus('Delay'); // Update the status in frontend
+      console.log('Test status updated to Delay');
     }
   } catch (error) {
-    console.error('Error sending reminder emails:', error.response ? error.response.data : error.message);
+    console.error('Error updating test status:', error);
   }
 };
 
-useEffect(() => {
-  sendTestReminderEmails();
-}, []); 
-  // You can call this based on your conditions (e.g., when the page loads or after a certain event)
+const sendTestReminder = async () => {
+  try {
+    await axios.post('/api/scheduleTest/sendReminder', {
+      userId: selectTest.userMongoId,
+      selectedCourse: selectTest.selectedCourse,
+      selectedSubject: selectTest.selectedSubject,
+      testDate: selectTest.testDate,
+      testTime: selectTest.testTime,
+    });
+  } catch (error) {
+    console.error('Error sending test reminder:', error);
+  }
+};
+// Function to send a 24-hour reminder email
+const sendTestReminder24Hours = async () => {
+  try {
+    await axios.post('/api/scheduleTest/sendReminder24Hours', {
+      userId: selectTest.userMongoId,
+      selectedCourse: selectTest.selectedCourse,
+      selectedSubject: selectTest.selectedSubject,
+      testDate: selectTest.testDate,
+      testTime: selectTest.testTime,
+    });
+  } catch (error) {
+    console.error('Error sending 24-hour test reminder:', error);
+  }
+};
+// const sendTestReminderEmails = async () => {
+//   try {
+//     console.log('Sending test reminder emails...');
+//     const response = await axios.post('/api/email/send-reminder-email');
+    
+//     // Log the success response
+//     console.log('Response:', response.data);
+
+//     if (response.data.message) {
+//       console.log(response.data.message);  // Notify user about the success
+//     } else {
+//       console.log('Something went wrong. Please try again later.');
+//     }
+//   } catch (error) {
+//     console.error('Error sending reminder emails:', error.response ? error.response.data : error.message);
+//   }
+// };
+
+// useEffect(() => {
+//   sendTestReminderEmails();
+// }, []); 
+//   // You can call this based on your conditions (e.g., when the page loads or after a certain event)
   
   return (
     <div style={{ padding: '30px', maxWidth: '1200px', margin: '0 auto', backgroundColor: '#f4f4f9'}}>
