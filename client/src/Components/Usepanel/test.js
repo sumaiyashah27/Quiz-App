@@ -370,69 +370,69 @@ const Test = () => {
     return pdfBlob;
     //doc.save('exam_results.pdf');
   }, [courseName, subjectName, quizquestionSet, selectedOptions]);
-  
+
  // Submit quiz and calculate the score
  const handleSubmitQuiz = useCallback(() => {
-    const pendingQuestions = quizquestionSet.reduce((acc, question, index) => {
-      if (!selectedOptions[question._id]) {
-        acc.push(index + 1); // Store question number (1-based index)
-      }
-      return acc;
-    }, []);
-    // If there are unanswered questions, show the popup
-    if (pendingQuestions.length > 0) {
-      setPendingQuestions(pendingQuestions);
-      setShowPendingQuestionsPopup(true); // Show the popup for pending questions
-      return; // Stop the submission process until the user answers pending questions
+  const pendingQuestions = quizquestionSet.reduce((acc, question, index) => {
+    if (!selectedOptions[question._id]) {
+      acc.push(index + 1); // Store question number (1-based index)
     }
-    setQuizSubmitted(true);
+    return acc;
+  }, []);
+  // If there are unanswered questions, show the popup
+  if (pendingQuestions.length > 0) {
+    setPendingQuestions(pendingQuestions);
+    setShowPendingQuestionsPopup(true); // Show the popup for pending questions
+    return; // Stop the submission process until the user answers pending questions
+  }
+  setQuizSubmitted(true);
 
-    // Calculate the score by comparing selected options to correct answers
-    let score = 0;
-    Object.keys(selectedOptions).forEach((questionId) => {
-      if (selectedOptions[questionId] === correctAnswers[questionId]) {
-        score += 1;
-      }
-    });
-    setScore(score);
-    setShowResults(true);
-    // Generate PDF for the results
-    const pdfBlob = generatePDF();
-    const formData = new FormData();
-    formData.append('userEmail', userEmail);
-    formData.append('pdf', pdfBlob); // Assuming you have the PDF as a blob
+  // Calculate the score by comparing selected options to correct answers
+  let score = 0;
+  Object.keys(selectedOptions).forEach((questionId) => {
+    if (selectedOptions[questionId] === correctAnswers[questionId]) {
+      score += 1;
+    }
+  });
+  setScore(score);
+  setShowResults(true);
+  // Generate PDF for the results
+  const pdfBlob = generatePDF();
+  const formData = new FormData();
+  formData.append('userEmail', userEmail);
+  formData.append('pdf', pdfBlob); // Assuming you have the PDF as a blob
 
-    // Send the email with the PDF attachment
-    axios.post('/api/quizResults/sendQuizResults', formData)
-      .then((response) => {
-        console.log('Email sent successfully:', response);
-      })
-      .catch((error) => {
-        console.error('Error sending email:', error);
-      });
-    // Update test status to "Completed" and send the score
-    axios.post('/api/scheduleTest/updateTestStatus', {userId,selectedCourse,selectedSubject,score,})
-      .then((response) => {
-        console.log('Test status and score updated successfully:', response.data);
-      })
-      .catch((error) => {
-        console.error('Error updating test status and score:', error);
-      });
-
-    // Update the test score in the database
-    axios.post('/api/scheduleTest/updateTestScore', {
-      userId,
-      selectedCourse,
-      selectedSubject,
-      score,
+  // Send the email with the PDF attachment
+  axios.post('/api/quizResults/sendQuizResults', formData)
+    .then((response) => {
+      console.log('Email sent successfully:', response);
     })
-      .then((response) => {
-        console.log('Test score updated successfully:', response.data);
-      })
-      .catch((error) => {
-        console.error('Error updating test score:', error);
-      });
-    navigate('/user-panel'); 
+    .catch((error) => {
+      console.error('Error sending email:', error);
+    });
+  // Update test status to "Completed" and send the score
+  axios.post('/api/scheduleTest/updateTestStatus', {userId,selectedCourse,selectedSubject,score,})
+    .then((response) => {
+      console.log('Test status and score updated successfully:', response.data);
+    })
+    .catch((error) => {
+      console.error('Error updating test status and score:', error);
+    });
+
+  // Update the test score in the database
+  axios.post('/api/scheduleTest/updateTestScore', {
+    userId,
+    selectedCourse,
+    selectedSubject,
+    score,
+  })
+    .then((response) => {
+      console.log('Test score updated successfully:', response.data);
+    })
+    .catch((error) => {
+      console.error('Error updating test score:', error);
+    });
+  navigate('/user-panel'); 
 }, [selectedOptions, correctAnswers, generatePDF, userEmail, userId, selectedCourse, selectedSubject, navigate, visitedQuestions]);
 
 // Countdown timer
@@ -607,7 +607,7 @@ useEffect(() => {
                   {/* Question Image */}
                   {quizquestionSet[currentQuestionIndex].questionImage1 && (
                     <div style={{ display: 'flex', justifyContent: 'center', marginTop: '10px' }}>
-                      <img src={quizquestionSet[currentQuestionIndex].questionImage1} alt={`Question ${currentQuestionIndex + 1}`} style={{ maxWidth: '50%', maxHeight: '200px', objectFit: 'contain' }}/>
+                      <img src={quizquestionSet[currentQuestionIndex].questionImage1} alt={`Question ${currentQuestionIndex + 1}`} style={{ maxWidth: '100%', maxHeight: '200px', objectFit: 'contain' }}/>
                     </div>
                   )}
                   {/* Question Table */}
@@ -644,7 +644,7 @@ useEffect(() => {
                   
                   {quizquestionSet[currentQuestionIndex].questionImage2 && (
                     <div style={{ display: 'flex', justifyContent: 'center', marginTop: '10px' }}>
-                      <img src={quizquestionSet[currentQuestionIndex].questionImage2} alt={`Question ${currentQuestionIndex + 1}`} style={{ maxWidth: '50%', maxHeight: '200px', objectFit: 'contain' }}/>
+                      <img src={quizquestionSet[currentQuestionIndex].questionImage2} alt={`Question ${currentQuestionIndex + 1}`} style={{ maxWidth: '100%', maxHeight: '200px', objectFit: 'contain' }}/>
                     </div>
                   )}
 
@@ -682,7 +682,7 @@ useEffect(() => {
                   
                   {quizquestionSet[currentQuestionIndex].questionImage3 && (
                     <div style={{ display: 'flex', justifyContent: 'center', marginTop: '10px' }}>
-                      <img src={quizquestionSet[currentQuestionIndex].questionImage3} alt={`Question ${currentQuestionIndex + 1}`} style={{ maxWidth: '50%', maxHeight: '200px', objectFit: 'contain' }}/>
+                      <img src={quizquestionSet[currentQuestionIndex].questionImage3} alt={`Question ${currentQuestionIndex + 1}`} style={{ maxWidth: '100%', maxHeight: '200px', objectFit: 'contain' }}/>
                     </div>
                   )}
 
@@ -775,12 +775,12 @@ useEffect(() => {
         </>
       )};
       {/* Display quiz results and allow PDF download */}
-      {/* {showResults && (
+      {showResults && (
         <div>
           <h2>Your Score: {score}/{quizquestionSet.length}</h2>
           <button onClick={generatePDF}>Download PDF</button>
         </div>
-      )} */}
+      )}
     </div>
   );
 };
