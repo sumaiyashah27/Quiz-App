@@ -9,6 +9,7 @@ const upload = multer({
 const csv = require('csv-parser');
 const stream = require('stream');
 const Subject = require("../models/subject-model");
+const { Parser } = require('json2csv');
 
 const router = express.Router();
 
@@ -272,5 +273,62 @@ router.get('/:subjectId/questions', async (req, res) => {
   }
 });
 
+router.get('/:id/download-csv', async (req, res) => {
+  const { id } = req.params; // Get the subject ID from the route parameter
+  
+  try {
+    // Fetch the subject and its questions from the database
+    const subject = await Subject.findById(id).populate('questions');
+    if (!subject) {
+      return res.status(404).json({ message: "Subject not found" });
+    }
+
+    // Format the questions data for the CSV
+    const questionsData = subject.questions.map((question) => ({
+      questionText1: question.questionText1 || "",
+      questionImage1: question.questionImage1 || "",
+      questionTable1: question.questionTable1 || "",
+      
+      questionText2: question.questionText2 || "",
+      questionImage2: question.questionImage2 || "",
+      questionTable2: question.questionTable2 || "",
+      
+      questionText3: question.questionText3 || "",
+      questionImage3: question.questionImage3 || "",
+      questionTable3: question.questionTable3 || "",
+      
+      a: question.options.a || "",
+      b: question.options.b || "",
+      c: question.options.c || "",
+      d: question.options.d || "",
+      
+      correctAns: question.correctAns || "",
+      
+      answerDescriptionText1: question.answerDescriptionText1 || "",
+      answerDescriptionImage1: question.answerDescriptionImage1 || "",
+      answerDescriptionTable1: question.answerDescriptionTable1 || "",
+      
+      answerDescriptionText2: question.answerDescriptionText2 || "",
+      answerDescriptionImage2: question.answerDescriptionImage2 || "",
+      answerDescriptionTable2: question.answerDescriptionTable2 || "",
+      
+      answerDescriptionText3: question.answerDescriptionText3 || "",
+      answerDescriptionImage3: question.answerDescriptionImage3 || "",
+      answerDescriptionTable3: question.answerDescriptionTable3 || "",
+    }));
+
+    // Use json2csv to generate the CSV
+    const json2csvParser = new Parser();
+    const csv = json2csvParser.parse(questionsData);
+
+    // Send the CSV file as a response
+    res.header('Content-Type', 'text/csv');
+    res.attachment('questions.csv');
+    return res.send(csv);
+  } catch (error) {
+    console.error("Error generating CSV:", error);
+    return res.status(500).json({ message: "Failed to generate CSV" });
+  }
+});
 
 module.exports = router;

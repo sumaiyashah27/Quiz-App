@@ -231,6 +231,30 @@ function updateTableCell(question, index, rowIndex, colIndex, value) {
   }));
 }
 
+const handleDownloadCSV = async (currentSubjectId) => {
+  if (!currentSubjectId) {
+    alert("Please select a subject first.");
+    return;
+  }
+  try {
+    const response = await axios.get(`/api/subjects/${currentSubjectId}/download-csv`, {
+      responseType: 'blob', // Important for handling files
+    });
+    
+    // Create a download link for the CSV file
+    const url = window.URL.createObjectURL(new Blob([response.data]));
+    const link = document.createElement('a');
+    link.href = url;
+    link.setAttribute('download', 'questions.csv'); // Specify the file name
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+  } catch (error) {
+    console.error("Error downloading CSV:", error);
+    alert("Failed to download CSV. Please try again.");
+  }
+};
+
   return (
     <div>
       <h2 style={{ textAlign: 'center', marginBottom: '20px', color: '#4CAF50' }}>Subject Details</h2>
@@ -307,9 +331,14 @@ function updateTableCell(question, index, rowIndex, colIndex, value) {
                 <button onClick={() => { setCurrentSubjectId(subject._id); setShowUploadModal(true); }} style={{ backgroundColor: '#4CAF50', color: 'white', padding: '8px 16px', borderRadius: '5px', cursor: 'pointer' }} >
                   <FontAwesomeIcon icon={faUpload} style={{ marginRight: '8px' }} /> Upload CSV
                 </button>
+                {/* <button onClick={() => { handleDownloadCSV(subject._id); }} className="download-csv-btn">
+                  Download CSV
+                </button> */}
+
+
                 {/* Questions here */}
                 <>
-              <ul style={{ paddingLeft: "20px" }}>
+                <ul style={{ paddingLeft: "20px" }}>
                 {subject.questions.map((question) => (
                   <li key={question._id} style={{ marginBottom: "10px" }}>
                     <div style={{ display: "flex", justifyContent: "space-between" }}>

@@ -1,10 +1,10 @@
 const express = require('express');
 const router = express.Router();
 require('dotenv').config();
-const nodemailer = require('nodemailer');
 const ScheduleTest = require('../models/scheduletest-model');
 const Subject = require('../models/subject-model');
 const User = require('../models/user-model') // Assuming this is the Subject model
+const sendEmail = require('../utils/sendEmail');
 
 router.post('/', async (req, res) => {
   try {
@@ -160,7 +160,7 @@ router.post('/updateTestScore', async (req, res) => {
   }
 });
 // Fetch completed tests for a specific user
-router.get('/api/scheduleTest/:userId', async (req, res) => {
+router.get('/scheduleTest/:userId', async (req, res) => {
   try {
     const userId = req.params.userId;
     const completedTests = await ScheduleTest.find({ userId, testStatus: 'Completed' })
@@ -238,40 +238,6 @@ router.get('/', async (req, res) => {
   }
 });
 
-// Route to send email
-router.post('/send-email', async (req, res) => {
-  const { email, subject, message, testDate, testTime } = req.body;
-
-  // Validate received data
-  if (!email || !subject || !message || !testDate || !testTime) {
-    return res.status(400).json({ message: 'All fields are required.' });
-  }
-
-  // Create email transporter
-  const transporter = nodemailer.createTransport({
-    service: 'gmail',
-    auth: {
-      user: process.env.GMAIL_USER,  // Your Gmail account
-      pass: process.env.GMAIL_PASS,  // Your Gmail app password
-    },
-  });
-
-  const mailOptions = {
-    from: process.env.GMAIL_USER,
-    to: email,
-    subject: subject,
-    text: `${message} - Test Date: ${new Date(testDate).toLocaleString()} at ${testTime}`,
-  };
-
-  try {
-    await transporter.sendMail(mailOptions);
-    res.status(200).send('Email sent successfully!');
-  } catch (error) {
-    console.error('Error sending email:', error);
-    res.status(500).send('Failed to send email.');
-  }
-});
-
 // Endpoint to check and update test status to "delay" after 1 hour
 router.put('/scheduleTest/delay', async (req, res) => {
   const { userMongoId, selectedCourse, selectedSubject, testDate } = req.body;
@@ -305,63 +271,148 @@ router.put('/scheduleTest/delay', async (req, res) => {
     res.status(500).json({ message: 'Internal server error' });
   }
 });
-// Backend route to send a test reminder email 1 hour before the test
-router.post('/scheduleTest/sendReminder', async (req, res) => {
-  const { userMongoId, selectedCourse, selectedSubject, testDate, testTime } = req.body;
 
-  // Calculate the time difference
-  const testDateTime = new Date(testDate);
-  const [hours, minutes] = testTime.split(':');
-  testDateTime.setHours(hours);
-  testDateTime.setMinutes(minutes);
-  testDateTime.setSeconds(0);
+// Endpoint to send a reminder email 24 hours before the test
+router.post('/sendReminder24Hours', async (req, res) => {
+  try {
+    // Log the request body to check if userId is coming correctly
+    console.log('Received request to send 24-hour reminder:', req.body);
 
-  const now = new Date();
-  const timeDiff = testDateTime - now;
+    const { userId, testDate, testTime } = req.body;
 
-  if (timeDiff <= 0 || timeDiff > 3600000) {
-    return res.status(400).json({ message: 'Test is not within 1 hour.' });
+    // Ensure userId is received properly
+    if (!userId) {
+      console.error('UserId is missing from the request body');
+      return res.status(400).json({ message: 'UserId is required' });
+    }
+
+    // Calculate test date and time
+    const testDateTime = new Date(testDate);
+    const [hours, minutes] = testTime.split(':');
+    testDateTime.setHours(hours);
+    testDateTime.setMinutes(minutes);
+
+    // Format the testDate to a readable format
+    const formattedTestDate = testDateTime.toLocaleDateString('en-GB', {
+      weekday: 'long',
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+    });
+    const formattedTestTime = testDateTime.toLocaleTimeString('en-GB', {
+      hour: '2-digit',
+      minute: '2-digit',
+    });
+
+    const now = new Date();
+    const timeDiff = testDateTime - now;
+
+    // Ensure the test is within 24 hours
+    if (timeDiff <= 0 || timeDiff > 86400000) { // 24 hours in milliseconds
+      return res.status(400).json({ message: 'Test is not within 24 hours.' });
+    }
+
+    // Find the scheduled test
+    const scheduledTest = await ScheduleTest.findOne({ userId, testDate, testTime });
+    if (!scheduledTest) {
+      return res.status(404).json({ message: 'Scheduled test not found.' });
+    }
+
+    // Check if 24-hour reminder has already been sent
+    if (scheduledTest?.reminderSent24Hours) {
+      return res.status(400).json({ message: '24-hour reminder has already been sent for this test.' });
+    }
+
+    // Find the user and send the email
+    const user = await User.findById(userId);
+    if (!user || !user.email) {
+      console.error('User not found, userId:', userId);  // Log the userId for debugging
+      return res.status(404).json({ message: 'User not found.' });
+    }
+
+    // Send the email
+    await sendEmail(user.email, '24-Hour Test Reminder', 
+      `Your test is scheduled for ${formattedTestDate} at ${formattedTestTime}.`);
+
+    // Update reminderSent24Hours flag and save
+    scheduledTest.reminderSent24Hours = true;
+    await scheduledTest.save();
+
+    res.status(200).json({ message: '24-hour reminder sent successfully.' });
+  } catch (error) {
+    console.error('Error details:', error);
+    res.status(500).json({ message: 'Server error while sending reminder.' });
   }
-
-  // Send email reminder
-  const user = await User.findById(userMongoId); // Assuming you have a User model to get the email
-  if (!user || !user.email) {
-    return res.status(404).json({ message: 'User not found.' });
-  }
-
-  // Call send email function (already defined in your backend)
-  sendTestReminder(user.email, testDateTime, selectedCourse, selectedSubject);
-
-  res.status(200).json({ message: 'Test reminder email sent.' });
 });
-// Backend route to send a test reminder email 24 hours before the test
-router.post('/scheduleTest/sendReminder24Hours', async (req, res) => {
-  const { userMongoId, selectedCourse, selectedSubject, testDate, testTime } = req.body;
 
-  // Calculate the test date and time from the given testDate and testTime
-  const testDateTime = new Date(testDate);
-  const [hours, minutes] = testTime.split(':');
-  testDateTime.setHours(hours);
-  testDateTime.setMinutes(minutes);
-  testDateTime.setSeconds(0);
+// Endpoint to send a reminder email 1 hour before the test
+router.post('/sendReminder1Hour', async (req, res) => {
+  try {
+    // Log the request body to check if userId is coming correctly
+    console.log('Received request to send 1-hour reminder:', req.body);
 
-  const now = new Date();
-  const timeDiff = testDateTime - now;
+    const { userId, testDate, testTime } = req.body;
+    
+    // Ensure userId is received properly
+    if (!userId) {
+      console.error('UserId is missing from the request body');
+      return res.status(400).json({ message: 'UserId is required' });
+    }
 
-  if (timeDiff <= 0 || timeDiff > 86400000) { // 86400000 milliseconds = 24 hours
-    return res.status(400).json({ message: 'Test is not within 24 hours.' });
+    // Calculate test date and time
+    const testDateTime = new Date(testDate);
+    const [hours, minutes] = testTime.split(':');
+    testDateTime.setHours(hours);
+    testDateTime.setMinutes(minutes);
+
+    // Format the testDate to a readable format
+    const formattedTestDate = testDateTime.toLocaleDateString('en-GB', {
+      weekday: 'long',
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+    });
+    const formattedTestTime = testDateTime.toLocaleTimeString('en-GB', {
+      hour: '2-digit',
+      minute: '2-digit',
+    });
+
+    const now = new Date();
+    const timeDiff = testDateTime - now;
+
+    // Ensure the test is within 1 hour
+    if (timeDiff <= 0 || timeDiff > 3600000) { // 1 hour in milliseconds
+      return res.status(400).json({ message: 'Test is not within 1 hour.' });
+    }
+
+    // Find the scheduled test
+    const scheduledTest = await ScheduleTest.findOne({ userId, testDate, testTime });
+
+    // Check if 1-hour reminder has already been sent
+    if (scheduledTest?.reminderSent1Hour) {
+      return res.status(400).json({ message: '1-hour reminder has already been sent for this test.' });
+    }
+
+    // Find the user and send the email
+    const user = await User.findById(userId);
+    if (!user || !user.email) {
+      console.error('User not found, userId:', userId);  // Log the userId for debugging
+      return res.status(404).json({ message: 'User not found.' });
+    }
+
+    // Send formatted date and time in the email
+    await sendEmail(user.email, '1-Hour Test Reminder', 
+      `Your test is scheduled for ${formattedTestDate} at ${formattedTestTime}.`);
+
+    // Update reminderSent1Hour flag and save
+    scheduledTest.reminderSent1Hour = true;
+    await scheduledTest.save();
+
+    res.status(200).json({ message: '1-hour reminder sent successfully.' });
+  } catch (error) {
+    console.error('Error details:', error);
+    res.status(500).json({ message: 'Server error while sending reminder.' });
   }
-
-  // Send email reminder 24 hours before the test
-  const user = await User.findById(userMongoId); // Assuming you have a User model to get the email
-  if (!user || !user.email) {
-    return res.status(404).json({ message: 'User not found.' });
-  }
-
-  // Call send email function (already defined in your backend)
-  sendTestReminder(user.email, testDateTime, selectedCourse, selectedSubject);
-
-  res.status(200).json({ message: 'Test reminder email sent 24 hours before the test.' });
 });
 
 module.exports = router;

@@ -82,8 +82,8 @@ router.get("/admin/total-users", async (req, res) => {
 // Get all users excluding the admin and ordered by userId
 router.get("/users", async (req, res) => {
     try {
-        const users = await User.find({ email: { $ne: 'support@eduinvest.in' } })
-                                .sort({ userId: 1 });
+        const users = await User.find({ 
+            email: { $ne: 'kunal@edumocks.com' } }) .sort({ userId: 1 });
         res.status(200).json(users);
     } catch (error) {
         console.error("Error fetching users:", error);
@@ -91,7 +91,6 @@ router.get("/users", async (req, res) => {
     }
 });
 
-// Delete user by userId
 // Delete user by userId
 router.delete("/user/:userId", async (req, res) => {
     const { userId } = req.params;
@@ -136,7 +135,6 @@ router.get("/:userId", async (req, res) => {
     }
 });
 
-  // Route to fetch all users
 // Get all users excluding the admin and ordered by userId
 router.get('/', async (req, res) => {
     try {

@@ -19,6 +19,7 @@ const testEnrollRoutes = require("./routes/testenrollRoutes");
 const stripe = require("stripe")(process.env.STRIPE_SECRET_KEY);
 const delayTestRoutes = require('./routes/delayTestRoutes');
 const emailRoutes = require("./routes/emailRoutes");
+const checkAndSendReminders = require('./services/scheduler');
 const app = express();
 
 // Load environment variables
@@ -30,7 +31,8 @@ app.use(cors({
     credentials: true, // If you're using cookies or other credentials
 }));
 app.use(express.json());
-
+// Start the scheduler
+checkAndSendReminders();
 // Serve static images from the "images" folder (adjust the folder name if needed)
 app.use('/images', express.static(path.join(__dirname, './image'))); // Replace 'images' with your actual image folder
 
@@ -51,8 +53,6 @@ app.use("/api/email", emailRoutes);
 
 const PORT = process.env.PORT || 5000;
 connectDB().then(() => {
-    // Start cron job
-    require("./services/emailService");
     app.listen(PORT,'0.0.0.0', () => {
         console.log(`Server is now running on port ${PORT}`);
     });

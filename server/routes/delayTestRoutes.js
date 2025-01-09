@@ -98,5 +98,4 @@ router.get('/courses/:courseId', async (req, res) => {
   }
 });
   
-  
 module.exports = router;

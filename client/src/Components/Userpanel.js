@@ -15,7 +15,7 @@ const Userpanel = () => {
   const [modalOpen, setModalOpen] = useState(false);
   const [selectedCourse, setSelectedCourse] = useState('');
   const [selectedSubject, setSelectedSubject] = useState('');
-  const [questionSet, setQuestionSet] = useState(30); // Default question set to 30
+  const [questionSet, setQuestionSet] = useState(''); // Default question set to 30
   const [testDate, setTestDate] = useState('');
   const [testTime, setTestTime] = useState('');
   const [scheduledTests, setScheduledTests] = useState([]); // Store scheduled tests
@@ -29,76 +29,59 @@ const Userpanel = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [testStatus, setTestStatus] = useState('Scheduled');
 
-
   // Fetch user details, quiz enrollment data, and scheduled tests
   useEffect(() => {
+    // Fetch user details
     const fetchUserDetails = async (userId) => {
       try {
         const response = await axios.get(`/api/users/${userId}`);
         const userData = response.data;
-        setUserName(userData.firstName);
-        setUserMongoId(userData._id); // MongoDB user _id
-        setUserEmail(userData.email);
-        setIsLoading(false);
-      } catch (error) {
-        console.error('Error fetching user details:', error);
+        setUserName(userData.firstName); setUserMongoId(userData._id); setUserEmail(userData.email); setIsLoading(false);
+      } catch (error) { console.error('Error fetching user details:', error);
         setIsLoading(false);
       }
     };
-
+    //Quiz enrollment data
     const fetchQuizEnrollmentData = async (userMongoId) => {
       if (!userMongoId) return;
       try {
         const response = await axios.get(`/api/quizenroll/${userMongoId}`);
-        if (Array.isArray(response.data)) {
-          setQuizEnrollmentData(response.data);
-        } else {
-          console.error('Expected an array, but received:', response.data);
+        if (Array.isArray(response.data)) {setQuizEnrollmentData(response.data);
+        } else { console.error('Expected an array, but received:', response.data);
         }
-      } catch (error) {
-        console.error('Error fetching quiz enrollment data:', error);
+      } catch (error) {console.error('Error fetching quiz enrollment data:', error);
       }
     };
-
+    //Scheduled tests
     const fetchScheduledTests = async (userMongoId) => {
       if (!userMongoId) return;
-
-      try {
-        const response = await axios.get(`/api/scheduleTest/${userMongoId}`);
-        if (Array.isArray(response.data)) {
-          setScheduledTests(response.data);
-        } else {
-          console.error('Expected an array, but received:', response.data);
+      try { const response = await axios.get(`/api/scheduleTest/${userMongoId}`);
+        if (Array.isArray(response.data)) {setScheduledTests(response.data);
+        } else {console.error('Expected an array, but received:', response.data);
         }
-      } catch (error) {
-        console.error('Error fetching scheduled tests:', error);
+      } catch (error) {console.error('Error fetching scheduled tests:', error);
       }
-    };
-
+    }
+    //courses and subjects
     const fetchCoursesAndSubjects = async () => {
       try {
-        // Fetch courses and subjects from the server (replace with actual API endpoints)
         const courseResponse = await axios.get('/api/courses');
         const subjectResponse = await axios.get('/api/subjects');
-        
         setCourses(courseResponse.data);
         setSubjects(subjectResponse.data);
-      } catch (error) {
-        console.error('Error fetching courses and subjects:', error);
+      } catch (error) {console.error('Error fetching courses and subjects:', error);
       }
     };
-
     if (userId) {
       fetchUserDetails(userId);
-      fetchQuizEnrollmentData(userMongoId); // Fetch quiz enrollment data if userId is available
-      fetchScheduledTests(userMongoId); // Fetch scheduled tests for the user
-      fetchCoursesAndSubjects(); // Fetch courses and subjects
+      fetchQuizEnrollmentData(userMongoId); 
+      fetchScheduledTests(userMongoId); 
+      fetchCoursesAndSubjects(); 
     }
   }, [userId, userMongoId]);
-
+  //update the active tests
   const formatEnrollmentData = () => {
     const activeTests = [];
-
     quizEnrollmentData.forEach((enrollment) => {
       enrollment.selectedSubject.forEach((subject) => {
         const testData = {course: enrollment.selectedCourse,subject: subject,amount: enrollment.amount,testStatus: enrollment.testStatus,
@@ -107,47 +90,29 @@ const Userpanel = () => {
       });
     });
     return { activeTests };
-  };
-  const { activeTests } = formatEnrollmentData();
-
+  }; const { activeTests } = formatEnrollmentData();
+  // Define the handleScheduleTest function
   const handleScheduleTest = (course, subject) => {
     setSelectedCourse(course);
     setSelectedSubject(subject);
     setModalOpen(true);
   };
+  // Filter the scheduled tests to get the completed tests
   const completedTests = scheduledTests.filter(test => test.testStatus === 'Completed');
    // Define the state variables
    const [selectTest, setSelectTest] = useState(null);
    const [remainingTime, setRemainingTime] = useState('');
    const [showEnterButton, setShowEnterButton] = useState(false);
-
+    // Update the useEffect hook to include the selectTest state  
    useEffect(() => {
     if (selectTest?.testDate && selectTest?.testTime) {
-      // Extract the date part (date part of testDate)
       const testDate = new Date(selectTest.testDate); 
-      const testTime = selectTest.testTime; // Time in HH:mm format
-  
-      // Split the time into hours and minutes
+      const testTime = selectTest.testTime;
       const [hours, minutes] = testTime.split(':');
-  
-      // Set the hours and minutes of the testDate to match testTime
+      
       testDate.setHours(hours);
       testDate.setMinutes(minutes);
       testDate.setSeconds(0); // Set seconds to 0 if required
-
-      // Check if the test is within 24 hours and trigger the email reminder
-      const now = new Date();
-      const testDateTime = new Date(selectTest.testDate);
-      const timeDiff = testDateTime - now;
-      if (timeDiff > 0 && timeDiff <= 86400000) { // 86400000 ms = 24 hours
-        sendTestReminder24Hours(); // Send reminder 24 hours before
-      }
-      if (timeDiff > 0 && timeDiff <= 3600000) {
-        // Trigger email reminder 1 hour before
-        sendTestReminder();
-      }
-  
-      console.log('Test Date:', testDate); // Log the final test date-time object
   
       if (isNaN(testDate.getTime())) {
         console.error('Invalid test date-time:', testDate); // If invalid date-time
@@ -179,26 +144,40 @@ const Userpanel = () => {
   
       return () => clearInterval(interval); // Cleanup on unmount
     }
-  }, [selectTest]);
-
+  },);
+  // Define the handleConfirmSchedule function
   const handleConfirmSchedule = async () => {
+    console.log('Selected Question Set:', questionSet); // This logs the selected value
+  
     // Validate if the selected time is in the past
     const selectedDateTime = new Date(`${testDate}T${testTime}`);
     const currentDateTime = new Date();
-
+  
+    // Validate if all fields are filled out, including questionSet
     if (!testDate || !testTime || !questionSet) {
-      setErrorMessage("Please fill out all the fields.");
+      if (!questionSet) {
+        setErrorMessage("Please select a question set.");
+      } else {
+        setErrorMessage("Please fill out all the fields.");
+      }
       return;
     }
     // Proceed with scheduling if validation passes
     setErrorMessage('');
-
     if (selectedDateTime <= currentDateTime) {
       setTimeError('The selected time cannot be in the past.');
       return;
     }
     setTimeError(''); // Clear the error if the time is valid
-    const testData = { userId: userMongoId,selectedCourse,selectedSubject,questionSet,testDate,testTime,testStatus: 'Scheduled',};
+    const testData = { 
+      userId: userMongoId,
+      selectedCourse,
+      selectedSubject,
+      questionSet,  // This holds the selected value
+      testDate,
+      testTime,
+      testStatus: 'Scheduled',
+    };
     // Optimistically update the UI
     const newScheduledTests = [...scheduledTests, testData];
     setScheduledTests(newScheduledTests);
@@ -214,6 +193,7 @@ const Userpanel = () => {
     }
   };
 
+  //define the handleDelayTest function
   const handleDelayTest = (course, subject) => {
     const test = scheduledTests.find(
       (test) => test.selectedCourse === course && test.selectedSubject === subject
@@ -303,7 +283,6 @@ const handleCloseModal = () => {
 
 const handleEnterRoom = async (course, subject) => {
   console.log('selectTest object:', selectTest);
-
   try {
     // Make a DELETE request to remove the specific subject from the backend
     const response = await axios.delete(`/api/quizenroll/${userMongoId}/${course}/${subject}`);
@@ -331,6 +310,9 @@ const handleEnterRoom = async (course, subject) => {
         state: { userId: userMongoId, userName, userEmail, selectedCourse: course, selectedSubject: subject },
       });
     }
+    // navigate(`/test/${course}/${subject}`, {
+    //   state: { userId: userMongoId, userName, userEmail, selectedCourse: course, selectedSubject: subject },
+    // });
   } catch (error) {
     console.error('Error removing subject:', error);
     alert('Failed to remove subject. Please try again later.');
@@ -354,57 +336,6 @@ const handleEnterRoom = async (course, subject) => {
     console.error('Error updating test status:', error);
   }
 };
-
-const sendTestReminder = async () => {
-  try {
-    await axios.post('/api/scheduleTest/sendReminder', {
-      userId: selectTest.userMongoId,
-      selectedCourse: selectTest.selectedCourse,
-      selectedSubject: selectTest.selectedSubject,
-      testDate: selectTest.testDate,
-      testTime: selectTest.testTime,
-    });
-  } catch (error) {
-    console.error('Error sending test reminder:', error);
-  }
-};
-// Function to send a 24-hour reminder email
-const sendTestReminder24Hours = async () => {
-  try {
-    await axios.post('/api/scheduleTest/sendReminder24Hours', {
-      userId: selectTest.userMongoId,
-      selectedCourse: selectTest.selectedCourse,
-      selectedSubject: selectTest.selectedSubject,
-      testDate: selectTest.testDate,
-      testTime: selectTest.testTime,
-    });
-  } catch (error) {
-    console.error('Error sending 24-hour test reminder:', error);
-  }
-};
-// const sendTestReminderEmails = async () => {
-//   try {
-//     console.log('Sending test reminder emails...');
-//     const response = await axios.post('/api/email/send-reminder-email');
-    
-//     // Log the success response
-//     console.log('Response:', response.data);
-
-//     if (response.data.message) {
-//       console.log(response.data.message);  // Notify user about the success
-//     } else {
-//       console.log('Something went wrong. Please try again later.');
-//     }
-//   } catch (error) {
-//     console.error('Error sending reminder emails:', error.response ? error.response.data : error.message);
-//   }
-// };
-
-// useEffect(() => {
-//   sendTestReminderEmails();
-// }, []); 
-//   // You can call this based on your conditions (e.g., when the page loads or after a certain event)
-  
   return (
     <div style={{ padding: '30px', maxWidth: '1200px', margin: '0 auto', backgroundColor: '#f4f4f9'}}>
       {/* Render user details */}
@@ -460,11 +391,12 @@ const sendTestReminder24Hours = async () => {
         <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0, 0, 0, 0.5)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 1000 }}>
           <div style={{ backgroundColor: '#fff', padding: '20px', borderRadius: '8px', maxWidth: '500px', width: '100%', boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)', textAlign: 'center' }}>
             <h2>Test Details</h2>
-            {/* <p><strong>Course:</strong> {selectTest.selectedCourse}</p>
-            <p><strong>Subject:</strong> {selectTest.selectedSubject}</p> */}
+            <p><strong>Course:</strong> {selectTest.selectedCourse}</p>
+            <p><strong>Subject:</strong> {selectTest.selectedSubject}</p>
             <p><strong>Question Set:</strong> {selectTest.questionSet}</p>
             <p><strong>Test Time:</strong> {selectTest.testTime}</p>
             <p><strong>Test Date:</strong> {new Date(selectTest.testDate).toLocaleDateString()}</p>
+              
             {!showEnterButton && remainingTime && <p style={{ color: 'red', fontWeight: 'bold' }}>Countdown: {remainingTime}</p>}
             {showEnterButton && (
               <button onClick={() => handleEnterRoom(selectTest.selectedCourse, selectTest.selectedSubject)} 
@@ -501,17 +433,23 @@ const sendTestReminder24Hours = async () => {
 
             <div style={{ marginBottom: '15px' }}>
               <label style={{ fontSize: '1.2rem', fontWeight: 'bold', color: '#555' }}>Question Set:</label>
-              <select
-                value={questionSet}
-                onChange={(e) => setQuestionSet(e.target.value)}
-                style={{ width: '100%', padding: '8px', marginTop: '10px', border: '1px solid #ddd', borderRadius: '6px', fontSize: '1rem', color: '#333', backgroundColor: '#f9f9f9', boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)' }}
-              >
-                <option value="30">30 Questions</option>
-                <option value="60">60 Questions</option>
-                <option value="90">90 Questions</option>
+              <select value={questionSet} onChange={(e) => setQuestionSet(e.target.value)} style={{ width: '100%', padding: '8px', marginTop: '10px', border: '1px solid #ddd', borderRadius: '6px', fontSize: '1rem', color: '#333', backgroundColor: '#f9f9f9', boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)' }} >
+                {getCourseName(selectedCourse) === 'CFA LEVEL - 1' ? (
+                  <>
+                    <option value="" disabled>select</option>
+                    <option value="30">30 Questions</option>
+                    <option value="60">60 Questions</option>
+                    <option value="90">90 Questions</option>
+                  </>
+                ) : (
+                  <>
+                    <option value="" disabled>select</option>
+                    <option value="44">44 Questions</option>
+                    <option value="88">88 Questions</option>
+                  </>
+                )}
               </select>
             </div>
-
             <div style={{ marginBottom: '15px' }}>
               <label style={{ fontSize: '1.2rem', fontWeight: 'bold', color: '#555' }}>Test Date:</label>
               <input

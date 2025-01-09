@@ -11,6 +11,7 @@ const Test = () => {
   const location = useLocation();
   const { userId, userName, userEmail, selectedCourse, selectedSubject } = location.state || {};
   const [courseName, setCourseName] = useState('');
+  const [modalOpen, setModalOpen] = useState(false); // Modal state
   const [subjectName, setSubjectName] = useState('');
   const [questionSet, setQuestionSet] = useState(null);
   const [quizquestionSet, setQuizQuestionSet] = useState([]);
@@ -34,6 +35,7 @@ const Test = () => {
   const savedExamStarted = localStorage.getItem('examStarted') === 'true';
   const [countdown, setCountdown] = useState(initialCountdown);
   const [examStarted, setExamStarted] = useState(savedExamStarted);
+  
   // Fetch course name
   const fetchCourseName = useCallback(() => {
     if (selectedCourse) {
@@ -108,56 +110,20 @@ const Test = () => {
     fetchSubjectName();
     fetchQuestionSet();  // Fetch question set when the component mounts
   }, [fetchCourseName, fetchSubjectName, fetchQuestionSet]);
-
-  // Handle page reload logic
-  useEffect(() => {
-    const savedStartTime = localStorage.getItem("startTime");
-    if (savedStartTime) {
-      const currentTime = Date.now();
-      const elapsedTime = Math.floor((currentTime - savedStartTime) / 1000); // Time elapsed in seconds
-      const remainingTime = savedCountdown - elapsedTime;
-      if (remainingTime > 0) {
-        setCountdown(remainingTime); // Set the remaining countdown time
-      } else {
-        setCountdown(0);
-        setExamStarted(true); // Start the exam if countdown is over
-        localStorage.setItem("examStarted", "true");
-        fetchQuizQuestionSet();
-      }
-    } else {
-      // Store the start time when countdown begins
-      const currentTime = Date.now();
-      localStorage.setItem("startTime", currentTime);
-    }
-  }, [savedCountdown]);
-     
-  // Countdown timer for 30 seconds
-   useEffect(() => {
-    if (countdown > 0) {
-      const timerId = setInterval(() => {
-        setCountdown((prev) => prev - 1);
-      }, 1000);
-      return () => clearInterval(timerId);
-    } else {
-      setExamStarted(true); // Start the exam when countdown reaches zero
-      localStorage.setItem('examStarted', 'true');
-      fetchQuizQuestionSet(); // Fetch quiz questions
-      setLoadingMessage(null); // Hide loading message
-      // Set timer based on course name
+  
+   // Handle opening the popup and fetch chapters
+   const handleEnterRoom = () => {
+    setModalOpen(true);
+    if (selectedSubject) {
+      // Set the timer based on the course name
       if (courseName === "CFA LEVEL - 1") {
         setTimer(questionSet * 90); // 90 seconds per question
-      } else {
+      } else if (courseName) {
         setTimer(questionSet * 180); // Default timer (180 seconds per question)
       }
+      fetchQuizQuestionSet();  // Fetch chapters after opening the modal
     }
-  }, [countdown, fetchQuizQuestionSet, courseName, questionSet]);
-
-  useEffect(() => {
-    // Save the countdown time in localStorage to persist across page reloads
-    if (countdown > 0) {
-      localStorage.setItem('countdownTime', countdown);
-    }
-  }, [countdown]);
+  };
  
   // Prevent page reload during the test
   useEffect(() => {
@@ -171,14 +137,14 @@ const Test = () => {
       window.removeEventListener("beforeunload", handleBeforeUnload);
     };
   }, []);
-
+  //sign the selected option to the question
   const handleNextQuestion = () => {
     if (currentQuestionIndex < quizquestionSet.length - 1) {
       setVisitedQuestions((prev) => new Set(prev).add(currentQuestionIndex));
       setCurrentQuestionIndex(currentQuestionIndex + 1);
     }
   };
-
+// Function to handle the previous question
   const handlePrevQuestion = () => {
     if (currentQuestionIndex > 0) {
       setVisitedQuestions((prev) => new Set(prev).add(currentQuestionIndex));
@@ -191,202 +157,211 @@ const Test = () => {
     doc.setFont("helvetica", "normal"); // Use Helvetica font
     doc.setFontSize(12);
 
-    // Watermark properties
-    const watermark = '/Assets/edumock logo.JPG'; // Replace with your watermark image path
-    const watermarkWidth = 100; // Adjust the size of the watermark
-    const watermarkHeight = 50;
+    // Transparent Watermark Logo (your logo should already have transparency)
+    const watermarkLogoPath = '/edulog-2.png'; // Path to your transparent logo
+    const logoWidth = 40; // Adjust logo size
+    const logoHeight = 15;
+    const pageWidth = doc.internal.pageSize.width;
+    const pageHeight = doc.internal.pageSize.height;
 
-    // Function to add watermark to the page
-    const addWatermark = () => {
-        const pageWidth = doc.internal.pageSize.width;
-        const pageHeight = doc.internal.pageSize.height;
-        const xPosition = (pageWidth - watermarkWidth) / 2; // Center horizontally
-        const yPosition = (pageHeight - watermarkHeight) / 2; // Center vertically
-        doc.addImage(watermark, 'JPEG', xPosition, yPosition, watermarkWidth, watermarkHeight, undefined, 'FAST');
-    };addWatermark();
+    // Function to add watermark and border to each page
+    const addPageContent = (isFirstPage = false) => {
+      // Page Border
+      doc.rect(5, 5, pageWidth - 10, pageHeight - 10); // Border around the page
   
-    // Title section
-    doc.setFontSize(16);
-    doc.setTextColor(0, 123, 255); // Blue for title
-    doc.text('Test Results', 105, 20, { align: 'center' }); // Title at the top center
-    doc.setFontSize(12);
-    doc.setTextColor(0, 0, 0); // Reset text color to black
+      if (isFirstPage) {
+          // First Page ke Header mein Logo
+          const logoPath = '/edulog-2.png'; // Path to logo image
+          doc.addImage(logoPath, 'PNG', 10, 10, logoWidth, logoHeight); // Top-left corner pe logo
+          
+          // Title Section (First Page Only)
+          doc.setFontSize(16);
+          doc.setTextColor(0, 123, 255); // Title ke liye blue color
+          doc.text('Test Results', pageWidth / 2, 20, { align: 'center' }); // Title center mein
+          doc.setFontSize(12);
+          doc.setTextColor(0, 0, 0); // Black text color reset
+      }
   
+      // Add Watermark
+      if (doc.setGState) {
+          doc.setGState(new doc.GState({ opacity: 0.1 })); // Transparency set karte hain
+          doc.addImage(watermarkLogoPath, 'PNG', pageWidth / 4, pageHeight / 4, logoWidth * 2, logoHeight * 2); // Watermark add karein
+          doc.setGState(new doc.GState({ opacity: 1 })); // Normal state reset
+      } else {
+          // Agar `setGState` nahi hai, toh transparent watermark image use karein
+          doc.addImage(watermarkLogoPath, 'PNG', pageWidth / 4, pageHeight / 4, logoWidth * 2, logoHeight * 2);
+      }
+    };
+
+    // Add content for the first page
+    addPageContent(true); // Pass 'true' for first page
+
     // Basic Info Section
     doc.text(`Course: ${courseName}`, 10, 40);
     doc.text(`Subject: ${subjectName}`, 10, 50);
-  
+
     let yPosition = 60;
-  
+
     // Loop through all questions and add them to the PDF
     quizquestionSet.forEach((question, index) => {
-      if (yPosition > 270) {
-        doc.addPage();
-        yPosition = 10;
-        addWatermark();
-      }
-  
-      // Add Question Heading
-      doc.setFontSize(14);
-      doc.setTextColor(0, 0, 0); // Black color for headings
-      doc.text(`Question ${index + 1}:`, 10, yPosition);
-      yPosition += 10;
-  
-      // Question Text, Image, and Table
-      const questionFields = [
-        { text: question.questionText1, image: question.questionImage1, table: question.questionTable1 },
-        { text: question.questionText2, image: question.questionImage2, table: question.questionTable2 },
-        { text: question.questionText3, image: question.questionImage3, table: question.questionTable3 },
-      ];
-  
-      questionFields.forEach(({ text, image, table }) => {
-        if (text || image || table) {
-          if (text) {
-            doc.setFontSize(12);
-            const words = text.split(' '); // Split the text into words
-            let line = '';
-            let yPositionIncrement = 10;
-          
-            for (let i = 0; i < words.length; i++) {
-              line += words[i] + ' '; // Append the word to the current line
-              if (line.split(' ').length > 5 || i === words.length - 1) {
-                doc.text(line.trim(), 10, yPosition, { maxWidth: 180 });
-                yPosition += yPositionIncrement; // Move to the next line
-                line = ''; // Reset the line for the next chunk
-              }
-            }
-          }
-          if (image) {
-            const imgWidth = 25;
-            const imgHeight = 25;
-            const imgX = (doc.internal.pageSize.width - imgWidth) / 2; // Center the image horizontally
-            doc.addImage(image, 'JPEG', imgX, yPosition, imgWidth, imgHeight);
-            yPosition += imgHeight + 10; // Adjust yPosition after the image
-          }
-          if (table && table.data) {
-            table.data.forEach((row) => {
-              let xPosition = 10;
-              row.forEach((cell) => {
-                doc.rect(xPosition, yPosition, 30, 10); // Draw cell
-                doc.text(String(cell), xPosition + 2, yPosition + 7); // Add text to cell
-                xPosition += 30;
-              });
-              yPosition += 10;
-            });
-            yPosition += 5; // Add spacing after the table
-          }
-        }
-      });
-  
-      // Options
-      doc.setFontSize(14);
-      doc.text("Options:", 10, yPosition);
-      yPosition += 10;
-  
-      doc.setFontSize(12);
-      Object.entries(question.options).forEach(([key, value]) => {
         if (yPosition > 270) {
-          doc.addPage();
-          yPosition = 10;
-          addWatermark();
-        }
-        doc.text(`${key.toUpperCase()}: ${value}`, 10, yPosition);
-        yPosition += 10;
-      });
-  
-      // Selected and Correct Answers
-      doc.setTextColor(0, 123, 0); // Green for selected answer
-      doc.text(`Your Answer: ${selectedOptions[question._id] || 'None'}`, 10, yPosition);
-      yPosition += 10;
-  
-      doc.setTextColor(255, 0, 0); // Red for correct answer
-      doc.text(`Correct Answer: ${question.correctAns}`, 10, yPosition);
-      yPosition += 10;
-  
-      // Explanation
-      doc.setFontSize(14);
-      doc.setTextColor(0, 0, 0); // Black color for heading
-      doc.text("Answer Description:", 10, yPosition);
-      yPosition += 10;
-  
-      const explanationFields = [
-        { text: question.answerDescriptionText1, image: question.answerDescriptionImage1, table: question.answerDescriptionTable1 },
-        { text: question.answerDescriptionText2, image: question.answerDescriptionImage2, table: question.answerDescriptionTable2 },
-        { text: question.answerDescriptionText3, image: question.answerDescriptionImage3, table: question.answerDescriptionTable3 },
-      ];
-  
-      explanationFields.forEach(({ text, image, table }) => {
-        if (text || image || table) {
-          if (yPosition > 270) {
-            doc.addPage();
+            doc.addPage(); // Add new page
+            addPageContent(); // Add watermark and border on the new page
             yPosition = 10;
-            addWatermark();
-          }
-          if (text) {
-            doc.setTextColor(0, 0, 0); // Default black color for explanation text
-            const words = text.split(' '); // Split the text into words
-            let line = '';
-            let yPositionIncrement = 10;
-          
-            for (let i = 0; i < words.length; i++) {
-              line += words[i] + ' '; // Append the word to the current line
-              if (line.split(' ').length > 5 || i === words.length - 1) {
-                doc.text(line.trim(), 10, yPosition, { maxWidth: 180 });
-                yPosition += yPositionIncrement; // Move to the next line
-                line = ''; // Reset the line for the next chunk
-              }
-            }
-          }
-          if (image) {
-            const imgWidth = 25;
-            const imgHeight = 25;
-            const imgX = (doc.internal.pageSize.width - imgWidth) / 2;
-            doc.addImage(image, 'JPEG', imgX, yPosition, imgWidth, imgHeight);
-            yPosition += imgHeight + 10;
-          }
-          if (table && table.data) {
-            table.data.forEach((row) => {
-              let xPosition = 10;
-              row.forEach((cell) => {
-                doc.rect(xPosition, yPosition, 30, 10);
-                doc.text(String(cell), xPosition + 2, yPosition + 7);
-                xPosition += 30;
-              });
-              yPosition += 10;
-            });
-            yPosition += 5; // Add spacing after the table
-          }
         }
-      });
-  
-      // Add a separator line
-      doc.setDrawColor(0, 0, 0);
-      doc.line(10, yPosition, doc.internal.pageSize.width - 10, yPosition);
-      yPosition += 10;
+
+        // Add Question Heading
+        doc.setFontSize(14);
+        doc.setTextColor(0, 0, 0); // Black color for headings
+        doc.text(`Question ${index + 1}:`, 10, yPosition);
+        yPosition += 10;
+
+        // Question Text, Image, and Table
+        const questionFields = [
+            { text: question.questionText1, image: question.questionImage1, table: question.questionTable1 },
+            { text: question.questionText2, image: question.questionImage2, table: question.questionTable2 },
+            { text: question.questionText3, image: question.questionImage3, table: question.questionTable3 },
+        ];
+
+        questionFields.forEach(({ text, image, table }) => {
+            if (text || image || table) {
+                if (text) {
+                    doc.setFontSize(12);
+                    const words = text.split(' '); // Split the text into words
+                    let line = '';
+                    let yPositionIncrement = 10;
+                    const maxWidth = pageWidth - 20; // Allow for margins
+
+                    for (let i = 0; i < words.length; i++) {
+                        line += words[i] + ' '; // Append the word to the current line
+                        if (doc.getTextWidth(line) > maxWidth || i === words.length - 1) {
+                            doc.text(line.trim(), 10, yPosition, { maxWidth: maxWidth });
+                            yPosition += yPositionIncrement; // Move to the next line
+                            line = ''; // Reset the line for the next chunk
+                        }
+                    }
+                }
+                if (image) {
+                    const imgWidth = 25;
+                    const imgHeight = 25;
+                    const imgX = (doc.internal.pageSize.width - imgWidth) / 2; // Center the image horizontally
+
+                    const imageType = image.includes('.png') ? 'PNG' : 'JPEG'; // Determine image format
+
+                    doc.addImage(image, imageType, imgX, yPosition, imgWidth, imgHeight);
+                    yPosition += imgHeight + 10; // Adjust yPosition after the image
+                }
+                if (table && table.data) {
+                    table.data.forEach((row) => {
+                        let xPosition = 10;
+                        row.forEach((cell) => {
+                            doc.rect(xPosition, yPosition, 30, 10); // Draw cell
+                            doc.text(String(cell), xPosition + 2, yPosition + 7); // Add text to cell
+                            xPosition += 30;
+                        });
+                        yPosition += 10;
+                    });
+                    yPosition += 5; // Add spacing after the table
+                }
+            }
+        });
+        // Options
+        doc.setFontSize(14);
+        doc.text("Options:", 10, yPosition);
+        yPosition += 10;
+        doc.setFontSize(12);
+        Object.entries(question.options).forEach(([key, value]) => {
+            if (yPosition > 270) {
+                doc.addPage(); // Add new page
+                addPageContent(); // Add watermark and border on the new page
+                yPosition = 10;
+            }
+            doc.text(`${key.toUpperCase()}: ${value}`, 10, yPosition);
+            yPosition += 10;
+        });
+
+        // Selected and Correct Answers
+        doc.setTextColor(0, 123, 0); // Green for selected answer
+        doc.text(`Your Answer: ${selectedOptions[question._id] || 'None'}`, 10, yPosition);
+        yPosition += 10;
+
+        doc.setTextColor(255, 0, 0); // Red for correct answer
+        doc.text(`Correct Answer: ${question.correctAns}`, 10, yPosition);
+        yPosition += 10;
+
+        // Explanation
+        doc.setFontSize(14);
+        doc.setTextColor(0, 0, 0); // Black color for heading
+        doc.text("Answer Description:", 10, yPosition);
+        yPosition += 10;
+
+        const explanationFields = [
+            { text: question.answerDescriptionText1, image: question.answerDescriptionImage1, table: question.answerDescriptionTable1 },
+            { text: question.answerDescriptionText2, image: question.answerDescriptionImage2, table: question.answerDescriptionTable2 },
+            { text: question.answerDescriptionText3, image: question.answerDescriptionImage3, table: question.answerDescriptionTable3 },
+        ];
+
+        explanationFields.forEach(({ text, image, table }) => {
+            if (text || image || table) {
+                if (yPosition > 270) {
+                    doc.addPage(); // Add new page
+                    addPageContent(); // Add watermark and border on the new page
+                    yPosition = 10;
+                }
+                if (text) {
+                    doc.setTextColor(0, 0, 0); // Default black color for explanation text
+                    const words = text.split(' '); // Split the text into words
+                    let line = '';
+                    let yPositionIncrement = 10;
+                    const maxWidth = pageWidth - 20; // Allow for margins
+
+                    for (let i = 0; i < words.length; i++) {
+                        line += words[i] + ' '; // Append the word to the current line
+                        if (doc.getTextWidth(line) > maxWidth || i === words.length - 1) {
+                            doc.text(line.trim(), 10, yPosition, { maxWidth: maxWidth });
+                            yPosition += yPositionIncrement; // Move to the next line
+                            line = ''; // Reset the line for the next chunk
+                        }
+                    }
+                }
+                if (image) {
+                    const imgWidth = 25;
+                    const imgHeight = 25;
+                    const imgX = (doc.internal.pageSize.width - imgWidth) / 2;
+                    const imageType = image.includes('.png') ? 'PNG' : 'JPEG'; // Determine image format
+                    doc.addImage(image, imageType, imgX, yPosition, imgWidth, imgHeight);
+                    yPosition += imgHeight + 10;
+                }
+                if (table && table.data) {
+                    table.data.forEach((row) => {
+                        let xPosition = 10;
+                        row.forEach((cell) => {
+                            doc.rect(xPosition, yPosition, 30, 10);
+                            doc.text(String(cell), xPosition + 2, yPosition + 7);
+                            xPosition += 30;
+                        });
+                        yPosition += 10;
+                    });
+                    yPosition += 5; // Add spacing after the table
+                }
+            }
+        });
+
+        // Add a separator line
+        doc.setDrawColor(0, 0, 0);
+        doc.line(10, yPosition, doc.internal.pageSize.width - 10, yPosition);
+        yPosition += 10;
     });
-  
+
     // Save the generated PDF
     const pdfBlob = doc.output('blob'); // Get PDF as Blob
     return pdfBlob;
     //doc.save('exam_results.pdf');
-  }, [courseName, subjectName, quizquestionSet, selectedOptions]);
+}, [courseName, subjectName, quizquestionSet, selectedOptions]);
 
  // Submit quiz and calculate the score
  const handleSubmitQuiz = useCallback(() => {
-  const pendingQuestions = quizquestionSet.reduce((acc, question, index) => {
-    if (!selectedOptions[question._id]) {
-      acc.push(index + 1); // Store question number (1-based index)
-    }
-    return acc;
-  }, []);
-  // If there are unanswered questions, show the popup
-  if (pendingQuestions.length > 0) {
-    setPendingQuestions(pendingQuestions);
-    setShowPendingQuestionsPopup(true); // Show the popup for pending questions
-    return; // Stop the submission process until the user answers pending questions
-  }
   setQuizSubmitted(true);
-
   // Calculate the score by comparing selected options to correct answers
   let score = 0;
   Object.keys(selectedOptions).forEach((questionId) => {
@@ -396,6 +371,7 @@ const Test = () => {
   });
   setScore(score);
   setShowResults(true);
+
   // Generate PDF for the results
   const pdfBlob = generatePDF();
   const formData = new FormData();
@@ -410,30 +386,24 @@ const Test = () => {
     .catch((error) => {
       console.error('Error sending email:', error);
     });
-  // Update test status to "Completed" and send the score
-  axios.post('/api/scheduleTest/updateTestStatus', {userId,selectedCourse,selectedSubject,score,})
-    .then((response) => {
-      console.log('Test status and score updated successfully:', response.data);
-    })
-    .catch((error) => {
-      console.error('Error updating test status and score:', error);
-    });
 
-  // Update the test score in the database
-  axios.post('/api/scheduleTest/updateTestScore', {
+  // Update test status and score in the database
+  axios.post('/api/scheduleTest/updateTestStatus', {
     userId,
     selectedCourse,
     selectedSubject,
-    score,
+    score, 
+    status: "Completed",  // Assuming 'Completed' is the status after submission
   })
-    .then((response) => {
-      console.log('Test score updated successfully:', response.data);
-    })
-    .catch((error) => {
-      console.error('Error updating test score:', error);
-    });
-  navigate('/user-panel'); 
-}, [selectedOptions, correctAnswers, generatePDF, userEmail, userId, selectedCourse, selectedSubject, navigate, visitedQuestions]);
+  .then((response) => {
+    console.log('Test updated successfully:', response.data);
+  })
+  .catch((error) => {
+    console.error('Error updating test:', error);
+  });
+
+  navigate('/user-panel');
+}, [selectedOptions, correctAnswers, generatePDF, userEmail, userId, selectedCourse, selectedSubject, navigate]);
 
 // Countdown timer
 useEffect(() => {
@@ -533,7 +503,7 @@ const PendingQuestionsPopup = () => (
         </button>
         {/* Button to submit test */}
         <button
-          onClick={() => {setIsSubmitClicked(true); handleSubmitQuiz();}}
+          onClick={() => {handleSubmitQuiz();}}
           style={{ backgroundColor: '#f44336', color: 'white', padding: '10px', fontSize: '14px', borderRadius: '5px', cursor: 'pointer', width: '48%' }}
         >Submit Test
         </button>
@@ -544,6 +514,22 @@ const PendingQuestionsPopup = () => (
     </div>
   </div>
 );
+const handleFinishTest = () => {
+  const unansweredQuestions = quizquestionSet.reduce((acc, question, index) => {
+    if (!selectedOptions[question._id] && !visitedQuestions.has(index)) {
+      acc.push(index + 1); // Store question number (1-based index)
+    }
+    return acc;
+  }, []);
+
+  if (unansweredQuestions.length > 0) {
+    setPendingQuestions(unansweredQuestions);
+    setShowPendingQuestionsPopup(true); // Show popup
+  } else {
+    setIsSubmitClicked(true);
+    handleSubmitQuiz();
+  }
+};
 // Handle beforeunload event
 useEffect(() => {
   const handleBeforeUnload = (event) => {
@@ -561,7 +547,6 @@ useEffect(() => {
   return (
     <div className="quiz-container" style={{ margin: '0 auto', maxWidth: '900px', padding: '20px' }}>
       {/* <h1 style={{ textAlign: 'center', fontSize: '2rem', marginBottom: '20px' }} >Quiz Test</h1> */}
-      {!examStarted ? (
         <div>
           {/* <p>User ID: {userId}</p>
           <p>User Name: {userName}</p>
@@ -569,19 +554,21 @@ useEffect(() => {
           <p>Course: {courseName || 'Loading...'}</p>
           <p>Subject: {subjectName || 'Loading...'}</p>
           <p>QuestionSet: {questionSet}</p> */}
-          {loadingMessage && <p style={{ color: 'blue', textAlign: 'center' }}>{loadingMessage}</p>}
-          {countdown > 0 && <p style={{ color: 'orange', textAlign: 'center' }}>Starting in {countdown} seconds...</p>}
+          <button onClick={handleEnterRoom}>Enter Room</button>
+          {/* {loadingMessage && <p style={{ color: 'blue', textAlign: 'center' }}>{loadingMessage}</p>}
+          {countdown > 0 && <p style={{ color: 'orange', textAlign: 'center' }}>Starting in {countdown} seconds...</p>} */}
         </div>
-      ) : (
+      
         <>
           {error && <p style={{ color: 'red', textAlign: 'center', margin: '10px 0' }}>{error}</p>}
-          {loading && <p>Loading questions...</p>}
-          {questionsFetched && !quizSubmitted && (
+          {/* {loadingMessage && <p style={{ color: 'blue', textAlign: 'center' }}>{loadingMessage}</p>}
+          {countdown > 0 && <p style={{ color: 'orange', textAlign: 'center' }}>Starting in {countdown} seconds...</p>} */}
+          {modalOpen && questionsFetched && !quizSubmitted && (
             <div  style={{ display: 'flex', gap: '5px', width: '100%', height: '80vh', margin: 'auto', padding: '10px', flexDirection: 'column', backgroundColor: '#4c4c4c' , boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)' , overflow: 'hidden',}}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <h3 style={{ marginBottom: '10px', textAlign: 'left', color: '#fff', fontSize: '20px' }}>{`Question ${currentQuestionIndex + 1}`}</h3>
                 <p style={{ marginBottom: '10px', textAlign: 'center', color: '#fff', fontSize: '16px' }}>Time Left: {formatTime(timer)}</p>
-                <button onClick={handleSubmitQuiz} style={{ padding: '10px 20px', backgroundColor: '#fff8dd', color: '#333', border: 'none', cursor: 'pointer', borderRadius: '5px' ,fontSize: '16px' }} >
+                <button onClick={handleFinishTest} style={{ padding: '10px 20px', backgroundColor: '#fff8dd', color: '#333', border: 'none', cursor: 'pointer', borderRadius: '5px' ,fontSize: '16px' }} >
                   Finish Test
                 </button>
               </div>
@@ -750,7 +737,13 @@ useEffect(() => {
                 </div>
               </div>
               {showPopup && <UnansweredQuestionsPopup />}
-              {showPendingQuestionsPopup && <PendingQuestionsPopup />}
+              {showPendingQuestionsPopup && (
+                <PendingQuestionsPopup 
+                  pendingQuestions={pendingQuestions} 
+                  onClose={() => setShowPendingQuestionsPopup(false)} 
+                />
+              )}
+              {/* {showPendingQuestionsPopup && <PendingQuestionsPopup />} */}
               <div className="navigation-buttons" style={{ marginTop: '5px', display: 'flex', justifyContent: 'flex-end', gap: '10px' }}>
                 {currentQuestionIndex === quizquestionSet.length - 1 && (
                   <button onClick={handleSubmitQuiz} style={{  padding: '10px 20px', backgroundColor: '#fff8dd', color: '#333', border: 'none', cursor: 'pointer', borderRadius: '5px', fontSize: '16px' }}>
@@ -773,7 +766,6 @@ useEffect(() => {
             </div>
           )}
         </>
-      )};
       {/* Display quiz results and allow PDF download */}
       {showResults && (
         <div>

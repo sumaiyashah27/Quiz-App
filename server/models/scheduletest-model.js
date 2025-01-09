@@ -1,4 +1,4 @@
-const mongoose = require('mongoose');
+const mongoose = require('mongoose'); 
 
 // Define the ScheduleTest Schema
 const scheduleTestSchema = new mongoose.Schema({
@@ -31,7 +31,7 @@ const scheduleTestSchema = new mongoose.Schema({
   },
   testStatus: {
     type: String, // Status of the test (e.g., "Scheduled", "Completed", "Delayed")
-    default: 'Enroll', // Default status is "Scheduled"
+    default: 'Scheduled', // Default status is "Scheduled"
     enum: ['Scheduled', 'Completed', 'Delayed'], // You can define possible values for the status
   },
   score: {
@@ -39,6 +39,14 @@ const scheduleTestSchema = new mongoose.Schema({
     default: 0, // Default score is 0
     min: 0, // Score cannot be less than 0
     required: true,
+  },
+  reminderSent24Hours: {
+    type: Boolean, // Flag to indicate if the 24-hour reminder was sent
+    default: false, // Default to false (reminder has not been sent)
+  },
+  reminderSent1Hour: {
+    type: Boolean, // Flag to indicate if the 1-hour reminder was sent
+    default: false, // Default to false (reminder has not been sent)
   },
 }, {
   timestamps: true, // Automatically add createdAt and updatedAt fields

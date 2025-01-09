@@ -67,7 +67,7 @@ const Adminpanel = () => {
   document.head.appendChild(styleTag);
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', backgroundColor: '#ecf0f1', minHeight: '100vh' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', backgroundColor: '#ecf0f1', marginTop: '20px', marginBottom: '50px' }}>
       <div style={{ display: 'flex', flexDirection: 'column', flex: 1 }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '20px', background: 'linear-gradient(135deg, #2C3E50, #34495E)', color: 'white' }}>
           <h2>Welcome, Admin!</h2>
