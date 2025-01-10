@@ -3,6 +3,7 @@ const router = express.Router();
 require('dotenv').config();
 const ScheduleTest = require('../models/scheduletest-model');
 const Subject = require('../models/subject-model');
+const Course = require('../models/course-model');
 const User = require('../models/user-model') // Assuming this is the Subject model
 const sendEmail = require('../utils/sendEmail');
 
@@ -414,5 +415,64 @@ router.post('/sendReminder1Hour', async (req, res) => {
     res.status(500).json({ message: 'Server error while sending reminder.' });
   }
 });
+// Fetch completed tests for all users
+router.get('/completedTests', async (req, res) => {
+  const userId = req.query.userId; // Use query parameter for userId
 
+  // Validate userId
+  if (!mongoose.Types.ObjectId.isValid(userId)) {
+    return res.status(400).json({ message: "Invalid user ID" });
+  }
+
+  try {
+    // Fetch completed tests for the specific user
+    const completedTests = await ScheduleTest.find({ 
+      testStatus: "Completed", 
+      userId: userId // Filter by userId
+    }).select("userId selectedCourse selectedSubject score");
+
+    // If no tests found, return an empty array
+    if (completedTests.length === 0) {
+      return res.status(200).json([]);
+    }
+
+    // Validate and populate fields
+    const results = await Promise.all(
+      completedTests.map(async (test) => {
+        const result = { score: test.score };
+
+        // Fetch user details
+        if (mongoose.Types.ObjectId.isValid(test.userId)) {
+          const user = await User.findById(test.userId).select("firstName lastName");
+          result.user = user ? `${user.firstName} ${user.lastName}` : "Unknown User";
+        } else {
+          result.user = "Invalid UserId";
+        }
+
+        // Fetch course details
+        if (mongoose.Types.ObjectId.isValid(test.selectedCourse)) {
+          const course = await Course.findById(test.selectedCourse).select("courseName");
+          result.course = course ? course.courseName : "Unknown Course";
+        } else {
+          result.course = "Invalid CourseId";
+        }
+
+        // Fetch subject details
+        if (mongoose.Types.ObjectId.isValid(test.selectedSubject)) {
+          const subject = await Subject.findById(test.selectedSubject).select("subjectName");
+          result.subject = subject ? subject.subjectName : "Unknown Subject";
+        } else {
+          result.subject = "Invalid SubjectId";
+        }
+
+        return result;
+      })
+    );
+
+    res.status(200).json(results);
+  } catch (error) {
+    console.error("Error fetching completed tests:", error);
+    res.status(500).json({ message: "Server error occurred." });
+  }
+});
 module.exports = router;

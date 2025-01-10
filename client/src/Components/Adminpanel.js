@@ -1,12 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faTachometerAlt, faUser, faBook, faChalkboardTeacher, faImage, faClipboardList } from '@fortawesome/free-solid-svg-icons';
+import { faTachometerAlt, faChartLine, faUser, faBook, faChalkboardTeacher, faImage, faClipboardList } from '@fortawesome/free-solid-svg-icons';
 import Dashboard from './Adminpanel/dashbord';
 import Student from './Adminpanel/student';
 import Course from './Adminpanel/course';
 import Subject from './Adminpanel/subject';
 import Images from './Adminpanel/images';
 import QuizEnroll from './Adminpanel/quizenroll';
+import StudentResult from './Adminpanel/studresult';
 import { useNavigate } from 'react-router-dom';
 
 const Adminpanel = () => {
@@ -36,6 +37,7 @@ const Adminpanel = () => {
     { name: 'Subject', panel: 'subject', icon: faChalkboardTeacher },
     { name: 'Images', panel: 'images', icon: faImage },
     { name: 'QuizEnroll', panel: 'quizenroll', icon: faClipboardList },
+    { name: 'Student Result', panel: 'studentresult', icon: faChartLine },
   ];
 
   const renderContent = () => {
@@ -46,6 +48,7 @@ const Adminpanel = () => {
       case 'subject': return <Subject />;
       case 'images': return <Images />;
       case 'quizenroll': return <QuizEnroll />;
+      case 'studentresult': return <StudentResult />
       default: return <h2>Welcome! Please select an option.</h2>;
     }
   };

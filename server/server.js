@@ -3,6 +3,7 @@ const cors = require('cors');
 const multer = require("multer");
 const path = require("path"); // Import path module
 const connectDB = require("./utils/db");
+const dotenv = require("dotenv");
 require('dotenv').config();
 
 
@@ -23,6 +24,8 @@ const emailRoutes = require("./routes/emailRoutes");
 const checkAndSendReminders = require('./services/scheduler');
 const app = express();
 
+// Load environment variables
+dotenv.config();
 
 app.use(cors({
     origin: ["https://edumocks.com", "https://www.edumocks.com", "http://localhost:3000"],
@@ -36,7 +39,6 @@ checkAndSendReminders();
 app.use('/images', express.static(path.join(__dirname, './image'))); // Replace 'images' with your actual image folder
 
 // Use route files
-app.use(bodyParser.json()); // for parsing application/json
 app.use("/api/users", userRoutes);
 app.use("/api/courses", courseRoutes);
 app.use("/api/subjects", subjectRoutes);
