@@ -6,6 +6,8 @@ import jsPDF from 'jspdf';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faChevronLeft, faChevronRight, faTimes, faFlag  } from '@fortawesome/free-solid-svg-icons';
 import 'jspdf-autotable';
+import { ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 const Test = () => {
   const location = useLocation();
@@ -24,18 +26,25 @@ const Test = () => {
   const [score, setScore] = useState(null);
   const [correctAnswers, setCorrectAnswers] = useState({});
   const [showResults, setShowResults] = useState(false);
-  const [loadingMessage, setLoadingMessage] = useState("Your test is loading... Please wait.");
   const navigate = useNavigate();
   const [visitedQuestions, setVisitedQuestions] = useState(new Set());
   const [showPopup, setShowPopup] = useState(false);
   const [unansweredQuestions, setUnansweredQuestions] = useState([]);
   const [timer, setTimer] = useState(600);
-  const savedCountdown = localStorage.getItem('countdownTime');
-  const initialCountdown = savedCountdown ? parseInt(savedCountdown, 10) : 30;
-  const savedExamStarted = localStorage.getItem('examStarted') === 'true';
-  const [countdown, setCountdown] = useState(initialCountdown);
-  const [examStarted, setExamStarted] = useState(savedExamStarted);
-  
+  const [showButton, setShowButton] = useState(true); // State to control button visibility
+  const [timeoutReached, setTimeoutReached] = useState(false);
+
+  useEffect(() => {
+    // Start a 30-second timer to hide the button
+    const timer = setTimeout(() => {
+      setShowButton(false);
+      setTimeoutReached(true); // Set timeoutReached to true after 30 seconds
+    }, 30000);
+
+    // Cleanup timer on component unmount
+    return () => clearTimeout(timer);
+  }, []);
+   
   // Fetch course name
   const fetchCourseName = useCallback(() => {
     if (selectedCourse) {
@@ -44,8 +53,8 @@ const Test = () => {
           setCourseName(response.data.name);
         })
         .catch((error) => {
-          console.error('Error fetching course:', error);
-          setError('Failed to load course');
+          toast.error('Error fetching course:', error);
+          toast.error('Failed to load course');
         });
     }
   }, [selectedCourse]);
@@ -57,8 +66,8 @@ const Test = () => {
           setSubjectName(response.data.name);
         })
         .catch((error) => {
-          console.error('Error fetching subject:', error);
-          setError('Failed to load subject');
+          toast.error('Error fetching subject:', error);
+          toast.error('Failed to load subject');
         });
     }
   }, [selectedSubject]);
@@ -75,9 +84,9 @@ const Test = () => {
           setLoading(false);
         })
         .catch((error) => {
-          console.error('Error fetching question set:', error);
+          toast.error('Error fetching question set:', error);
           setLoading(false);
-          setError('Failed to load question set');
+          toast.error('Failed to load question set');
         });
     }
   }, [userId, selectedCourse, selectedSubject]);
@@ -98,9 +107,9 @@ const Test = () => {
           setLoading(false);
         })
         .catch((error) => {
-          console.error('Error fetching quiz questions:', error);
+          toast.error('Error fetching quiz questions:', error);
           setLoading(false);
-          setError('Failed to load quiz questions');
+          toast.error('Failed to load quiz questions');
         });
     }
   }, [selectedSubject, questionSet]);
@@ -113,6 +122,8 @@ const Test = () => {
   
    // Handle opening the popup and fetch chapters
    const handleEnterRoom = () => {
+    setIsEnterRoomClicked(true); 
+    setQuizStarted(true);
     setModalOpen(true);
     if (selectedSubject) {
       // Set the timer based on the course name
@@ -381,10 +392,10 @@ const Test = () => {
   // Send the email with the PDF attachment
   axios.post('/api/quizResults/sendQuizResults', formData)
     .then((response) => {
-      console.log('Email sent successfully:', response);
+      toast.success('Email sent successfully:', response);
     })
     .catch((error) => {
-      console.error('Error sending email:', error);
+      toast.error('Error sending email:', error);
     });
 
   // Update test status and score in the database
@@ -396,10 +407,10 @@ const Test = () => {
     status: "Completed",  // Assuming 'Completed' is the status after submission
   })
   .then((response) => {
-    console.log('Test updated successfully:', response.data);
+    toast.success('Test updated successfully:', response.data);
   })
   .catch((error) => {
-    console.error('Error updating test:', error);
+    toast.error('Error updating test:', error);
   });
 
   navigate('/user-panel');
@@ -534,7 +545,7 @@ const handleFinishTest = () => {
 useEffect(() => {
   const handleBeforeUnload = (event) => {
     event.preventDefault();
-    event.returnValue = ''; // Show confirmation dialog
+    event.returnValue = 'your time is not resert '; // Show confirmation dialog
   };
 
   window.addEventListener('beforeunload', handleBeforeUnload);
@@ -542,19 +553,50 @@ useEffect(() => {
     window.removeEventListener('beforeunload', handleBeforeUnload);
   };
 }, []);
+const [isEnterRoomClicked, setIsEnterRoomClicked] = useState(false);
+const isQuestionAnswered = (index) => {
+  return !!selectedOptions[quizquestionSet[index]._id];
+};
+const [quizStarted, setQuizStarted] = useState(false);
+useEffect(() => {
+  // Retrieve the timer value from localStorage (if available)
+  const savedTimer = localStorage.getItem('quizTimer');
+  if (savedTimer) {
+    setTimer(parseInt(savedTimer, 10)); // Set the timer to the saved value
+  }
 
+  // Only set up the interval when the quiz is started
+  if (quizStarted) {
+    const interval = setInterval(() => {
+      setTimer((prevTimer) => {
+        const newTime = prevTimer - 1;
+        localStorage.setItem('quizTimer', newTime); // Save the updated timer to localStorage
+        return newTime;
+      });
+    }, 1000);
+
+    // Cleanup interval on component unmount or when the quiz ends
+    return () => clearInterval(interval);
+  }
+}, [quizStarted]);
 
   return (
     <div className="quiz-container" style={{ margin: '0 auto', maxWidth: '900px', padding: '20px' }}>
+      <ToastContainer />
       {/* <h1 style={{ textAlign: 'center', fontSize: '2rem', marginBottom: '20px' }} >Quiz Test</h1> */}
-        <div>
+        <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', marginTop: '10px', marginBottom: '50px' }}>
           {/* <p>User ID: {userId}</p>
           <p>User Name: {userName}</p>
           <p>User Email: {userEmail}</p>
           <p>Course: {courseName || 'Loading...'}</p>
           <p>Subject: {subjectName || 'Loading...'}</p>
           <p>QuestionSet: {questionSet}</p> */}
-          <button onClick={handleEnterRoom}>Enter Room</button>
+          {/* <button onClick={handleEnterRoom}>Enter Room</button> */}
+          {!isEnterRoomClicked && (
+            <button  onClick={handleEnterRoom} style={{ padding: '10px 20px',  backgroundColor: '#8CC63E',  color: '#fff',  border: 'none',  cursor: 'pointer',  borderRadius: '5px',  fontSize: '16px', }}>
+              Enter Room
+            </button>
+          )}
           {/* {loadingMessage && <p style={{ color: 'blue', textAlign: 'center' }}>{loadingMessage}</p>}
           {countdown > 0 && <p style={{ color: 'orange', textAlign: 'center' }}>Starting in {countdown} seconds...</p>} */}
         </div>
@@ -564,7 +606,7 @@ useEffect(() => {
           {/* {loadingMessage && <p style={{ color: 'blue', textAlign: 'center' }}>{loadingMessage}</p>}
           {countdown > 0 && <p style={{ color: 'orange', textAlign: 'center' }}>Starting in {countdown} seconds...</p>} */}
           {modalOpen && questionsFetched && !quizSubmitted && (
-            <div  style={{ display: 'flex', gap: '5px', width: '100%', height: '80vh', margin: 'auto', padding: '10px', flexDirection: 'column', backgroundColor: '#4c4c4c' , boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)' , overflow: 'hidden',}}>
+            <div  style={{ display: 'flex', gap: '5px', width: '100%', height: '100vh', margin: 'auto', padding: '10px', flexDirection: 'column', backgroundColor: '#4c4c4c' , boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)' , overflow: 'hidden',}}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <h3 style={{ marginBottom: '10px', textAlign: 'left', color: '#fff', fontSize: '20px' }}>{`Question ${currentQuestionIndex + 1}`}</h3>
                 <p style={{ marginBottom: '10px', textAlign: 'center', color: '#fff', fontSize: '16px' }}>Time Left: {formatTime(timer)}</p>
@@ -577,7 +619,7 @@ useEffect(() => {
                 {/* Left Side Panel with Question Numbers */}
                 <div className="question-list" style={{ backgroundColor: '#fff', padding: '10px', boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)', maxHeight: '800px', overflowY: 'auto' , fontSize: '16px' }}>
                   {quizquestionSet.map((_, index) => (
-                    <button key={index} onClick={() => setCurrentQuestionIndex(index)} className={currentQuestionIndex === index ? 'active' : ''}style={{ display: 'block', width: '100%', padding: '8px', marginBottom: '5px', border: 'none', backgroundColor:'#8CC63E', color:'#fff', cursor: 'pointer', borderRadius: '4px', textAlign: 'center', position: 'relative', }}>
+                    <button key={index} onClick={() => setCurrentQuestionIndex(index)} className={currentQuestionIndex === index ? 'active' : ''}style={{ display: 'block', width: '100%', padding: '8px', marginBottom: '5px', border: 'none', backgroundColor: isQuestionAnswered(index) ? '#ccc' : '#8CC63E', color:'#fff', cursor: 'pointer', borderRadius: '4px', textAlign: 'center', position: 'relative', }}>
                       {`Q${index + 1}`}
                       {currentQuestionIndex === index && (
                         <span style={{ position: 'absolute', top: '50%', right: '-10px', transform: 'translateY(-50%)', width: '0', height: '0', borderTop: '10px solid transparent', borderBottom: '10px solid transparent', borderLeft: '10px solid #8CC63E', fontSize: '16px'}}></span>

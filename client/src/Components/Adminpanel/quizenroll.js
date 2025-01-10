@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
+import { ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 // Modal Component for Quiz Enrollment
 const QuizEnroll = () => {
@@ -28,7 +30,7 @@ const QuizEnroll = () => {
       const response = await axios.get('/api/users/users');
       setUsers(response.data);
     } catch (error) {
-      console.error('Error fetching users:', error);
+      toast.error('Error fetching users:', error);
     }
   };
 
@@ -38,7 +40,7 @@ const QuizEnroll = () => {
       const data = await response.json();
       setCourses(data);
     } catch (error) {
-      console.error('Error fetching courses:', error);
+      toast.error('Error fetching courses:', error);
     }
   };
 
@@ -72,12 +74,12 @@ const QuizEnroll = () => {
 
     try {
       await axios.post('/api/quizenroll', enrollmentData); // Backend URL
-      setSuccessMessage('User successfully enrolled for the quiz!'); // Show success message
+      toast.success('User successfully enrolled for the quiz!'); // Show success message
       setErrorMessage(''); // Clear any previous error message
       setModalOpen(false);
     } catch (error) {
-      console.error("Error adding user:", error);
-      setErrorMessage('Error enrolling user. Please try again later.'); // Show error message
+      toast.error("Error adding user:", error);
+      toast.error('Error enrolling user. Please try again later.'); // Show error message
       setSuccessMessage(''); // Clear any previous success message
     }
   };
@@ -157,10 +159,11 @@ const QuizEnroll = () => {
               Enroll
             </button>
           </form>
-          {successMessage && <div style={{ color: 'green', marginTop: '10px' }}>{successMessage}</div>}
-          {errorMessage && <div style={{ color: 'red', marginTop: '10px' }}>{errorMessage}</div>}
+          {/* {successMessage && <div style={{ color: 'green', marginTop: '10px' }}>{successMessage}</div>}
+          {errorMessage && <div style={{ color: 'red', marginTop: '10px' }}>{errorMessage}</div>} */}
         </div>
       )}
+      <ToastContainer />
     </div>
   );
 };

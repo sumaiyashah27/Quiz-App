@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios'; // If using 'react-modal' library
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faPlus, faEdit, faTrash, faTimes, faDollarSign, faUpload } from '@fortawesome/free-solid-svg-icons';
+import { ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 const Subject = () => {
   const [subjects, setSubjects] = useState([]);
@@ -30,7 +32,7 @@ const Subject = () => {
       const { data } = await axios.get('/api/subjects');
       setSubjects(data);
     } catch (error) {
-      console.error("Error fetching subjects:", error);
+      toast.error("Error fetching subjects:", error);
     } finally {
       setLoading(false);
     }
@@ -38,12 +40,12 @@ const Subject = () => {
 
   const handleAddSubject = async () => {
     if (!newSubjectName.trim()) {
-      alert("Please enter a subject name.");
+      toast.error("Please enter a subject name.");
       return;
     }
     const priceInDollars = parseFloat(newSubjectPrice);
     if (isNaN(priceInDollars) || priceInDollars <= 0) {
-      alert("Please enter a valid price.");
+      toast.error("Please enter a valid price.");
       return;
     }
     setLoading(true);
@@ -54,7 +56,7 @@ const Subject = () => {
       setShowAddSubjectModal(false);
       fetchSubjects();
     } catch (error) {
-      console.error('Error adding subject:', error);
+      toast.error('Error adding subject:', error);
     } finally {
       setLoading(false);
     }
@@ -74,7 +76,7 @@ const Subject = () => {
       setShowEditSubjectModal(false);
       fetchSubjects();
     } catch (error) {
-      console.error('Error updating subject:', error);
+      toast.error('Error updating subject:', error);
     } finally {
       setLoading(false);
     }
@@ -86,7 +88,7 @@ const Subject = () => {
         await axios.delete(`/api/subjects/${id}`);
         fetchSubjects();
       } catch (error) {
-        console.error('Error deleting subject:', error);
+        toast.error('Error deleting subject:', error);
       }
     }
   };
@@ -96,7 +98,7 @@ const Subject = () => {
 
   const handleUploadCSV = async () => {
     if (!selectedFile || !currentSubjectId) {
-      alert("Please select a file and chapter.");
+      toast.error("Please select a file and chapter.");
       return;
     }
     const formData = new FormData();
@@ -105,12 +107,12 @@ const Subject = () => {
       await axios.post(`/api/subjects/${currentSubjectId}/upload`, formData, {
         headers: { "Content-Type": "multipart/form-data" },
       });
-      setSuccessMessage("File uploaded successfully!");
+      toast.success("File uploaded successfully!");
       setShowUploadModal(false);
       fetchSubjects();
     } catch (error) {
-      console.error("Error uploading file:", error);
-      setErrorMessage("Error uploading file, please try again.");
+      toast.error("Error uploading file:", error);
+      toast.error("Error uploading file, please try again.");
     }
   };
   
@@ -152,7 +154,7 @@ const Subject = () => {
   
   const handleUpdateQuestion = async () => {
     if (!currentSubjectId || !editingQuestion?._id) {
-      console.error("Missing Subject ID or question ID");
+      toast.error("Missing Subject ID or question ID");
       return; // Return early if subject or question ID is invalid
     }
     setLoading(true);
@@ -192,11 +194,11 @@ const Subject = () => {
       );
   
       console.log('Question updated:', response.data);
-      alert('Question updated successfully');
+      toast.success('Question updated successfully');
       setShowEditQuestionModal(false); // Close the modal after updating
       fetchSubjects(); // Refresh the subjects list with the updated question
     } catch (error) {
-      console.error('Error updating question:', error.response?.data || error);
+      toast.error('Error updating question:', error.response?.data || error);
     } finally {
       setLoading(false); // Ensure loading state is reset
     }
@@ -233,7 +235,7 @@ function updateTableCell(question, index, rowIndex, colIndex, value) {
 
 const handleDownloadCSV = async (currentSubjectId) => {
   if (!currentSubjectId) {
-    alert("Please select a subject first.");
+    toast.error("Please select a subject first.");
     return;
   }
   try {
@@ -250,13 +252,14 @@ const handleDownloadCSV = async (currentSubjectId) => {
     link.click();
     link.remove();
   } catch (error) {
-    console.error("Error downloading CSV:", error);
-    alert("Failed to download CSV. Please try again.");
+    toast.error("Error downloading CSV:", error);
+    toast.error("Failed to download CSV. Please try again.");
   }
 };
 
   return (
     <div>
+       <ToastContainer />
       <h2 style={{ textAlign: 'center', marginBottom: '20px', color: '#4CAF50' }}>Subject Details</h2>
 
       {/* Button to Add Subject */}
@@ -315,13 +318,13 @@ const handleDownloadCSV = async (currentSubjectId) => {
                 {subject.name}</div>
               <div>
                 <button onClick={() => handleEditSubject(subject)} style={{ background: 'transparent', border: 'none', cursor: 'pointer' }}>
-                  <FontAwesomeIcon icon={faEdit} style={{ marginRight: '10px' }} />
+                  <FontAwesomeIcon icon={faEdit} style={{ color: '#333',  fontSize: '20px', marginRight: '10px' }} />
                 </button>
                 <button onClick={() => handleDeleteSubject(subject._id)} style={{ background: 'transparent', border: 'none', cursor: 'pointer' }}>
-                  <FontAwesomeIcon icon={faTrash} style={{ color: 'red' }} />
+                  <FontAwesomeIcon icon={faTrash} style={{ color: '#e74c3c', cursor: 'pointer', fontSize: '20px' }} />
                 </button>
                 <button onClick={() => setExpandedSubject(expandedSubject === subject._id ? null : subject._id)} style={{ background: 'transparent', border: 'none', cursor: 'pointer' }}>
-                  <FontAwesomeIcon icon={faPlus} />
+                  <FontAwesomeIcon icon={faPlus} style={{color: '#4CAF50', cursor: 'pointer', fontSize: '20px',marginLeft: '20px',marginRight: '10px'}} />
                 </button>
               </div>
             </div>

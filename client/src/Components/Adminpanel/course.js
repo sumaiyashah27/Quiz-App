@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faPlus, faTrash } from '@fortawesome/free-solid-svg-icons';
+import { ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 const Course = () => {
   const [courses, setCourses] = useState([]);
@@ -18,19 +20,32 @@ const Course = () => {
   const [expandedCourse, setExpandedCourse] = useState(null);
   const [expandedSubject, setExpandedSubject] = useState(null);
 
-  useEffect(() => { fetchCourses(); fetchSubjects(); }, []);
-  const fetchCourses = async () => { 
-    setLoading(true); 
-    try { 
-      const { data } = await axios.get('/api/courses'); 
-      setCourses(data); 
-    } catch (error) { 
-      console.error('Error fetching courses:', error);
-    } finally { 
-      setLoading(false); 
-    } 
+  useEffect(() => {
+    fetchCourses();
+    fetchSubjects();
+  }, []);
+
+  const fetchCourses = async () => {
+    setLoading(true);
+    try {
+      const { data } = await axios.get('/api/courses');
+      setCourses(data);
+    } catch (error) {
+      toast.error('Error fetching courses.');
+    } finally {
+      setLoading(false);
+    }
   };
-  const fetchSubjects = async () => { try { const { data } = await axios.get('/api/subjects'); setSubjectOptions(data); } catch (error) { console.error('Error fetching subjects:', error); } };
+
+  const fetchSubjects = async () => {
+    try {
+      const { data } = await axios.get('/api/subjects');
+      setSubjectOptions(data);
+    } catch (error) {
+      toast.error('Error fetching subjects.');
+    }
+  };
+
   const handleCourseSelect = async (courseId) => {
     setSelectedCourse(courseId);
     setLoading(true);
@@ -38,59 +53,118 @@ const Course = () => {
       const { data } = await axios.get(`/api/courses/${courseId}`);
       setCourseDetails(data);
     } catch (error) {
-      console.error('Error fetching course details:', error);
-      alert('Failed to fetch course details. Please try again later.'); // Consider logging the error response here as well.
+      toast.error('Failed to fetch course details. Please try again later.');
     } finally {
       setLoading(false);
     }
   };
-  const pulseAnimation = {
-    animation: 'pulse 1.5s infinite',
-  };
-  
-  
-  const handleAddSubjectToCourse = async () => { if (!selectedCourse || !selectedSubject) { alert('Please select both a course and a subject.'); return; } const courseToUpdate = courses.find((course) => course._id === selectedCourse); const isSubjectAlreadyAdded = courseToUpdate && courseToUpdate.subjects.some((subject) => subject._id === selectedSubject); if (isSubjectAlreadyAdded) { alert('This subject is already added to the course.'); return; } const updatedCourses = courses.map((course) => { if (course._id === selectedCourse) { const subjectToAdd = subjectOptions.find((subject) => subject._id === selectedSubject); return { ...course, subjects: [...course.subjects, subjectToAdd] }; } return course; }); setCourses(updatedCourses); try { await axios.put(`/api/courses/${selectedCourse}/add-subject`, { subjectId: selectedSubject }); handleCourseSelect(selectedCourse); closeAddSubjectModal(); } catch (error) { console.error('Error adding subject to course:', error); fetchCourses(); } };
-  const handleAddCourse = async () => { 
-    if (!newCourseName) { 
-      alert('Please enter a course name.'); 
-      return; 
-    } try { const newCourse = { name: newCourseName }; await axios.post('/api/courses', newCourse); fetchCourses(); closeAddCourseModal(); } catch (error) { console.error('Error adding new course:', error); } };
-  const handleDeleteCourse = async (courseId) => { try { await axios.delete(`/api/courses/${courseId}`); setCourses(courses.filter((course) => course._id !== courseId)); alert('Course deleted successfully'); } catch (error) { console.error('Error deleting course:', error.response || error); alert('Error deleting the course'); } };
-  const handleDeleteSubject = async (courseId, subjectId) => {
+
+  const handleAddSubjectToCourse = async () => {
+    if (!selectedCourse || !selectedSubject) {
+      toast.warn('Please select both a course and a subject.');
+      return;
+    }
+
+    const courseToUpdate = courses.find((course) => course._id === selectedCourse);
+    const isSubjectAlreadyAdded =
+      courseToUpdate && courseToUpdate.subjects.some((subject) => subject._id === selectedSubject);
+
+    if (isSubjectAlreadyAdded) {
+      toast.info('This subject is already added to the course.');
+      return;
+    }
+
+    const updatedCourses = courses.map((course) => {
+      if (course._id === selectedCourse) {
+        const subjectToAdd = subjectOptions.find((subject) => subject._id === selectedSubject);
+        return { ...course, subjects: [...course.subjects, subjectToAdd] };
+      }
+      return course;
+    });
+
+    setCourses(updatedCourses);
+
     try {
-      // Perform the API request to remove the subject
-      await axios.put(`/api/courses/${courseId}/remove-subject`, { subjectId });
-  
-      // Update the course details directly in state
-      setCourses((prevCourses) => {
-        return prevCourses.map((course) => {
-          if (course._id === courseId) {
-            // Filter out the deleted subject from the course's subjects array
-            return {
-              ...course,
-              subjects: course.subjects.filter(subject => subject._id !== subjectId)
-            };
-          }
-          return course;
-        });
-      });
-  
-      // Optionally, update the selected course details to reflect the change immediately
-      handleCourseSelect(courseId);
+      await axios.put(`/api/courses/${selectedCourse}/add-subject`, { subjectId: selectedSubject });
+      handleCourseSelect(selectedCourse);
+      closeAddSubjectModal();
+      toast.success('Subject added successfully.');
     } catch (error) {
-      console.error('Error deleting subject from course:', error);
+      toast.error('Error adding subject to course.');
+      fetchCourses();
     }
   };
-  
-  const openAddSubjectModal = (courseId, courseName) => { setSelectedCourse(courseId); setModalCourseName(courseName); setIsAddSubjectModalOpen(true); };
-  const closeAddSubjectModal = () => { setIsAddSubjectModalOpen(false); setSelectedSubject(''); };
-  const openAddCourseModal = () => { setIsAddCourseModalOpen(true); };
-  const closeAddCourseModal = () => { setIsAddCourseModalOpen(false); setNewCourseName(''); };
+
+  const handleAddCourse = async () => {
+    if (!newCourseName) {
+      toast.warn('Please enter a course name.');
+      return;
+    }
+
+    try {
+      const newCourse = { name: newCourseName };
+      await axios.post('/api/courses', newCourse);
+      fetchCourses();
+      closeAddCourseModal();
+      toast.success('Course added successfully.');
+    } catch (error) {
+      toast.error('Error adding new course.');
+    }
+  };
+
+  const handleDeleteCourse = async (courseId) => {
+    try {
+      await axios.delete(`/api/courses/${courseId}`);
+      setCourses(courses.filter((course) => course._id !== courseId));
+      toast.success('Course deleted successfully.');
+    } catch (error) {
+      toast.error('Error deleting the course.');
+    }
+  };
+
+  const handleDeleteSubject = async (courseId, subjectId) => {
+    try {
+      await axios.put(`/api/courses/${courseId}/remove-subject`, { subjectId });
+      setCourses((prevCourses) =>
+        prevCourses.map((course) =>
+          course._id === courseId
+            ? { ...course, subjects: course.subjects.filter((subject) => subject._id !== subjectId) }
+            : course
+        )
+      );
+      handleCourseSelect(courseId);
+      toast.success('Subject deleted successfully.');
+    } catch (error) {
+      toast.error('Error deleting subject from course.');
+    }
+  };
+
+  const openAddSubjectModal = (courseId, courseName) => {
+    setSelectedCourse(courseId);
+    setModalCourseName(courseName);
+    setIsAddSubjectModalOpen(true);
+  };
+
+  const closeAddSubjectModal = () => {
+    setIsAddSubjectModalOpen(false);
+    setSelectedSubject('');
+  };
+
+  const openAddCourseModal = () => {
+    setIsAddCourseModalOpen(true);
+  };
+
+  const closeAddCourseModal = () => {
+    setIsAddCourseModalOpen(false);
+    setNewCourseName('');
+  };
+
   const toggleCourseExpand = (courseId) => setExpandedCourse(expandedCourse === courseId ? null : courseId);
   const toggleSubjectExpand = (subjectId) => setExpandedSubject(expandedSubject === subjectId ? null : subjectId);
 
   return (
     <div style={{ padding: '20px', fontFamily: 'Arial, sans-serif' }}>
+      <ToastContainer />
       <h2 style={{ fontWeight: 'bold', color: '#333',textAlign:'center' }}>Course Management</h2>
       {loading && <p>Loading...</p>}
       <button style={{ padding: '10px 15px', backgroundColor: '#4CAF50', color: '#fff', border: 'none', borderRadius: '5px', cursor: 'pointer', marginBottom: '20px', transition: 'background-color 0.3s ease' }} onClick={openAddCourseModal}>
@@ -102,7 +176,12 @@ const Course = () => {
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', cursor: 'pointer' }} onClick={() => toggleCourseExpand(course._id)}>
               <h3>{course.name}</h3>
               <div>
-                <FontAwesomeIcon icon={faTrash} style={{ color: '#e74c3c', cursor: 'pointer', fontSize: '20px'}} onClick={(e) => { e.stopPropagation(); handleDeleteCourse(course._id); }} />
+                {/* <FontAwesomeIcon icon={faTrash} style={{ color: '#e74c3c', cursor: 'pointer', fontSize: '20px'}} onClick={(e) => { e.stopPropagation(); handleDeleteCourse(course._id); }} /> */}
+                {course.name !== 'CFA LEVEL - 1' && (
+                  <FontAwesomeIcon icon={faTrash} style={{ color: '#e74c3c', cursor: 'pointer', fontSize: '20px' }}
+                    onClick={(e) => { e.stopPropagation(); handleDeleteCourse(course._id); }}
+                  />
+                )}
                 <FontAwesomeIcon icon={faPlus} style={{ color: '#4CAF50', cursor: 'pointer', fontSize: '20px',marginLeft: '10px',marginRight: '10px'}} onClick={(e) => { e.stopPropagation(); openAddSubjectModal(course._id, course.name); }}/>
               </div>
             </div>

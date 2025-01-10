@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { FaPlus, FaTimes, FaImage, FaCloudUploadAlt, FaTrashAlt, FaCopy } from 'react-icons/fa';
+import { ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 export default function Images() {
   const [images, setImages] = useState([]);
@@ -18,7 +20,7 @@ export default function Images() {
         setLoading(false);
       })
       .catch((error) => {
-        setError('Error fetching images');
+        toast.error('Error fetching images');
         setLoading(false);
       });
   }, []);
@@ -33,21 +35,22 @@ export default function Images() {
       setImages(response.data);
       setIsModalOpen(false);
       setSelectedFiles([]);
+      toast.success('Images uploaded successfully.');
     } catch (error) {
-      console.error('Error uploading images:', error);
+      toast.error('Error uploading images:', error);
     }
   };
 
   const deleteImage = async (imageId, imageLocation) => {
     try {
       if (!imageLocation) {
-        console.error('Image location is not available');
+        toast.error('Image location is not available.');
         return;
       }
       await axios.delete(`/api/images/${imageId}`, { data: { location: imageLocation } });
       setImages(images.filter((image) => image._id !== imageId));
     } catch (error) {
-      console.error('Error deleting image:', error);
+      toast.error('Error deleting image:', error);
     }
   };
 
@@ -74,6 +77,7 @@ export default function Images() {
 
   return (
     <div className="images-container" style={{ padding: '30px', backgroundColor: '#f4f4f4' }}>
+      <ToastContainer />
       <h1 style={{ textAlign: 'center', color: '#333', fontSize: '2rem', marginBottom: '20px' }}>
         <FaImage style={{ marginRight: '10px' }} />
         Image Management

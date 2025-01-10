@@ -3,6 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { faTimes, faClock, faEdit, faCalendarPlus} from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 const Userpanel = () => {
   const [isLoading, setIsLoading] = useState(true);
@@ -37,7 +39,7 @@ const Userpanel = () => {
         const response = await axios.get(`/api/users/${userId}`);
         const userData = response.data;
         setUserName(userData.firstName); setUserMongoId(userData._id); setUserEmail(userData.email); setIsLoading(false);
-      } catch (error) { console.error('Error fetching user details:', error);
+      } catch (error) { toast.error('Error fetching user details:', error);
         setIsLoading(false);
       }
     };
@@ -47,9 +49,9 @@ const Userpanel = () => {
       try {
         const response = await axios.get(`/api/quizenroll/${userMongoId}`);
         if (Array.isArray(response.data)) {setQuizEnrollmentData(response.data);
-        } else { console.error('Expected an array, but received:', response.data);
+        } else { toast.error('Expected an array, but received:', response.data);
         }
-      } catch (error) {console.error('Error fetching quiz enrollment data:', error);
+      } catch (error) {toast.error('Error fetching quiz enrollment data:', error);
       }
     };
     //Scheduled tests
@@ -57,9 +59,9 @@ const Userpanel = () => {
       if (!userMongoId) return;
       try { const response = await axios.get(`/api/scheduleTest/${userMongoId}`);
         if (Array.isArray(response.data)) {setScheduledTests(response.data);
-        } else {console.error('Expected an array, but received:', response.data);
+        } else {toast.error('Expected an array, but received:', response.data);
         }
-      } catch (error) {console.error('Error fetching scheduled tests:', error);
+      } catch (error) {toast.error('Error fetching scheduled tests:', error);
       }
     }
     //courses and subjects
@@ -69,7 +71,7 @@ const Userpanel = () => {
         const subjectResponse = await axios.get('/api/subjects');
         setCourses(courseResponse.data);
         setSubjects(subjectResponse.data);
-      } catch (error) {console.error('Error fetching courses and subjects:', error);
+      } catch (error) {toast.error('Error fetching courses and subjects:', error);
       }
     };
     if (userId) {
@@ -115,7 +117,7 @@ const Userpanel = () => {
       testDate.setSeconds(0); // Set seconds to 0 if required
   
       if (isNaN(testDate.getTime())) {
-        console.error('Invalid test date-time:', testDate); // If invalid date-time
+        toast.error('Invalid test date-time:', testDate); // If invalid date-time
         return; // Return if invalid date-time to avoid further calculations
       }
       const updateRemainingTime = () => {
@@ -156,16 +158,16 @@ const Userpanel = () => {
     // Validate if all fields are filled out, including questionSet
     if (!testDate || !testTime || !questionSet) {
       if (!questionSet) {
-        setErrorMessage("Please select a question set.");
+        toast.error("Please select a question set.");
       } else {
-        setErrorMessage("Please fill out all the fields.");
+        toast.error("Please fill out all the fields.");
       }
       return;
     }
     // Proceed with scheduling if validation passes
     setErrorMessage('');
     if (selectedDateTime <= currentDateTime) {
-      setTimeError('The selected time cannot be in the past.');
+      toast.error('The selected time cannot be in the past.');
       return;
     }
     setTimeError(''); // Clear the error if the time is valid
@@ -185,11 +187,11 @@ const Userpanel = () => {
       const response = await axios.post('/api/scheduleTest', testData);
       console.log('Test scheduled successfully:', response.data);
       setModalOpen(false);
-      alert('Test scheduled successfully!');
+      toast.success('Test scheduled successfully!');
     } catch (error) {
-      console.error('Error scheduling test:', error);
+      toast.error('Error scheduling test:', error);
       setScheduledTests(scheduledTests); // Revert to previous state if the request fails
-      alert('Failed to schedule test.');
+      toast.error('Failed to schedule test.');
     }
   };
 
@@ -208,7 +210,7 @@ const Userpanel = () => {
       return; // Prevents proceeding if fields are empty
     }
     // Reset error state and proceed with paying delay logic
-    setError(false);
+    toast.error(false);
     console.log("Navigating with test details:", {
       userId: userMongoId,
       selectedCourse: selectedTest.selectedCourse,
@@ -273,7 +275,7 @@ const handleAttendTest = (course, subject) => {
     // Open the modal
     setIsModalOpen(true);
   } else {
-    console.error('Test not found for the given course and subject.');
+    toast.error('Test not found for the given course and subject.');
   }
 };
 
@@ -314,8 +316,8 @@ const handleEnterRoom = async (course, subject) => {
     //   state: { userId: userMongoId, userName, userEmail, selectedCourse: course, selectedSubject: subject },
     // });
   } catch (error) {
-    console.error('Error removing subject:', error);
-    alert('Failed to remove subject. Please try again later.');
+    toast.error('Error removing subject:', error);
+    toast.error('Failed to remove subject. Please try again later.');
   }
 };
  // Function to update test status to "Delay" after 1 hour
@@ -330,7 +332,7 @@ const handleEnterRoom = async (course, subject) => {
 
     if (response.data) {
       setTestStatus('Delay'); // Update the status in frontend
-      console.log('Test status updated to Delay');
+      toast.error('Test status updated to Delay');
     }
   } catch (error) {
     console.error('Error updating test status:', error);
@@ -338,6 +340,7 @@ const handleEnterRoom = async (course, subject) => {
 };
   return (
     <div style={{ padding: '30px', maxWidth: '1200px', margin: '0 auto', backgroundColor: '#f4f4f9'}}>
+      <ToastContainer />
       {/* Render user details */}
       <div style={{ paddingBottom: '20px'}}>
         <h2 style={{ fontSize: '2rem', fontWeight: 'bold', color: '#333' }}>Welcome, {isLoading ? 'Loading...' : userName}</h2>
@@ -391,8 +394,8 @@ const handleEnterRoom = async (course, subject) => {
         <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0, 0, 0, 0.5)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 1000 }}>
           <div style={{ backgroundColor: '#fff', padding: '20px', borderRadius: '8px', maxWidth: '500px', width: '100%', boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)', textAlign: 'center' }}>
             <h2>Test Details</h2>
-            <p><strong>Course:</strong> {selectTest.selectedCourse}</p>
-            <p><strong>Subject:</strong> {selectTest.selectedSubject}</p>
+            {/* <p><strong>Course:</strong> {selectTest.selectedCourse}</p>
+            <p><strong>Subject:</strong> {selectTest.selectedSubject}</p> */}
             <p><strong>Question Set:</strong> {selectTest.questionSet}</p>
             <p><strong>Test Time:</strong> {selectTest.testTime}</p>
             <p><strong>Test Date:</strong> {new Date(selectTest.testDate).toLocaleDateString()}</p>
@@ -411,7 +414,6 @@ const handleEnterRoom = async (course, subject) => {
           </div>
         </div>
       )}
-
       {/* Modal for scheduling the test */}
       {modalOpen && (
         <div style={{ position: 'fixed', top: '0', left: '0', right: '0', bottom: '0', backgroundColor: 'rgba(0, 0, 0, 0.5)', display: 'flex', justifyContent: 'center', alignItems: 'center', padding: '20px' }}>

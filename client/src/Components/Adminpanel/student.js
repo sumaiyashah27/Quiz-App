@@ -3,6 +3,8 @@ import axios from 'axios';
 import Papa from 'papaparse'; 
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'; 
 import { faPlus, faTimes, faTrash, faEye, faEyeSlash, faDownload } from '@fortawesome/free-solid-svg-icons'; 
+import { ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 const Student = () => { 
   const [users, setUsers] = useState([]); 
@@ -16,19 +18,19 @@ const Student = () => {
 
   useEffect(() => { fetchUsers(); }, []); 
   const fetchUsers = () => { 
-    axios.get('/api/users/users').then(response => { setUsers(response.data); setLoading(false); }).catch(err => { setError("Failed to fetch users data"); setLoading(false); }); 
+    axios.get('/api/users/users').then(response => { setUsers(response.data); setLoading(false); }).catch(err => { toast.error("Failed to fetch users data"); setLoading(false); }); 
   };
 
   const handleDelete = (userId) => {
     if (window.confirm("Are you sure you want to delete this user?")) {
         axios.delete(`/api/users/user/${userId}`)
         .then(response => {
-          alert("User deleted successfully!");
+          toast.success("User deleted successfully!");
           fetchUsers(); // Refresh user list after successful deletion
       })
       .catch(error => {
           console.error("Error deleting user:", error);
-          alert("Error deleting user.");
+          toast.error("Error deleting user.");
       });
     }
 };
@@ -36,7 +38,7 @@ const Student = () => {
 const handleFileChange = (event) => {
   const file = event.target.files[0];
   if (file && file.type !== 'text/csv') {
-    alert("Please select a valid CSV file.");
+    toast.error("Please select a valid CSV file.");
     setSelectedFile(null); // Reset file if not valid
   } else {
     setSelectedFile(file); // Store file if valid
@@ -47,7 +49,7 @@ const handleInputChange = (e) => setFormData({ ...formData, [e.target.name]: e.t
 
 const handleUploadCSV = async () => {
   if (!selectedFile) {
-      alert("Please select a CSV file first.");
+    toast.error("Please select a CSV file first.");
       return;
   }
 
@@ -74,17 +76,17 @@ const handleUploadCSV = async () => {
               });
 
               if (response.status === 200) {
-                  alert("CSV uploaded and users added successfully.");
+                toast.success("CSV uploaded and users added successfully.");
                   fetchUsers(); // Refresh user list after successful upload
               } else {
-                  alert("Failed to upload CSV file. Please check the file format.");
+                toast.error("Failed to upload CSV file. Please check the file format.");
               }
           } catch (error) {
               console.error("Error uploading CSV:", error);
               if (error.response && error.response.data.errors) {
-                  alert("Errors:\n" + error.response.data.errors.join('\n'));
+                toast.error("Errors:\n" + error.response.data.errors.join('\n'));
               } else {
-                  alert("Error uploading CSV file: " + (error.response?.data?.message || "Unknown error"));
+                toast.error("Error uploading CSV file: " + (error.response?.data?.message || "Unknown error"));
               }
           }
       }
@@ -121,18 +123,18 @@ const pulseAnimation = {
 const handleFormSubmit = (e) => { 
   e.preventDefault(); 
   if (formData.password !== formData.confirmPassword) { 
-    alert("Passwords do not match!"); 
+    toast.error("Passwords do not match!"); 
     return; 
   }
   const dataToSubmit = {firstName: formData.firstName, lastName: formData.lastName, email: formData.email, phone: formData.phone, countryCode: formData.countryCode, password: formData.password, };
 
   axios.post('/api/users/signup', dataToSubmit) // Submit to the same signup endpoint
     .then(() => { 
-      alert("User  added successfully"); 
+      toast.success("User  added successfully"); 
       setShowAddStudentModal(false); 
       fetchUsers(); 
     })
-    .catch(() => alert("Error adding user"));
+    .catch(() => toast.error("Error adding user"));
 };
 
 // Keyframes for the pulse animation
@@ -188,6 +190,7 @@ document.head.appendChild(styleTag);
 
 return (
     <div style={{ padding: '20px' }}>
+      <ToastContainer />
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: '20px' }}>
         <div>
           <button onClick={() => setShowAddStudentModal(true)} style={{ backgroundColor: "green", color: "white", padding: "10px 12px", fontSize: "14px", borderRadius: "8px", cursor: "pointer", boxShadow: "0px 4px 6px rgba(0, 0, 0, 0.1)", transition: "all 0.3s ease", }} >
