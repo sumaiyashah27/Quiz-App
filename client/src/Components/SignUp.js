@@ -78,18 +78,18 @@ const SignUp = () => {
         },
         body: JSON.stringify({ email: email, firstName: firstName }),
       });
-  
-      const data = await response.json();
+      
       if (!response.ok) {
-        console.error('Failed to send welcome email:', data.message);
+        const errorData  = await response.json();
+        console.error('Failed to send welcome email:', errorData.message);
       } else {
+        const data = await response.json();
         console.log('Welcome email sent successfully:', data.message);
       }
     } catch (error) {
       console.error('Error sending welcome email:', error);
     }
   };
-  
 
   const responseGoogle = (credentialResponse) => {
     if (credentialResponse.credential) {

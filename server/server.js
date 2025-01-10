@@ -36,6 +36,7 @@ checkAndSendReminders();
 app.use('/images', express.static(path.join(__dirname, './image'))); // Replace 'images' with your actual image folder
 
 // Use route files
+app.use(bodyParser.json()); // for parsing application/json
 app.use("/api/users", userRoutes);
 app.use("/api/courses", courseRoutes);
 app.use("/api/subjects", subjectRoutes);
