@@ -3,7 +3,8 @@ const cors = require('cors');
 const multer = require("multer");
 const path = require("path"); // Import path module
 const connectDB = require("./utils/db");
-const dotenv = require("dotenv");
+require('dotenv').config();
+
 
 const userRoutes = require("./routes/userRoutes");
 const courseRoutes = require("./routes/courseRoutes");
@@ -22,8 +23,6 @@ const emailRoutes = require("./routes/emailRoutes");
 const checkAndSendReminders = require('./services/scheduler');
 const app = express();
 
-// Load environment variables
-dotenv.config();
 
 app.use(cors({
     origin: ["https://edumocks.com", "https://www.edumocks.com", "http://localhost:3000"],

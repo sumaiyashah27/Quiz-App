@@ -1,5 +1,6 @@
 const mongoose = require('mongoose');
-require('dotenv').config(); // Load environment variables from .env file
+require('dotenv').config();
+ // Load environment variables from .env file
 
 // MongoDB URI (store this in your .env file)
 const mongoURI = process.env.MONGO_URI;

@@ -3,6 +3,8 @@ const nodemailer = require('nodemailer');
 const User = require('../models/user-model')
 const ScheduleTest = require('../models/scheduletest-model');
 const router = express.Router();
+require('dotenv').config();
+
 
 // POST route to send email
 router.post('/send-email', async (req, res) => {
