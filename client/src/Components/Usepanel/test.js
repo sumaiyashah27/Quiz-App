@@ -168,7 +168,7 @@ const Test = () => {
     doc.setFont("helvetica", "normal");
     doc.setFontSize(12);
 
-    const watermarkLogoPath = '/edulog-2.png';
+    const watermarkLogoPath = 'https://edumocks.com/edulog-2.png';
     const logoWidth = 40;
     const logoHeight = 15;
     const pageWidth = doc.internal.pageSize.width;
@@ -180,7 +180,7 @@ const Test = () => {
 
         if (isFirstPage) {
             // Add header logo
-            const logoPath = '/edulog-2.png';
+            const logoPath = 'https://edumocks.com/edulog-2.png';
             doc.addImage(logoPath, 'PNG', 10, 10, logoWidth, logoHeight);
 
             // Add title
