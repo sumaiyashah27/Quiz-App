@@ -53,6 +53,6 @@ router.post('/send-email', async (req, res) => {
 });
 
 // Log ScheduledTest to verify it is properly imported
-console.log(ScheduleTest);  // Check if the model is imported correctly
+console.log(ScheduleTest); 
 
 module.exports = router;

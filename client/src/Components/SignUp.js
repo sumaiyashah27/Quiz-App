@@ -4,6 +4,35 @@ import { useNavigate } from 'react-router-dom';
 import { AiOutlineCheck, AiOutlineClose } from 'react-icons/ai';
 import { GoogleOAuthProvider, GoogleLogin } from '@react-oauth/google';
 
+const countryList = [
+  { code: '+1', country: 'USA' },
+  { code: '+44', country: 'UK' },
+  { code: '+91', country: 'India' },
+  { code: '+61', country: 'Australia' },
+  { code: '+81', country: 'Japan' },
+  { code: '+49', country: 'Germany' },
+  { code: '+33', country: 'France' },
+  { code: '+39', country: 'Italy' },
+  { code: '+55', country: 'Brazil' },
+  { code: '+7', country: 'Russia' },
+  { code: '+250', country: 'Rwanda' },
+  { code: '+164', country: 'Dominican Republic' },
+  { code: '+254', country: 'Kenya' },
+  { code: '+34', country: 'Spain' },
+  { code: '+27', country: 'South Africa' },
+  { code: '+20', country: 'Egypt' },
+  { code: '+62', country: 'Indonesia' },
+  { code: '+32', country: 'Belgium' },
+  { code: '+1', country: 'Canada' },
+  { code: '+66', country: 'Thailand' },
+  { code: '+90', country: 'Turkey' },
+  { code: '+51', country: 'Peru' },
+  { code: '+61', country: 'Australia' },
+  { code: '+48', country: 'Poland' },
+  { code: '+33', country: 'France' },
+  { code: '+54', country: 'Argentina' },
+  { code: '+52', country: 'Mexico' }
+];
 const SignUp = () => {
   const navigate = useNavigate(); // Initialize navigation
   const [showPassword, setShowPassword] = useState(false);
@@ -133,10 +162,12 @@ const SignUp = () => {
             {email.length > 0 && (emailValid ? <AiOutlineCheck style={{ position: 'absolute', right: '10px', top: '50%', transform: 'translate(0, -50%)', color: 'green' }} /> : <AiOutlineClose style={{ position: 'absolute', right: '10px', top: '50%', transform: 'translate(0, -50%)', color: 'red' }} />)}
           </div>
           <div style={{ display: 'flex' }}>
-            <select id="countryCode" name="countryCode" value={user.countryCode} onChange={handleInputs} style={{ ...countryCodeStyles }}>
-              <option value="+1">+1 (USA)</option>
-              <option value="+44">+44 (UK)</option>
-              <option value="+91">+91 (India)</option>
+          <select id="countryCode" name="countryCode" value={user.countryCode} onChange={handleInputs} style={{ ...countryCodeStyles }}>
+              {countryList.map((country, index) => (
+                <option key={index} value={country.code}>
+                  {`${country.code} (${country.country})`}
+                </option>
+              ))}
             </select>
             <input type="tel" id="phone" name="phone" required placeholder="Phone Number" autoComplete="off" value={user.phone} onChange={handleInputs} style={{ ...phoneInputStyles, backgroundColor: inputBg.phone, flex: 1 }} onFocus={() => handleFocus('phone')} onBlur={() => handleBlur('phone')} />
           </div>

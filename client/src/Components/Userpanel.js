@@ -39,7 +39,7 @@ const Userpanel = () => {
         const response = await axios.get(`/api/users/${userId}`);
         const userData = response.data;
         setUserName(userData.firstName); setUserMongoId(userData._id); setUserEmail(userData.email); setIsLoading(false);
-      } catch (error) { toast.error('Error fetching user details:', error);
+      } catch (error) { console.error('Error fetching user details:', error);
         setIsLoading(false);
       }
     };
@@ -51,7 +51,7 @@ const Userpanel = () => {
         if (Array.isArray(response.data)) {setQuizEnrollmentData(response.data);
         } else { toast.error('Expected an array, but received:', response.data);
         }
-      } catch (error) {toast.error('Error fetching quiz enrollment data:', error);
+      } catch (error) {console.error('Error fetching quiz enrollment data:', error);
       }
     };
     //Scheduled tests
@@ -61,7 +61,7 @@ const Userpanel = () => {
         if (Array.isArray(response.data)) {setScheduledTests(response.data);
         } else {toast.error('Expected an array, but received:', response.data);
         }
-      } catch (error) {toast.error('Error fetching scheduled tests:', error);
+      } catch (error) {console.error('Error fetching scheduled tests:', error);
       }
     }
     //courses and subjects
@@ -71,7 +71,7 @@ const Userpanel = () => {
         const subjectResponse = await axios.get('/api/subjects');
         setCourses(courseResponse.data);
         setSubjects(subjectResponse.data);
-      } catch (error) {toast.error('Error fetching courses and subjects:', error);
+      } catch (error) {console.error('Error fetching courses and subjects:', error);
       }
     };
     if (userId) {
@@ -189,9 +189,9 @@ const Userpanel = () => {
       setModalOpen(false);
       toast.success('Test scheduled successfully!');
     } catch (error) {
-      toast.error('Error scheduling test:', error);
+      console.error('Error scheduling test:', error);
       setScheduledTests(scheduledTests); // Revert to previous state if the request fails
-      toast.error('Failed to schedule test.');
+      console.error('Failed to schedule test.');
     }
   };
 

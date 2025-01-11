@@ -6,6 +6,35 @@ import { faPlus, faTimes, faTrash, faEye, faEyeSlash, faDownload } from '@fortaw
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 
+const countryList = [
+  { code: '+1', country: 'USA' },
+  { code: '+44', country: 'UK' },
+  { code: '+91', country: 'India' },
+  { code: '+61', country: 'Australia' },
+  { code: '+81', country: 'Japan' },
+  { code: '+49', country: 'Germany' },
+  { code: '+33', country: 'France' },
+  { code: '+39', country: 'Italy' },
+  { code: '+55', country: 'Brazil' },
+  { code: '+7', country: 'Russia' },
+  { code: '+250', country: 'Rwanda' },
+  { code: '+164', country: 'Dominican Republic' },
+  { code: '+254', country: 'Kenya' },
+  { code: '+34', country: 'Spain' },
+  { code: '+27', country: 'South Africa' },
+  { code: '+20', country: 'Egypt' },
+  { code: '+62', country: 'Indonesia' },
+  { code: '+32', country: 'Belgium' },
+  { code: '+1', country: 'Canada' },
+  { code: '+66', country: 'Thailand' },
+  { code: '+90', country: 'Turkey' },
+  { code: '+51', country: 'Peru' },
+  { code: '+61', country: 'Australia' },
+  { code: '+48', country: 'Poland' },
+  { code: '+33', country: 'France' },
+  { code: '+54', country: 'Argentina' },
+  { code: '+52', country: 'Mexico' }
+];
 const Student = () => { 
   const [users, setUsers] = useState([]); 
   const [error, setError] = useState(null); 
@@ -219,12 +248,11 @@ return (
               <input type="email" name="email" value={formData.email} onChange={handleInputChange} placeholder="Email" style={{ width: '100%', padding: '10px', margin: '10px 0' }} required />
               <div style={{ display: 'flex', alignItems: 'center' }}>
                 <select name="countryCode" value={formData.countryCode} onChange={handleInputChange} style={{ width: '30%', padding: '10px', margin: '10px 5px 10px 0' }} required>
-                  <option value="+1">+1 (US)</option>
-                  <option value="+44">+44 (UK)</option>
-                  <option value="+91">+91 (IN)</option>
-                  <option value="+61">+61 (AU)</option>
-                  <option value="+81">+81 (JP)</option>
-                  {/* Add more options as needed */}
+                  {countryList.map((country, index) => (
+                    <option key={index} value={country.code}>
+                      {country.code} ({country.country})
+                    </option>
+                  ))}
                 </select>
                 <input  type="text" name="phone" value={formData.phone} onChange={handleInputChange} placeholder="Phone No" style={{ width: '70%', padding: '10px', margin: '10px 0' }} required/>
               </div>

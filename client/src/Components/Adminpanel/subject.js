@@ -111,8 +111,8 @@ const Subject = () => {
       setShowUploadModal(false);
       fetchSubjects();
     } catch (error) {
-      toast.error("Error uploading file:", error);
-      toast.error("Error uploading file, please try again.");
+      console.error("Error uploading file:", error);
+      console.error("Error uploading file, please try again.");
     }
   };
   
