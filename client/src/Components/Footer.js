@@ -26,18 +26,18 @@ const Footer = () => {
           {/* Contact Section */}
           <div style={{ flex: '1', minWidth: '250px', marginBottom: '20px' }}>
             <h3 style={{ color: '#FFDC5C', fontSize: '1.4rem' }}>Contact Us</h3>
-            <span style={{ display: 'block', marginTop: '10px' }}>244-5333-7783</span>
-            <span style={{ display: 'block', marginTop: '10px' }}>hello@edumocks.com</span>
-            <span style={{ display: 'block', marginTop: '10px' }}>press@edumocks.com</span>
-            <span style={{ display: 'block', marginTop: '10px' }}>contact@edumocks.com</span>
+            <span style={{ display: 'block', marginTop: '10px' }}>+917021191510</span>
+            <span style={{ display: 'block', marginTop: '10px' }}>support@edumocks.com</span>
+            {/* <span style={{ display: 'block', marginTop: '10px' }}>press@edumocks.com</span>
+            <span style={{ display: 'block', marginTop: '10px' }}>contact@edumocks.com</span> */}
           </div>
 
-          {/* Quick Links Section */}
+          {/* Quick Links Section
           <div style={{ flex: '1', minWidth: '250px', marginBottom: '20px' }}>
             <h3 style={{ color: '#FFDC5C', fontSize: '1.4rem' }}>Quick Links</h3>
             <span style={{ display: 'block', marginTop: '10px', cursor: 'pointer' }}>Terms & Conditions</span>
             <span style={{ display: 'block', marginTop: '10px', cursor: 'pointer' }}>Privacy Policy</span>
-          </div>
+          </div> */}
         </div>
       </div>
       {/* Footer Bottom */}
