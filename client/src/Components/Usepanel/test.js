@@ -792,12 +792,12 @@ useEffect(() => {
           )}
         </>
       {/* Display quiz results and allow PDF download */}
-      {showResults && (
+      {/* {showResults && (
         <div>
           <h2>Your Score: {score}/{quizquestionSet.length}</h2>
           <button onClick={generatePDF}>Download PDF</button>
         </div>
-      )}
+      )} */}
     </div>
   );
 };
