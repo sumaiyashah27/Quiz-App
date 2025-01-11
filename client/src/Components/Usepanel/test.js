@@ -181,26 +181,28 @@ const Test = () => {
 
     // Helper function to handle image loading and adding to PDF
     const addImageToPDF = (imagePath, x, y, width, height) => {
-        const img = new Image();
-        
-        img.onload = function () {
-            try {
-                if (img.complete && img.naturalWidth > 0) {
-                    doc.addImage(img, 'PNG', x, y, width, height);  // Add image to the PDF
-                } else {
-                    doc.text("Image not available", x + 10, y + 10);  // Fallback text if image fails
-                }
-            } catch (e) {
-                doc.text("Error loading image", x + 10, y + 10);  // Fallback text in case of error
-            }
-        };
-
-        img.onerror = function () {
-            doc.text("Image not available", x + 10, y + 10);  // Fallback text in case of error
-        };
-
-        img.src = imagePath;  // Start loading the image
-    };
+      const img = new Image();
+      
+      // Ensure image path uses HTTPS
+      img.src = imagePath.startsWith('http') ? imagePath : 'https://edumocks.com' + imagePath;
+  
+      img.onload = function () {
+          try {
+              if (img.complete && img.naturalWidth > 0) {
+                  doc.addImage(img, 'PNG', x, y, width, height);  // Add image to the PDF
+              } else {
+                  doc.text("Image not available", x + 10, y + 10);  // Fallback text if image fails
+              }
+          } catch (e) {
+              doc.text("Error loading image", x + 10, y + 10);  // Fallback text in case of error
+          }
+      };
+  
+      img.onerror = function () {
+          doc.text("Image not available", x + 10, y + 10);  // Fallback text in case of error
+      };
+  };
+  
 
     // Function to add page content (header, watermark, etc.)
     const addPageContent = (isFirstPage = false) => {
@@ -398,6 +400,7 @@ const Test = () => {
     const pdfBlob = doc.output('blob');
     return pdfBlob;
 }, [courseName, subjectName, quizquestionSet, selectedOptions]);
+
 
   
  // Submit quiz and calculate the score
