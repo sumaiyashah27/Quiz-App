@@ -8,6 +8,7 @@ import { faChevronLeft, faChevronRight, faTimes, faFlag  } from '@fortawesome/fr
 import 'jspdf-autotable';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
+import logo from './edulog-2.png'; 
 
 const Test = () => {
   const location = useLocation();
@@ -163,135 +164,248 @@ const Test = () => {
     }
   };
 
+  const fetchImageAsBase64 = async (url) => {
+    try {
+      const response = await fetch(url);
+      if (!response.ok) throw new Error(`Failed to fetch image: ${response.statusText}`);
+      const blob = await response.blob();
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onloadend = () => resolve(reader.result);
+        reader.onerror = reject;
+        reader.readAsDataURL(blob);
+      });
+    } catch (error) {
+      console.error(`Error fetching image: ${error.message}`);
+      return null;
+    }
+  };
+  
+
   const generatePDF = useCallback(() => {
     const doc = new jsPDF('p', 'mm', 'a4');
     doc.setFont("helvetica", "normal");
     doc.setFontSize(12);
 
+    const watermarkLogoPath = '/edulog-2.png';  // Ensure this path is correct
+    const logoWidth = 40;
+    const logoHeight = 15;
     const pageWidth = doc.internal.pageSize.width;
     const pageHeight = doc.internal.pageSize.height;
 
+    // Helper function to handle image loading and adding to PDF
+    const addImageToPDF = (imagePath, x, y, width, height) => {
+        const img = new Image();
+        
+        img.onload = function () {
+            try {
+                // Check if the image is loaded properly
+                if (img.complete && img.naturalWidth > 0) {
+                    doc.addImage(img, 'PNG', x, y, width, height);  // Add image to the PDF
+                } else {
+                    console.error(`Image failed to load properly: ${imagePath}`);
+                    doc.text("Image not available", x + 10, y + 10);  // Fallback text if image fails
+                }
+            } catch (e) {
+                console.error(`Error adding image: ${imagePath}`, e);
+                doc.text("Error loading image", x + 10, y + 10);  // Fallback text in case of error
+            }
+        };
+
+        img.onerror = function () {
+            console.error(`Error loading image: ${imagePath}`);
+            doc.text("Image not available", x + 10, y + 10);  // Fallback text in case of error
+        };
+
+        img.src = imagePath;  // Start loading the image
+    };
+
+    // Function to add page content (header, watermark, etc.)
     const addPageContent = (isFirstPage = false) => {
-        // Draw page border
-        doc.rect(5, 5, pageWidth - 10, pageHeight - 10);
+        doc.rect(5, 5, pageWidth - 10, pageHeight - 10);  // Draw page border
 
         if (isFirstPage) {
-            // Add title
+            addImageToPDF(watermarkLogoPath, 10, 10, logoWidth, logoHeight);  // Add header logo
+
+            // Add title in the center of the page
             doc.setFontSize(16);
             doc.setTextColor(0, 123, 255);
             doc.text('Test Results', pageWidth / 2, 20, { align: 'center' });
             doc.setFontSize(12);
-            doc.setTextColor(0, 0, 0);
+            doc.setTextColor(0, 0, 0);  // Reset text color
         }
+
+        // Add watermark (Check if it's a valid image)
+        const watermarkWidth = logoWidth * 2;
+        const watermarkHeight = logoHeight * 2;
+        addImageToPDF(watermarkLogoPath, pageWidth / 4, pageHeight / 4, watermarkWidth, watermarkHeight);
     };
 
-    addPageContent(true);
+    addPageContent(true);  // Add content to the first page
 
     let yPosition = 40;
 
-    // Add course and subject info
     if (courseName) doc.text(`Course: ${courseName}`, 10, yPosition);
     if (subjectName) doc.text(`Subject: ${subjectName}`, 10, yPosition + 10);
     yPosition += 20;
 
     quizquestionSet.forEach((question, index) => {
-        if (yPosition > 270) {
-            doc.addPage();
-            addPageContent();
-            yPosition = 10;
-        }
+      if (yPosition > 270) {
+          doc.addPage();  // Add a new page if the content exceeds the current page height
+          addPageContent();  // Add content to the new page
+          yPosition = 10;
+      }
+  
+      doc.setFontSize(14);
+      doc.setTextColor(0, 0, 0);  // Set default text color to black
+      doc.text(`Question ${index + 1}:`, 10, yPosition);
+      yPosition += 10;
+  
+      const questionFields = [
+          { text: question.questionText1, image: question.questionImage1, table: question.questionTable1 },
+          { text: question.questionText2, image: question.questionImage2, table: question.questionTable2 },
+          { text: question.questionText3, image: question.questionImage3, table: question.questionTable3 },
+      ];
+  
+      // Loop through each question's content fields (text, images, tables)
+      questionFields.forEach(({ text, image, table }) => {
+          if (text) {
+              // Split the question text into words and add to the PDF line by line
+              const words = text.split(' ');
+              let line = '';
+              const maxWidth = pageWidth - 20;
+  
+              words.forEach((word, i) => {
+                  line += `${word} `;
+                  if (doc.getTextWidth(line) > maxWidth || i === words.length - 1) {
+                      doc.text(line.trim(), 10, yPosition);
+                      yPosition += 10;
+                      line = '';  // Reset line for next text
+                  }
+              });
+          }
+  
+          if (image) {
+              const imgWidth = 25;  // Original image width
+              const imgHeight = 25; // Original image height
+              const imgX = (pageWidth - imgWidth) / 2;
+              const imgY = yPosition;
+  
+              const imgWidth50 = imgWidth * 0.5;  // 50% width
+              const imgHeight50 = imgHeight * 0.5; // 50% height
+  
+              // Add the image with validation using the helper function
+              addImageToPDF(image, imgX, imgY, imgWidth50, imgHeight50);
+              yPosition += imgHeight50 + 10;  // Move position for next content
+          }
+  
+          if (table && table.data) {
+              table.data.forEach((row) => {
+                  let xPosition = 10;
+                  row.forEach((cell) => {
+                      doc.rect(xPosition, yPosition, 30, 10);  // Draw table cells
+                      doc.text(String(cell), xPosition + 2, yPosition + 7);  // Add text in cells
+                      xPosition += 30;
+                  });
+                  yPosition += 10;
+              });
+              yPosition += 5;  // Add extra space after the table
+          }
+      });
+  
+      // Add the options section for the question
+      doc.setFontSize(14);
+      doc.text("Options:", 10, yPosition);
+      yPosition += 10;
+  
+      doc.setFontSize(12);
+      Object.entries(question.options).forEach(([key, value]) => {
+          if (yPosition > 270) {
+              doc.addPage();  // Add a new page if content exceeds page height
+              addPageContent();  // Add content to the new page
+              yPosition = 10;
+          }
+          doc.text(`${key.toUpperCase()}: ${value}`, 10, yPosition);  // Display each option
+          yPosition += 10;
+      });
+  
+      // Add selected answer
+      doc.setTextColor(0, 123, 0); // Green for selected answer
+      doc.text(`Your Answer: ${selectedOptions[question._id] || 'None'}`, 10, yPosition);
+      yPosition += 10;
+  
+      // Add correct answer
+      doc.setTextColor(255, 0, 0); // Red for correct answer
+      doc.text(`Correct Answer: ${question.correctAns}`, 10, yPosition);
+      yPosition += 10;
+  
+      // Add answer description
+      doc.setFontSize(14);
+      doc.setTextColor(0, 0, 0); // Black color for heading
+      doc.text("Answer Description:", 10, yPosition);
+      yPosition += 10;
+  
+      const explanationFields = [
+          { text: question.answerDescriptionText1, image: question.answerDescriptionImage1, table: question.answerDescriptionTable1 },
+          { text: question.answerDescriptionText2, image: question.answerDescriptionImage2, table: question.answerDescriptionTable2 },
+          { text: question.answerDescriptionText3, image: question.answerDescriptionImage3, table: question.answerDescriptionTable3 },
+      ];
+  
+      explanationFields.forEach(({ text, image, table }) => {
+          if (text) {
+              const words = text.split(' ');
+              let line = '';
+              const maxWidth = pageWidth - 20;
+  
+              words.forEach((word, i) => {
+                  line += `${word} `;
+                  if (doc.getTextWidth(line) > maxWidth || i === words.length - 1) {
+                      doc.text(line.trim(), 10, yPosition);
+                      yPosition += 10;
+                      line = '';  // Reset line for next text
+                  }
+              });
+          }
+  
+          if (image) {
+              const imgWidth = 25;  // Original image width
+              const imgHeight = 25; // Original image height
+              const imgX = (pageWidth - imgWidth) / 2;
+              const imgY = yPosition;
+  
+              const imgWidth50 = imgWidth * 0.5;  // 50% width
+              const imgHeight50 = imgHeight * 0.5; // 50% height
+  
+              // Add image with validation using the helper function
+              addImageToPDF(image, imgX, imgY, imgWidth50, imgHeight50);
+              yPosition += imgHeight50 + 10;  // Move position for next content
+          }
+  
+          if (table && table.data) {
+              table.data.forEach((row) => {
+                  let xPosition = 10;
+                  row.forEach((cell) => {
+                      doc.rect(xPosition, yPosition, 30, 10);  // Draw table cells
+                      doc.text(String(cell), xPosition + 2, yPosition + 7);  // Add text in cells
+                      xPosition += 30;
+                  });
+                  yPosition += 10;
+              });
+              yPosition += 5;  // Add extra space after the table
+          }
+      });
+  
+      // Add a separator line between questions
+      doc.setDrawColor(0, 0, 0);
+      doc.line(10, yPosition, doc.internal.pageSize.width - 10, yPosition);
+      yPosition += 10;  // Add space after the separator
+  });
+  
+  // Finalize PDF and return as Blob
+  const pdfBlob = doc.output('blob');
+  return pdfBlob;
+  
 
-        doc.setFontSize(14);
-        doc.setTextColor(0, 0, 0);
-        doc.text(`Question ${index + 1}:`, 10, yPosition);
-        yPosition += 10;
-
-        const questionFields = [
-            { text: question.questionText1 },
-            { text: question.questionText2 },
-            { text: question.questionText3 },
-        ];
-
-        questionFields.forEach(({ text }) => {
-            if (text) {
-                const words = text.split(' ');
-                let line = '';
-                const maxWidth = pageWidth - 20;
-
-                words.forEach((word, i) => {
-                    line += `${word} `;
-                    if (doc.getTextWidth(line) > maxWidth || i === words.length - 1) {
-                        doc.text(line.trim(), 10, yPosition);
-                        yPosition += 10;
-                        line = '';
-                    }
-                });
-            }
-        });
-
-        if (question.options) {
-            doc.setFontSize(12);
-            doc.text('Options:', 10, yPosition);
-            yPosition += 10;
-
-            Object.entries(question.options).forEach(([key, value]) => {
-                if (yPosition > 270) {
-                    doc.addPage();
-                    addPageContent();
-                    yPosition = 10;
-                }
-                doc.text(`${key.toUpperCase()}: ${value}`, 10, yPosition);
-                yPosition += 10;
-            });
-        }
-
-        if (selectedOptions[question._id]) {
-            doc.setTextColor(0, 123, 0);
-            doc.text(`Your Answer: ${selectedOptions[question._id]}`, 10, yPosition);
-            yPosition += 10;
-        }
-
-        if (question.correctAns) {
-            doc.setTextColor(255, 0, 0);
-            doc.text(`Correct Answer: ${question.correctAns}`, 10, yPosition);
-            yPosition += 10;
-        }
-
-        doc.setTextColor(0, 0, 0);
-        doc.setFontSize(14);
-        doc.text('Answer Description:', 10, yPosition);
-        yPosition += 10;
-
-        const explanationFields = [
-            { text: question.answerDescriptionText1 },
-            { text: question.answerDescriptionText2 },
-            { text: question.answerDescriptionText3 },
-        ];
-
-        explanationFields.forEach(({ text }) => {
-            if (text) {
-                const words = text.split(' ');
-                let line = '';
-                const maxWidth = pageWidth - 20;
-
-                words.forEach((word, i) => {
-                    line += `${word} `;
-                    if (doc.getTextWidth(line) > maxWidth || i === words.length - 1) {
-                        doc.text(line.trim(), 10, yPosition);
-                        yPosition += 10;
-                        line = '';
-                    }
-                });
-            }
-        });
-
-        // Separator
-        doc.line(10, yPosition, pageWidth - 10, yPosition);
-        yPosition += 10;
-    });
-
-    const pdfBlob = doc.output('blob');
-    return pdfBlob;
 }, [courseName, subjectName, quizquestionSet, selectedOptions]);
 
 

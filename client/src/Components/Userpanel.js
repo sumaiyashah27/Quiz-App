@@ -447,7 +447,7 @@ const handleEnterRoom = async (course, subject) => {
                   <>
                     <option value="" disabled>select</option>
                     <option value="44">44 Questions</option>
-                    <option value="88">88 Questions</option>
+                    {/* <option value="88">88 Questions</option> */}
                   </>
                 )}
               </select>
@@ -536,6 +536,7 @@ const handleEnterRoom = async (course, subject) => {
               <th style={{ padding: '12px', fontWeight: 'bold', borderBottom: '2px solid #ddd' }}>Course</th>
               <th style={{ padding: '12px', fontWeight: 'bold', borderBottom: '2px solid #ddd' }}>Subject</th>
               <th style={{ padding: '12px', fontWeight: 'bold', borderBottom: '2px solid #ddd' }}>Score</th>
+              <th style={{ padding: '12px', fontWeight: 'bold', borderBottom: '2px solid #ddd' }}>Percentage</th> {/* New column for percentage */}
               <th style={{ padding: '12px', fontWeight: 'bold', borderBottom: '2px solid #ddd' }}>Grade</th>
               <th style={{ padding: '12px', fontWeight: 'bold', borderBottom: '2px solid #ddd' }}>Status</th>
             </tr>
@@ -543,7 +544,7 @@ const handleEnterRoom = async (course, subject) => {
           <tbody>
             {completedTests.length === 0 ? (
               <tr>
-                <td colSpan="5" style={{ textAlign: 'center', padding: '15px', color: '#777' }}>No past attempts found</td>
+                <td colSpan="6" style={{ textAlign: 'center', padding: '15px', color: '#777' }}>No past attempts found</td>
               </tr>
             ) : (
               completedTests.map((test, index) => {
@@ -589,6 +590,9 @@ const handleEnterRoom = async (course, subject) => {
                     </td>
                     <td style={{ fontSize: '1.1rem', padding: '12px', textAlign: 'center', backgroundColor: '#f9f9f9', color: '#333' }}>
                       {test.score} / {totalQuestions}
+                    </td>
+                    <td style={{ fontSize: '1.1rem', padding: '12px', textAlign: 'center', backgroundColor: '#f9f9f9', color: '#333' }}>
+                      {solvedPercentage.toFixed(2)}% {/* Display percentage */}
                     </td>
                     <td style={{ fontSize: '1.1rem', padding: '12px', textAlign: 'center', backgroundColor: '#f9f9f9', color: gradeColor, fontWeight: 'bold' }}>
                       {grade}
