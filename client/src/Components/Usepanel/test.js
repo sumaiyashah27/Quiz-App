@@ -168,9 +168,6 @@ const Test = () => {
     doc.setFont("helvetica", "normal");
     doc.setFontSize(12);
 
-    const watermarkLogoPath = 'https://edumocks.com/edulog-2.png';
-    const logoWidth = 40;
-    const logoHeight = 15;
     const pageWidth = doc.internal.pageSize.width;
     const pageHeight = doc.internal.pageSize.height;
 
@@ -179,25 +176,12 @@ const Test = () => {
         doc.rect(5, 5, pageWidth - 10, pageHeight - 10);
 
         if (isFirstPage) {
-            // Add header logo
-            const logoPath = 'https://edumocks.com/edulog-2.png';
-            doc.addImage(logoPath, 'PNG', 10, 10, logoWidth, logoHeight);
-
             // Add title
             doc.setFontSize(16);
             doc.setTextColor(0, 123, 255);
             doc.text('Test Results', pageWidth / 2, 20, { align: 'center' });
             doc.setFontSize(12);
             doc.setTextColor(0, 0, 0);
-        }
-
-        // Add watermark
-        if (doc.setGState) {
-            doc.setGState(new doc.GState({ opacity: 0.1 }));
-            doc.addImage(watermarkLogoPath, 'PNG', pageWidth / 4, pageHeight / 4, logoWidth * 2, logoHeight * 2);
-            doc.setGState(new doc.GState({ opacity: 1 }));
-        } else {
-            doc.addImage(watermarkLogoPath, 'PNG', pageWidth / 4, pageHeight / 4, logoWidth * 2, logoHeight * 2);
         }
     };
 
@@ -223,12 +207,12 @@ const Test = () => {
         yPosition += 10;
 
         const questionFields = [
-            { text: question.questionText1, image: question.questionImage1, table: question.questionTable1 },
-            { text: question.questionText2, image: question.questionImage2, table: question.questionTable2 },
-            { text: question.questionText3, image: question.questionImage3, table: question.questionTable3 },
+            { text: question.questionText1 },
+            { text: question.questionText2 },
+            { text: question.questionText3 },
         ];
 
-        questionFields.forEach(({ text, image, table }) => {
+        questionFields.forEach(({ text }) => {
             if (text) {
                 const words = text.split(' ');
                 let line = '';
@@ -242,27 +226,6 @@ const Test = () => {
                         line = '';
                     }
                 });
-            }
-
-            if (image) {
-                const imgWidth = 25;
-                const imgHeight = 25;
-                const imgX = (pageWidth - imgWidth) / 2;
-                doc.addImage(image, 'PNG', imgX, yPosition, imgWidth, imgHeight);
-                yPosition += imgHeight + 10;
-            }
-
-            if (table && table.data) {
-                table.data.forEach((row) => {
-                    let xPosition = 10;
-                    row.forEach((cell) => {
-                        doc.rect(xPosition, yPosition, 30, 10);
-                        doc.text(String(cell), xPosition + 2, yPosition + 7);
-                        xPosition += 30;
-                    });
-                    yPosition += 10;
-                });
-                yPosition += 5;
             }
         });
 
@@ -300,12 +263,12 @@ const Test = () => {
         yPosition += 10;
 
         const explanationFields = [
-            { text: question.answerDescriptionText1, image: question.answerDescriptionImage1, table: question.answerDescriptionTable1 },
-            { text: question.answerDescriptionText2, image: question.answerDescriptionImage2, table: question.answerDescriptionTable2 },
-            { text: question.answerDescriptionText3, image: question.answerDescriptionImage3, table: question.answerDescriptionTable3 },
+            { text: question.answerDescriptionText1 },
+            { text: question.answerDescriptionText2 },
+            { text: question.answerDescriptionText3 },
         ];
 
-        explanationFields.forEach(({ text, image, table }) => {
+        explanationFields.forEach(({ text }) => {
             if (text) {
                 const words = text.split(' ');
                 let line = '';
@@ -319,27 +282,6 @@ const Test = () => {
                         line = '';
                     }
                 });
-            }
-
-            if (image) {
-                const imgWidth = 25;
-                const imgHeight = 25;
-                const imgX = (pageWidth - imgWidth) / 2;
-                doc.addImage(image, 'PNG', imgX, yPosition, imgWidth, imgHeight);
-                yPosition += imgHeight + 10;
-            }
-
-            if (table && table.data) {
-                table.data.forEach((row) => {
-                    let xPosition = 10;
-                    row.forEach((cell) => {
-                        doc.rect(xPosition, yPosition, 30, 10);
-                        doc.text(String(cell), xPosition + 2, yPosition + 7);
-                        xPosition += 30;
-                    });
-                    yPosition += 10;
-                });
-                yPosition += 5;
             }
         });
 
