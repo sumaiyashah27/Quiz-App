@@ -39,7 +39,7 @@ export default function Images() {
     } catch (error) {
       toast.error('Error uploading images:', error);
     }
-  };
+  };//
 
   const deleteImage = async (imageId, imageLocation) => {
     try {

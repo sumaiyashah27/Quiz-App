@@ -164,24 +164,6 @@ const Test = () => {
     }
   };
 
-  const fetchImageAsBase64 = async (url) => {
-    try {
-      const response = await fetch(url);
-      if (!response.ok) throw new Error(`Failed to fetch image: ${response.statusText}`);
-      const blob = await response.blob();
-      return new Promise((resolve, reject) => {
-        const reader = new FileReader();
-        reader.onloadend = () => resolve(reader.result);
-        reader.onerror = reject;
-        reader.readAsDataURL(blob);
-      });
-    } catch (error) {
-      console.error(`Error fetching image: ${error.message}`);
-      return null;
-    }
-  };
-  
-
   const generatePDF = useCallback(() => {
     const doc = new jsPDF('p', 'mm', 'a4');
     doc.setFont("helvetica", "normal");
@@ -368,6 +350,7 @@ const Test = () => {
           }
   
           if (image) {
+            console.log('PDF Images',image);
               const imgWidth = 25;  // Original image width
               const imgHeight = 25; // Original image height
               const imgX = (pageWidth - imgWidth) / 2;
