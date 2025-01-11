@@ -134,7 +134,7 @@ const Subject = () => {
       questionTable3: question.questionTable3 || [],
       
       options: question.options || { a: '', b: '', c: '', d: '' },
-      correctAnswer: question.correctAns || '',
+      correctAns: question.correctAns || '',
       
       answerDescriptionText1: question.answerDescriptionText1 || '',
       answerDescriptionImage1: question.answerDescriptionImage1 || '',
@@ -177,7 +177,7 @@ const Subject = () => {
           questionTable3: updatedQuestion.questionTable3,
           
           options: updatedQuestion.options,
-          correctAns: updatedQuestion.correctAnswer,
+          correctAns: updatedQuestion.correctAns,
           
           answerDescriptionText1: updatedQuestion.answerDescriptionText1,
           answerDescriptionImage1: updatedQuestion.answerDescriptionImage1,
