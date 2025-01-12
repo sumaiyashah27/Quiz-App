@@ -6,14 +6,15 @@ const StudentResult = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  // Fetch data from the backend
+  // Fetch all test data
   useEffect(() => {
     const fetchScheduleTests = async () => {
       try {
-        const response = await axios.get('/api/scheduletests'); // Adjust the URL if needed
-        console.log(response.data); // Log the data to check if it's an array
+        const response = await axios.get('/api/scheduleTest');
+        console.log('API Response:', response.data); // Log the data here
         setScheduleTests(response.data);
       } catch (err) {
+        console.error('Error fetching data:', err);
         setError('Failed to fetch schedule test data');
       } finally {
         setLoading(false);
@@ -23,15 +24,16 @@ const StudentResult = () => {
     fetchScheduleTests();
   }, []);
   
-  // Render the data
+
+  // Render loading or error states
   if (loading) return <div>Loading...</div>;
   if (error) return <div>{error}</div>;
 
   return (
     <div>
-      <h1>Schedule Test List</h1>
+      <h1>All Users Test Results</h1>
       {scheduleTests.length === 0 ? (
-        <p>No tests scheduled.</p>
+        <p>No test results available.</p>
       ) : (
         <table>
           <thead>
@@ -46,17 +48,22 @@ const StudentResult = () => {
             </tr>
           </thead>
           <tbody>
-          {Array.isArray(scheduleTests) && scheduleTests.map((test) => (
-            <tr key={test._id}>
-              <td>{test.userId?.email || 'N/A'}</td>
-              <td>{test.selectedCourse}</td>
-              <td>{test.selectedSubject}</td>
-              <td>{new Date(test.testDate).toLocaleDateString()}</td>
-              <td>{test.testTime}</td>
-              <td>{test.testStatus}</td>
-              <td>{test.score}</td>
-            </tr>
-          ))}
+            {Array.isArray(scheduleTests) &&
+              scheduleTests.map((test) => (
+                <tr key={test._id}>
+                  <td>{test.userId?.email || 'N/A'}</td>
+                  <td>{test.selectedCourse || 'N/A'}</td>
+                  <td>{test.selectedSubject || 'N/A'}</td>
+                  <td>
+                    {test.testDate
+                      ? new Date(test.testDate).toLocaleDateString()
+                      : 'N/A'}
+                  </td>
+                  <td>{test.testTime || 'N/A'}</td>
+                  <td>{test.testStatus || 'N/A'}</td>
+                  <td>{test.score || 'N/A'}</td>
+                </tr>
+              ))}
           </tbody>
         </table>
       )}

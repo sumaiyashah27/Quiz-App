@@ -420,18 +420,12 @@ router.post('/sendReminder1Hour', async (req, res) => {
 });
 
 // Route to get all scheduled tests
-router.get('/', async (req, res) => {
+router.get('/api/scheduletests', async (req, res) => {
   try {
-    // Fetch all the scheduleTest data
-    const tests = await ScheduleTest.find()
-      .populate('userId', 'email') // Populate user info (name, email)
-      .populate('selectedCourse') // Populate course info (courseName)
-      .populate('selectedSubject'); // Populate subject info (subjectName)
-
-    // Return the tests data as JSON
+    const tests = await TestModel.find().populate('userId', 'email'); // Adjust query as needed
     res.json(tests);
-  } catch (err) {
-    res.status(500).json({ message: 'Error fetching scheduleTest data', error: err });
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to fetch tests' });
   }
 });
 

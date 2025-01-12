@@ -297,172 +297,191 @@ useEffect(() => {
 }, []);
 
 
-  const generatePDF = useCallback(() => {
-    const doc = new jsPDF('p', 'mm', 'a4'); // Set A4 size
-    const pageMargin = 10;  // Page margin from edges
-    const pageWidth = doc.internal.pageSize.width - 2 * pageMargin; // Width minus margins
-    const pageHeight = doc.internal.pageSize.height - 2 * pageMargin;
-    doc.setFont("helvetica", "normal"); // Use Helvetica font
-    doc.setFontSize(12);
+const generatePDF = useCallback(() => {
+  const doc = new jsPDF('p', 'mm', 'a4'); // Set A4 size
+  const pageMargin = 10; // Page margin from edges
+  const pageWidth = doc.internal.pageSize.width - 2 * pageMargin;
+  const pageHeight = doc.internal.pageSize.height - 2 * pageMargin;
+  let yPosition = pageMargin; // Start position for content
 
-    // Title section
-    doc.setFontSize(16);
-    doc.setTextColor(0, 123, 255); // Blue for title
-    doc.text('Test Results', 105, 20, { align: 'center' }); // Title at the top center
-    doc.setFontSize(12);
-    doc.setTextColor(0, 0, 0); // Reset text color to black
-  
-    // Basic Info Section
-    doc.text(`Course: ${courseName}`, 10, 40);
-    doc.text(`Subject: ${subjectName}`, 10, 50);
-  
-    let yPosition = 60;
-  
-    // Loop through all questions and add them to the PDF
-    quizquestionSet.forEach((question, index) => {
-      if (yPosition > pageHeight - 20) {
-        doc.addPage();
-        yPosition = 20;
-      }
-  
-      // Add Question Heading
-      doc.setFontSize(14);
-      doc.setTextColor(0, 0, 0); // Black color for headings
-      doc.text(`Question ${index + 1}:`, 10, yPosition);
-      yPosition += 10;
-  
-      // Question Text, Image, and Table
-      const questionFields = [
-        { text: question.questionText1, image: question.questionImage1, table: question.questionTable1 },
-        { text: question.questionText2, image: question.questionImage2, table: question.questionTable2 },
-        { text: question.questionText3, image: question.questionImage3, table: question.questionTable3 },
-      ];
-  
-      questionFields.forEach(({ text, image, table }) => {
-        if (text || image || table) {
-          if (text) {
-            doc.setFontSize(12);
-            const lines = doc.splitTextToSize(text, pageWidth); // Split text to fit within page width
-            lines.forEach(line => {
-              if (yPosition > pageHeight - 10) {
-                doc.addPage();
-                yPosition = 20;
-              }
-              doc.text(line, 10, yPosition);
-              yPosition += 10;
-            });
-          }
-          if (image) {
-            const imgWidth = 50;
-            const imgHeight = 50;
-            const imgX = (doc.internal.pageSize.width - imgWidth) / 2;
-            const imageType = image.includes('.png') ? 'PNG' : 'JPEG'; // Determine image format
-            doc.addImage(image, imageType, imgX, yPosition, imgWidth, imgHeight);
-            yPosition += imgHeight + 10;
-          }
-          if (table && table.data) {
-            table.data.forEach((row) => {
-              let xPosition = 10;
-              row.forEach((cell) => {
-                doc.rect(xPosition, yPosition, 30, 10); // Draw cell
-                doc.text(String(cell), xPosition + 2, yPosition + 7); // Add text to cell
-                xPosition += 30;
-              });
-              yPosition += 10;
-            });
-            yPosition += 5; // Add spacing after the table
-          }
-        }
-      });
-  
-      // Options
-      doc.setFontSize(14);
-      doc.text("Options:", 10, yPosition);
-      yPosition += 10;
-  
-      doc.setFontSize(12);
-      Object.entries(question.options).forEach(([key, value]) => {
-        if (yPosition > 270) {
-          doc.addPage();
-          yPosition = 10;
-        }
-        doc.text(`${key.toUpperCase()}: ${value}`, 10, yPosition);
-        yPosition += 10;
-      });
-  
-      // Selected and Correct Answers
-      doc.setTextColor(0, 123, 0); // Green for selected answer
-      doc.text(`Your Answer: ${selectedOptions[question._id] || 'None'}`, 10, yPosition);
-      yPosition += 10;
-  
-      doc.setTextColor(255, 0, 0); // Red for correct answer
-      doc.text(`Correct Answer: ${question.correctAns}`, 10, yPosition);
-      yPosition += 10;
-  
-      // Explanation
-      doc.setFontSize(14);
-      doc.setTextColor(0, 0, 0); // Black color for heading
-      doc.text("Answer Description:", 10, yPosition);
-      yPosition += 10;
-  
-      const explanationFields = [
-        { text: question.answerDescriptionText1, image: question.answerDescriptionImage1, table: question.answerDescriptionTable1 },
-        { text: question.answerDescriptionText2, image: question.answerDescriptionImage2, table: question.answerDescriptionTable2 },
-        { text: question.answerDescriptionText3, image: question.answerDescriptionImage3, table: question.answerDescriptionTable3 },
-      ];
-  
-      explanationFields.forEach(({ text, image, table }) => {
-        if (text || image || table) {
+  doc.setFont("helvetica", "normal");
+  doc.setFontSize(12);
+
+  // Draw Page Border
+  const drawPageBorder = () => {
+    doc.setDrawColor(0, 0, 0); // Black border
+    doc.rect(pageMargin, pageMargin, pageWidth, pageHeight); // Draw rectangle
+  };
+  drawPageBorder();
+
+  // Title section
+  doc.setFontSize(16);
+  doc.setTextColor(0, 123, 255); // Blue for title
+  doc.text('Test Results', doc.internal.pageSize.width / 2, yPosition + 10, { align: 'center' });
+  yPosition += 20;
+
+  doc.setFontSize(12);
+  doc.setTextColor(0, 0, 0);
+
+  // Basic Info Section
+  doc.text(`Course: ${courseName}`, pageMargin, yPosition);
+  doc.text(`Subject: ${subjectName}`, pageMargin, yPosition + 10);
+  yPosition += 20;
+
+  // Loop through all questions
+  quizquestionSet.forEach((question, index) => {
+    if (yPosition > pageHeight - 20) {
+      doc.addPage();
+      drawPageBorder();
+      yPosition = pageMargin + 10;
+    }
+
+    doc.setFontSize(14);
+    doc.text(`Question ${index + 1}:`, pageMargin, yPosition);
+    yPosition += 10;
+
+    // Add Question Fields
+    const questionFields = [
+      { text: question.questionText1, image: question.questionImage1, table: question.questionTable1 },
+      { text: question.questionText2, image: question.questionImage2, table: question.questionTable2 },
+      { text: question.questionText3, image: question.questionImage3, table: question.questionTable3 },
+    ];
+
+    questionFields.forEach(({ text, image, table }) => {
+      if (text) {
+        const lines = doc.splitTextToSize(text, pageWidth);
+        lines.forEach(line => {
           if (yPosition > pageHeight - 10) {
             doc.addPage();
-            yPosition = 20;
+            drawPageBorder();
+            yPosition = pageMargin + 10;
           }
-          if (text) {
-            doc.setFontSize(12);
-            const lines = doc.splitTextToSize(text, pageWidth); // Split text to fit within page width
-            lines.forEach(line => {
-              if (yPosition > pageHeight - 10) {
-                doc.addPage();
-                yPosition = 20;
-              }
-              doc.text(line, 10, yPosition);
-              yPosition += 10;
-            });
-          }
-          if (image) {
-            const imgWidth = 25;
-            const imgHeight = 25;
-            const imgX = (doc.internal.pageSize.width - imgWidth) / 2;
-            const imageType = image.includes('.png') ? 'PNG' : 'JPEG'; // Determine image format
-            doc.addImage(image, imageType, imgX, yPosition, imgWidth, imgHeight);
-            yPosition += imgHeight + 10;
-          }
-          if (table && table.data) {
-            table.data.forEach((row) => {
-              let xPosition = 10;
-              row.forEach((cell) => {
-                doc.rect(xPosition, yPosition, 30, 10);
-                doc.text(String(cell), xPosition + 2, yPosition + 7);
-                xPosition += 30;
-              });
-              yPosition += 10;
-            });
-            yPosition += 5; // Add spacing after the table
-          }
+          doc.text(line, pageMargin, yPosition);
+          yPosition += 10;
+        });
+      }
+
+      if (image) {
+        const imgWidth = 60; // Fixed width
+        const imgHeight = 60; // Fixed height
+        const imgX = (doc.internal.pageSize.width - imgWidth) / 2;
+        const imageType = image.includes('.png') ? 'PNG' : 'JPEG';
+
+        if (yPosition + imgHeight > pageHeight - 10) {
+          doc.addPage();
+          drawPageBorder();
+          yPosition = pageMargin + 10;
         }
-      });
-  
-      // Add a separator line
-      doc.setDrawColor(0, 0, 0);
-      doc.line(10, yPosition, doc.internal.pageSize.width - 10, yPosition);
+
+        doc.addImage(image, imageType, imgX, yPosition, imgWidth, imgHeight);
+        yPosition += imgHeight + 10;
+      }
+
+      if (table && table.data) {
+        table.data.forEach(row => {
+          let xPosition = pageMargin;
+          row.forEach(cell => {
+            doc.rect(xPosition, yPosition, 30, 10); // Draw cell
+            doc.text(String(cell), xPosition + 2, yPosition + 7); // Add text to cell
+            xPosition += 30;
+          });
+          yPosition += 10;
+        });
+        yPosition += 5;
+      }
+    });
+
+    // Add options
+    doc.setFontSize(14);
+    doc.text("Options:", pageMargin, yPosition);
+    yPosition += 10;
+
+    doc.setFontSize(12);
+    Object.entries(question.options).forEach(([key, value]) => {
+      if (yPosition > pageHeight - 10) {
+        doc.addPage();
+        drawPageBorder();
+        yPosition = pageMargin + 10;
+      }
+      doc.text(`${key.toUpperCase()}: ${value}`, pageMargin, yPosition);
       yPosition += 10;
     });
-  
-    // Save the generated PDF
-    const pdfBlob = doc.output('blob'); // Get PDF as Blob
-    return pdfBlob;
-    //doc.save('exam_results.pdf');
-  }, [courseName, subjectName, quizquestionSet, selectedOptions]);
+
+    // Add selected and correct answers
+    doc.setTextColor(0, 123, 0); // Green for selected answer
+    doc.text(`Your Answer: ${selectedOptions[question._id] || 'None'}`, pageMargin, yPosition);
+    yPosition += 10;
+
+    doc.setTextColor(255, 0, 0); // Red for correct answer
+    doc.text(`Correct Answer: ${question.correctAns}`, pageMargin, yPosition);
+    yPosition += 10;
+
+    // Add explanation
+    doc.setFontSize(14);
+    doc.setTextColor(0, 0, 0);
+    doc.text("Answer Description:", pageMargin, yPosition);
+    yPosition += 10;
+
+    const explanationFields = [
+      { text: question.answerDescriptionText1, image: question.answerDescriptionImage1, table: question.answerDescriptionTable1 },
+      { text: question.answerDescriptionText2, image: question.answerDescriptionImage2, table: question.answerDescriptionTable2 },
+      { text: question.answerDescriptionText3, image: question.answerDescriptionImage3, table: question.answerDescriptionTable3 },
+    ];
+
+    explanationFields.forEach(({ text, image, table }) => {
+      if (text) {
+        const lines = doc.splitTextToSize(text, pageWidth);
+        lines.forEach(line => {
+          if (yPosition > pageHeight - 10) {
+            doc.addPage();
+            drawPageBorder();
+            yPosition = pageMargin + 10;
+          }
+          doc.text(line, pageMargin, yPosition);
+          yPosition += 10;
+        });
+      }
+
+      if (image) {
+        const imgWidth = 40;
+        const imgHeight = 40;
+        const imgX = (doc.internal.pageSize.width - imgWidth) / 2;
+
+        if (yPosition + imgHeight > pageHeight - 10) {
+          doc.addPage();
+          drawPageBorder();
+          yPosition = pageMargin + 10;
+        }
+
+        doc.addImage(image, 'JPEG', imgX, yPosition, imgWidth, imgHeight);
+        yPosition += imgHeight + 10;
+      }
+
+      if (table && table.data) {
+        table.data.forEach(row => {
+          let xPosition = pageMargin;
+          row.forEach(cell => {
+            doc.rect(xPosition, yPosition, 30, 10);
+            doc.text(String(cell), xPosition + 2, yPosition + 7);
+            xPosition += 30;
+          });
+          yPosition += 10;
+        });
+        yPosition += 5;
+      }
+    });
+
+    // Add a separator line
+    doc.setDrawColor(0, 0, 0);
+    doc.line(pageMargin, yPosition, doc.internal.pageSize.width - pageMargin, yPosition);
+    yPosition += 10;
+  });
+
+  // Save the generated PDF
+  const pdfBlob = doc.output('blob');
+  return pdfBlob;
+}, [courseName, subjectName, quizquestionSet, selectedOptions]);
+
 
 // Submit quiz and calculate the score
 const handleSubmitQuiz = useCallback(() => {

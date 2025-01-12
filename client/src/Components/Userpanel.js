@@ -5,6 +5,7 @@ import { faTimes, faClock, faEdit, faCalendarPlus} from '@fortawesome/free-solid
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
+import { DateTime } from 'luxon'
 
 const Userpanel = () => {
   const [isLoading, setIsLoading] = useState(true);
@@ -30,6 +31,9 @@ const Userpanel = () => {
   const [subjects, setSubjects] = useState([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [testStatus, setTestStatus] = useState('Scheduled');
+  const now = DateTime.local();
+  console.log('Local Time:', now.toLocaleString(DateTime.DATETIME_FULL)); // Displays time based on local system settings
+  console.log('Timezone:', now.zoneName);
 
   // Fetch user details, quiz enrollment data, and scheduled tests
   useEffect(() => {
@@ -416,78 +420,78 @@ const handleEnterRoom = async (course, subject) => {
       )}
       {/* Modal for scheduling the test */}
       {modalOpen && (
-        <div style={{ position: 'fixed', top: '0', left: '0', right: '0', bottom: '0', backgroundColor: 'rgba(0, 0, 0, 0.5)', display: 'flex', justifyContent: 'center', alignItems: 'center', padding: '20px' }}>
-          <div style={{ backgroundColor: '#ffffff', padding: '30px', borderRadius: '12px', width: '400px', boxShadow: '0 4px 15px rgba(0, 0, 0, 0.2)', position: 'relative', animation: 'fadeIn 0.3s ease' }}>
-            <button onClick={() => { setModalOpen(false); setQuestionSet('30'); setTestDate(''); setTestTime(''); }} style={{ position: 'absolute', top: '9px', right: '12px', backgroundColor: 'transparent', border: 'none', fontSize: '1.5rem', cursor: 'pointer', color: '#333' }}>
-              <FontAwesomeIcon icon={faTimes} />
-            </button>
-            <h3 style={{ fontSize: '1.6rem', fontWeight: 'bold', color: '#333', textAlign: 'center', marginBottom: '20px' }}>Schedule Test</h3>
+  <div style={{ position: 'fixed', top: '0', left: '0', right: '0', bottom: '0', backgroundColor: 'rgba(0, 0, 0, 0.5)', display: 'flex', justifyContent: 'center', alignItems: 'center', padding: '20px' }}>
+    <div style={{ backgroundColor: '#ffffff', padding: '30px', borderRadius: '12px', width: '400px', boxShadow: '0 4px 15px rgba(0, 0, 0, 0.2)', position: 'relative', animation: 'fadeIn 0.3s ease' }}>
+      <button onClick={() => { setModalOpen(false); setQuestionSet('30'); setTestDate(''); setTestTime(''); }} style={{ position: 'absolute', top: '9px', right: '12px', backgroundColor: 'transparent', border: 'none', fontSize: '1.5rem', cursor: 'pointer', color: '#333' }}>
+        <FontAwesomeIcon icon={faTimes} />
+      </button>
+      <h3 style={{ fontSize: '1.6rem', fontWeight: 'bold', color: '#333', textAlign: 'center', marginBottom: '20px' }}>Schedule Test</h3>
 
-            <div style={{ marginBottom: '15px' }}>
-              <label style={{ fontSize: '1.3rem', fontWeight: 'bold', color: '#555' }}>Course:</label>
-              <span style={{ fontSize: '1.1rem', color: '#333' }}>{getCourseName(selectedCourse)}</span>
-            </div>
+      <div style={{ marginBottom: '15px' }}>
+        <label style={{ fontSize: '1.3rem', fontWeight: 'bold', color: '#555' }}>Course:</label>
+        <span style={{ fontSize: '1.1rem', color: '#333' }}>{getCourseName(selectedCourse)}</span>
+      </div>
 
-            <div style={{ marginBottom: '15px' }}>
-              <label style={{ fontSize: '1.3rem', fontWeight: 'bold', color: '#555' }}>Subject:</label>
-              <span style={{ fontSize: '1.1rem', color: '#333' }}>{getSubjectName(selectedSubject)}</span>
-            </div>
+      <div style={{ marginBottom: '15px' }}>
+        <label style={{ fontSize: '1.3rem', fontWeight: 'bold', color: '#555' }}>Subject:</label>
+        <span style={{ fontSize: '1.1rem', color: '#333' }}>{getSubjectName(selectedSubject)}</span>
+      </div>
 
-            <div style={{ marginBottom: '15px' }}>
-              <label style={{ fontSize: '1.2rem', fontWeight: 'bold', color: '#555' }}>Question Set:</label>
-              <select value={questionSet} onChange={(e) => setQuestionSet(e.target.value)} style={{ width: '100%', padding: '8px', marginTop: '10px', border: '1px solid #ddd', borderRadius: '6px', fontSize: '1rem', color: '#333', backgroundColor: '#f9f9f9', boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)' }} >
-                {getCourseName(selectedCourse) === 'CFA LEVEL - 1' ? (
-                  <>
-                    <option value="" disabled>select</option>
-                    <option value="30">30 Questions</option>
-                    <option value="60">60 Questions</option>
-                    <option value="90">90 Questions</option>
-                  </>
-                ) : (
-                  <>
-                    <option value="" disabled>select</option>
-                    <option value="44">44 Questions</option>
-                    {/* <option value="88">88 Questions</option> */}
-                  </>
-                )}
-              </select>
-            </div>
-            <div style={{ marginBottom: '15px' }}>
-              <label style={{ fontSize: '1.2rem', fontWeight: 'bold', color: '#555' }}>Test Date:</label>
-              <input
-                type="date"
-                value={testDate}
-                onChange={(e) => setTestDate(e.target.value)}
-                min={new Date().toISOString().split('T')[0]}
-                style={{ width: '100%', padding: '8px', marginTop: '10px', border: '1px solid #ddd', borderRadius: '6px', fontSize: '1rem', color: '#333', backgroundColor: '#f9f9f9', boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)' }}
-              />
-            </div>
+      <div style={{ marginBottom: '15px' }}>
+        <label style={{ fontSize: '1.2rem', fontWeight: 'bold', color: '#555' }}>Question Set:</label>
+        <select value={questionSet} onChange={(e) => setQuestionSet(e.target.value)} style={{ width: '100%', padding: '8px', marginTop: '10px', border: '1px solid #ddd', borderRadius: '6px', fontSize: '1rem', color: '#333', backgroundColor: '#f9f9f9', boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)' }} >
+          {getCourseName(selectedCourse) === 'CFA LEVEL - 1' ? (
+            <>
+              <option value="" disabled>select</option>
+              <option value="30">30 Questions</option>
+              <option value="60">60 Questions</option>
+              <option value="90">90 Questions</option>
+            </>
+          ) : (
+            <>
+              <option value="" disabled>select</option>
+              <option value="44">44 Questions</option>
+            </>
+          )}
+        </select>
+      </div>
 
-            <div style={{ marginBottom: '15px' }}>
-              <label style={{ fontSize: '1.2rem', fontWeight: 'bold', color: '#555' }}>Test Time:</label>
-              <input
-                type="time"
-                value={testTime}
-                onChange={(e) => setTestTime(e.target.value)}
-                style={{ width: '100%', padding: '8px', marginTop: '10px', border: '1px solid #ddd', borderRadius: '6px', fontSize: '1rem', color: '#333', backgroundColor: '#f9f9f9', boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)' }}
-              />
-              {timeError && <div style={{ color: 'red', marginTop: '10px', fontSize: '1rem' }}>{timeError}</div>}
-            </div>
+      <div style={{ marginBottom: '15px' }}>
+        <label style={{ fontSize: '1.2rem', fontWeight: 'bold', color: '#555' }}>Test Date:</label>
+        <input
+          type="date"
+          value={testDate}
+          onChange={(e) => setTestDate(e.target.value)}
+          min={DateTime.now().toFormat('yyyy-MM-dd')}
+          style={{ width: '100%', padding: '8px', marginTop: '10px', border: '1px solid #ddd', borderRadius: '6px', fontSize: '1rem', color: '#333', backgroundColor: '#f9f9f9', boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)' }}
+        />
+      </div>
 
-            {errorMessage && <div style={{ color: 'red', marginBottom: '15px', fontSize: '1rem' }}>{errorMessage}</div>}
+      <div style={{ marginBottom: '15px' }}>
+        <label style={{ fontSize: '1.2rem', fontWeight: 'bold', color: '#555' }}>Test Time:</label>
+        <input
+          type="time"
+          value={testTime}
+          onChange={(e) => setTestTime(e.target.value)}
+          style={{ width: '100%', padding: '8px', marginTop: '10px', border: '1px solid #ddd', borderRadius: '6px', fontSize: '1rem', color: '#333', backgroundColor: '#f9f9f9', boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)' }}
+        />
+        {timeError && <div style={{ color: 'red', marginTop: '10px', fontSize: '1rem' }}>{timeError}</div>}
+      </div>
 
-            <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-              <button
-                onClick={handleConfirmSchedule}
-                style={{ fontSize: '1.1rem', backgroundColor: '#28a745', color: 'white', padding: '12px 20px', border: 'none', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold', width: '100%', transition: 'transform 0.3s ease' }}
-                onMouseEnter={(e) => (e.target.style.transform = 'scale(1.05)')}
-                onMouseLeave={(e) => (e.target.style.transform = 'scale(1)')}
-              >Confirm
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      {errorMessage && <div style={{ color: 'red', marginBottom: '15px', fontSize: '1rem' }}>{errorMessage}</div>}
+
+      <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+        <button
+          onClick={handleConfirmSchedule}
+          style={{ fontSize: '1.1rem', backgroundColor: '#28a745', color: 'white', padding: '12px 20px', border: 'none', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold', width: '100%', transition: 'transform 0.3s ease' }}
+          onMouseEnter={(e) => (e.target.style.transform = 'scale(1.05)')}
+          onMouseLeave={(e) => (e.target.style.transform = 'scale(1)')}
+        >Confirm
+        </button>
+      </div>
+    </div>
+  </div>
+)}
       {delayModalOpen && selectedTest && (
         <div style={{ position: 'fixed', top: '0', left: '0', right: '0', bottom: '0', backgroundColor: 'rgba(0, 0, 0, 0.5)', display: 'flex', justifyContent: 'center', alignItems: 'center', padding: '20px' }}>
           <div style={{ backgroundColor: '#fff', padding: '30px', borderRadius: '12px', width: '400px', boxShadow: '0 4px 20px rgba(0, 0, 0, 0.2)', position: 'relative', animation: 'fadeIn 0.3s ease' }}>
