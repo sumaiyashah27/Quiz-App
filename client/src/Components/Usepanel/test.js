@@ -353,17 +353,13 @@ useEffect(() => {
             });
           }
           if (image) {
-            const imgWidth = pageWidth * 0.5;  // Set image width to 50% of page width
-            const imgHeight = pageWidth * 0.5; // Set image height to 50% of page width (it should match the width)
-            const imgX = (doc.internal.pageSize.width - imgWidth) / 2; // Center the image horizontally
-            
+            const imgWidth = 50;
+            const imgHeight = 50;
+            const imgX = (doc.internal.pageSize.width - imgWidth) / 2;
             const imageType = image.includes('.png') ? 'PNG' : 'JPEG'; // Determine image format
-        
-            // Add image with calculated width and height
             doc.addImage(image, imageType, imgX, yPosition, imgWidth, imgHeight);
-            yPosition += imgHeight + 10; // Adjust yPosition after the image
-        }
-        
+            yPosition += imgHeight + 10;
+          }
           if (table && table.data) {
             table.data.forEach((row) => {
               let xPosition = 10;
@@ -380,6 +376,7 @@ useEffect(() => {
       });
   
       // Options
+      // Options
       if (question.options && Object.keys(question.options).length > 0) {
         doc.setFontSize(14);
         doc.text("Options:", 10, yPosition);
@@ -387,14 +384,21 @@ useEffect(() => {
 
         doc.setFontSize(12);
         Object.entries(question.options).forEach(([key, value]) => {
+          // Only display the option if it has a value
+          if (value.trim()) { // Check if the value is not empty or just spaces
             if (yPosition > pageHeight - 10) { // Check if there's enough space for the next option
-                doc.addPage();
-                yPosition = 20;
+              doc.addPage();
+              yPosition = 20;
             }
             doc.text(`${key.toUpperCase()}: ${value}`, 10, yPosition);
             yPosition += 10;
+          }
         });
+      } else {
+        // If there are no options, the section won't be included.
       }
+
+
   
       // Selected and Correct Answers
       doc.setTextColor(0, 123, 0); // Green for selected answer
@@ -436,17 +440,13 @@ useEffect(() => {
             });
           }
           if (image) {
-            const imgWidth = pageWidth * 0.5;  // Set image width to 50% of page width
-            const imgHeight = pageWidth * 0.5; // Set image height to 50% of page width (it should match the width)
-            const imgX = (doc.internal.pageSize.width - imgWidth) / 2; // Center the image horizontally
-            
+            const imgWidth = 25;
+            const imgHeight = 25;
+            const imgX = (doc.internal.pageSize.width - imgWidth) / 2;
             const imageType = image.includes('.png') ? 'PNG' : 'JPEG'; // Determine image format
-        
-            // Add image with calculated width and height
             doc.addImage(image, imageType, imgX, yPosition, imgWidth, imgHeight);
-            yPosition += imgHeight + 10; // Adjust yPosition after the image
-        }
-        
+            yPosition += imgHeight + 10;
+          }
           if (table && table.data) {
             table.data.forEach((row) => {
               let xPosition = 10;
