@@ -1,10 +1,16 @@
+pdf align, test buttons , gray and all;
+
 import React, { useState, useEffect, useCallback } from 'react';
-import { useLocation, useNavigate } from 'react-router-dom';
+import { useLocation } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import jsPDF from 'jspdf';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faChevronLeft, faChevronRight, faTimes, faFlag  } from '@fortawesome/free-solid-svg-icons';
 import 'jspdf-autotable';
+import { ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
+import logo from './edulog-2.png'; 
 
 const Test = () => {
   const location = useLocation();
@@ -28,11 +34,20 @@ const Test = () => {
   const [showPopup, setShowPopup] = useState(false);
   const [unansweredQuestions, setUnansweredQuestions] = useState([]);
   const [timer, setTimer] = useState(600);
-  const [pendingQuestions, setPendingQuestions] = useState([]);
-  const [showPendingQuestionsPopup, setShowPendingQuestionsPopup] = useState(false);
-  const [isSubmitClicked, setIsSubmitClicked] = useState(false);
-  const [isEnterRoomClicked, setIsEnterRoomClicked] = useState(false);
-  const [showSubmitPopup, setShowSubmitPopup] = useState(false);
+  const [showButton, setShowButton] = useState(true); // State to control button visibility
+  const [timeoutReached, setTimeoutReached] = useState(false);
+
+  useEffect(() => {
+    // Start a 30-second timer to hide the button
+    const timer = setTimeout(() => {
+      setShowButton(false);
+      setTimeoutReached(true); // Set timeoutReached to true after 30 seconds
+    }, 30000);
+
+    // Cleanup timer on component unmount
+    return () => clearTimeout(timer);
+  }, []);
+   
   // Fetch course name
   const fetchCourseName = useCallback(() => {
     if (selectedCourse) {
@@ -42,11 +57,10 @@ const Test = () => {
         })
         .catch((error) => {
           console.error('Error fetching course:', error);
-          setError('Failed to load course');
+          console.error('Failed to load course');
         });
     }
   }, [selectedCourse]);
-
   // Fetch subject name
   const fetchSubjectName = useCallback(() => {
     if (selectedSubject) {
@@ -55,12 +69,11 @@ const Test = () => {
           setSubjectName(response.data.name);
         })
         .catch((error) => {
-          console.error('Error fetching subject:', error);
-          setError('Failed to load subject');
+          toast.error('Error fetching subject:', error);
+          toast.error('Failed to load subject');
         });
     }
   }, [selectedSubject]);
-
   // Fetch question set for the test (used when the page loads)
   const fetchQuestionSet = useCallback(() => {
     if (userId && selectedCourse && selectedSubject) {
@@ -74,9 +87,9 @@ const Test = () => {
           setLoading(false);
         })
         .catch((error) => {
-          console.error('Error fetching question set:', error);
+          toast.error('Error fetching question set:', error);
           setLoading(false);
-          setError('Failed to load question set');
+          toast.error('Failed to load question set');
         });
     }
   }, [userId, selectedCourse, selectedSubject]);
@@ -97,20 +110,19 @@ const Test = () => {
           setLoading(false);
         })
         .catch((error) => {
-          console.error('Error fetching quiz questions:', error);
+          toast.error('Error fetching quiz questions:', error);
           setLoading(false);
-          setError('Failed to load quiz questions');
+          toast.error('Failed to load quiz questions');
         });
     }
   }, [selectedSubject, questionSet]);
-
   // Automatically start the exam once the data is ready
   useEffect(() => {
     fetchCourseName();
     fetchSubjectName();
     fetchQuestionSet();  // Fetch question set when the component mounts
   }, [fetchCourseName, fetchSubjectName, fetchQuestionSet]);
-  const [quizStarted, setQuizStarted] = useState(false);
+  
    // Handle opening the popup and fetch chapters
    const handleEnterRoom = () => {
     setIsEnterRoomClicked(true); 
@@ -126,29 +138,19 @@ const Test = () => {
       fetchQuizQuestionSet();  // Fetch chapters after opening the modal
     }
   };
-  // Handle selecting an option for the current question
+ 
+  // Prevent page reload during the test
   useEffect(() => {
-    // Retrieve the timer value from localStorage (if available)
-    const savedTimer = localStorage.getItem('quizTimer');
-    if (savedTimer) {
-      setTimer(parseInt(savedTimer, 10)); // Set the timer to the saved value
-    }
-  
-    // Only set up the interval when the quiz is started
-    if (quizStarted) {
-      const interval = setInterval(() => {
-        setTimer((prevTimer) => {
-          const newTime = prevTimer - 1;
-          localStorage.setItem('quizTimer', newTime); // Save the updated timer to localStorage
-          return newTime;
-        });
-      }, 1000);
-  
-      // Cleanup interval on component unmount or when the quiz ends
-      return () => clearInterval(interval);
-    }
-  }, [quizStarted]);
-
+    const handleBeforeUnload = (e) => {
+      const message = "Reloading the page is prohibited during the test!";
+      e.returnValue = message;
+      return message;
+    };
+    window.addEventListener("beforeunload", handleBeforeUnload);
+    return () => {
+      window.removeEventListener("beforeunload", handleBeforeUnload);
+    };
+  }, []);
   //sign the selected option to the question
   const handleNextQuestion = () => {
     if (currentQuestionIndex < quizquestionSet.length - 1) {
@@ -163,22 +165,302 @@ const Test = () => {
       setCurrentQuestionIndex(currentQuestionIndex - 1);
     }
   };
- 
-  // Prevent page reload during the test
-  useEffect(() => {
-    const handleBeforeUnload = (e) => {
-      const message = "Reloading the page is prohibited during the test!";
-      e.returnValue = message;
-      return message;
-    };
-    window.addEventListener("beforeunload", handleBeforeUnload);
-    return () => {
-      window.removeEventListener("beforeunload", handleBeforeUnload);
-    };
-  }, []);
 
+  const generatePDF = useCallback(() => {
+    const doc = new jsPDF('p', 'mm', 'a4');
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(12);
 
+    const watermarkLogoPath = '/edulog-2.png';  // Ensure this path is correct
+    const logoWidth = 40;
+    const logoHeight = 15;
+    const pageWidth = doc.internal.pageSize.width;
+    const pageHeight = doc.internal.pageSize.height;
+
+    // Helper function to handle image loading and adding to PDF
+    const addImageToPDF = (imagePath, x, y, width, height) => {
+        const img = new Image();
+        
+        img.onload = function () {
+            try {
+                // Check if the image is loaded properly
+                if (img.complete && img.naturalWidth > 0) {
+                    doc.addImage(img, 'PNG', x, y, width, height);  // Add image to the PDF
+                } else {
+                    console.error(`Image failed to load properly: ${imagePath}`);
+                    doc.text("Image not available", x + 10, y + 10);  // Fallback text if image fails
+                }
+            } catch (e) {
+                console.error(`Error adding image: ${imagePath}`, e);
+                doc.text("Error loading image", x + 10, y + 10);  // Fallback text in case of error
+            }
+        };
+
+        img.onerror = function () {
+            console.error(`Error loading image: ${imagePath}`);
+            doc.text("Image not available", x + 10, y + 10);  // Fallback text in case of error
+        };
+
+        img.src = imagePath;  // Start loading the image
+    };
+
+    // Function to add page content (header, watermark, etc.)
+    const addPageContent = (isFirstPage = false) => {
+        doc.rect(5, 5, pageWidth - 10, pageHeight - 10);  // Draw page border
+
+        if (isFirstPage) {
+            addImageToPDF(watermarkLogoPath, 10, 10, logoWidth, logoHeight);  // Add header logo
+
+            // Add title in the center of the page
+            doc.setFontSize(16);
+            doc.setTextColor(0, 123, 255);
+            doc.text('Test Results', pageWidth / 2, 20, { align: 'center' });
+            doc.setFontSize(12);
+            doc.setTextColor(0, 0, 0);  // Reset text color
+        }
+
+        // Add watermark (Check if it's a valid image)
+        const watermarkWidth = logoWidth * 2;
+        const watermarkHeight = logoHeight * 2;
+        addImageToPDF(watermarkLogoPath, pageWidth / 4, pageHeight / 4, watermarkWidth, watermarkHeight);
+    };
+
+    addPageContent(true);  // Add content to the first page
+
+    let yPosition = 40;
+
+    if (courseName) doc.text(`Course: ${courseName}`, 10, yPosition);
+    if (subjectName) doc.text(`Subject: ${subjectName}`, 10, yPosition + 10);
+    yPosition += 20;
+
+    quizquestionSet.forEach((question, index) => {
+      if (yPosition > 270) {
+          doc.addPage();  // Add a new page if the content exceeds the current page height
+          addPageContent();  // Add content to the new page
+          yPosition = 10;
+      }
   
+      doc.setFontSize(14);
+      doc.setTextColor(0, 0, 0);  // Set default text color to black
+      doc.text(`Question ${index + 1}:`, 10, yPosition);
+      yPosition += 10;
+  
+      const questionFields = [
+          { text: question.questionText1, image: question.questionImage1, table: question.questionTable1 },
+          { text: question.questionText2, image: question.questionImage2, table: question.questionTable2 },
+          { text: question.questionText3, image: question.questionImage3, table: question.questionTable3 },
+      ];
+  
+      // Loop through each question's content fields (text, images, tables)
+      questionFields.forEach(({ text, image, table }) => {
+          if (text) {
+              // Split the question text into words and add to the PDF line by line
+              const words = text.split(' ');
+              let line = '';
+              const maxWidth = pageWidth - 20;
+  
+              words.forEach((word, i) => {
+                  line += `${word} `;
+                  if (doc.getTextWidth(line) > maxWidth || i === words.length - 1) {
+                      doc.text(line.trim(), 10, yPosition);
+                      yPosition += 10;
+                      line = '';  // Reset line for next text
+                  }
+              });
+          }
+  
+          if (image) {
+              const imgWidth = 25;  // Original image width
+              const imgHeight = 25; // Original image height
+              const imgX = (pageWidth - imgWidth) / 2;
+              const imgY = yPosition;
+  
+              const imgWidth50 = imgWidth * 0.5;  // 50% width
+              const imgHeight50 = imgHeight * 0.5; // 50% height
+  
+              // Add the image with validation using the helper function
+              addImageToPDF(image, imgX, imgY, imgWidth50, imgHeight50);
+              yPosition += imgHeight50 + 10;  // Move position for next content
+          }
+  
+          if (table && table.data) {
+              table.data.forEach((row) => {
+                  let xPosition = 10;
+                  row.forEach((cell) => {
+                      doc.rect(xPosition, yPosition, 30, 10);  // Draw table cells
+                      doc.text(String(cell), xPosition + 2, yPosition + 7);  // Add text in cells
+                      xPosition += 30;
+                  });
+                  yPosition += 10;
+              });
+              yPosition += 5;  // Add extra space after the table
+          }
+      });
+  
+      // Add the options section for the question
+      doc.setFontSize(14);
+      doc.text("Options:", 10, yPosition);
+      yPosition += 10;
+  
+      doc.setFontSize(12);
+      Object.entries(question.options).forEach(([key, value]) => {
+          if (yPosition > 270) {
+              doc.addPage();  // Add a new page if content exceeds page height
+              addPageContent();  // Add content to the new page
+              yPosition = 10;
+          }
+          doc.text(`${key.toUpperCase()}: ${value}`, 10, yPosition);  // Display each option
+          yPosition += 10;
+      });
+  
+      // Add selected answer
+      doc.setTextColor(0, 123, 0); // Green for selected answer
+      doc.text(`Your Answer: ${selectedOptions[question._id] || 'None'}`, 10, yPosition);
+      yPosition += 10;
+  
+      // Add correct answer
+      doc.setTextColor(255, 0, 0); // Red for correct answer
+      doc.text(`Correct Answer: ${question.correctAns}`, 10, yPosition);
+      yPosition += 10;
+  
+      // Add answer description
+      doc.setFontSize(14);
+      doc.setTextColor(0, 0, 0); // Black color for heading
+      doc.text("Answer Description:", 10, yPosition);
+      yPosition += 10;
+  
+      const explanationFields = [
+          { text: question.answerDescriptionText1, image: question.answerDescriptionImage1, table: question.answerDescriptionTable1 },
+          { text: question.answerDescriptionText2, image: question.answerDescriptionImage2, table: question.answerDescriptionTable2 },
+          { text: question.answerDescriptionText3, image: question.answerDescriptionImage3, table: question.answerDescriptionTable3 },
+      ];
+  
+      explanationFields.forEach(({ text, image, table }) => {
+          if (text) {
+              const words = text.split(' ');
+              let line = '';
+              const maxWidth = pageWidth - 20;
+  
+              words.forEach((word, i) => {
+                  line += `${word} `;
+                  if (doc.getTextWidth(line) > maxWidth || i === words.length - 1) {
+                      doc.text(line.trim(), 10, yPosition);
+                      yPosition += 10;
+                      line = '';  // Reset line for next text
+                  }
+              });
+          }
+  
+          if (image) {
+            console.log('PDF Images',image);
+              const imgWidth = 25;  // Original image width
+              const imgHeight = 25; // Original image height
+              const imgX = (pageWidth - imgWidth) / 2;
+              const imgY = yPosition;
+  
+              const imgWidth50 = imgWidth * 0.5;  // 50% width
+              const imgHeight50 = imgHeight * 0.5; // 50% height
+  
+              // Add image with validation using the helper function
+              addImageToPDF(image, imgX, imgY, imgWidth50, imgHeight50);
+              yPosition += imgHeight50 + 10;  // Move position for next content
+          }
+  
+          if (table && table.data) {
+              table.data.forEach((row) => {
+                  let xPosition = 10;
+                  row.forEach((cell) => {
+                      doc.rect(xPosition, yPosition, 30, 10);  // Draw table cells
+                      doc.text(String(cell), xPosition + 2, yPosition + 7);  // Add text in cells
+                      xPosition += 30;
+                  });
+                  yPosition += 10;
+              });
+              yPosition += 5;  // Add extra space after the table
+          }
+      });
+  
+      // Add a separator line between questions
+      doc.setDrawColor(0, 0, 0);
+      doc.line(10, yPosition, doc.internal.pageSize.width - 10, yPosition);
+      yPosition += 10;  // Add space after the separator
+  });
+  
+  // Finalize PDF and return as Blob
+  const pdfBlob = doc.output('blob');
+  return pdfBlob;
+  
+
+}, [courseName, subjectName, quizquestionSet, selectedOptions]);
+
+
+ // Submit quiz and calculate the score
+ const handleSubmitQuiz = useCallback(() => {
+  setQuizSubmitted(true);
+  // Calculate the score by comparing selected options to correct answers
+  let score = 0;
+  Object.keys(selectedOptions).forEach((questionId) => {
+    if (selectedOptions[questionId] === correctAnswers[questionId]) {
+      score += 1;
+    }
+  });
+  setScore(score);
+  setShowResults(true);
+
+  // Generate PDF for the results
+  const pdfBlob = generatePDF();
+  const formData = new FormData();
+  formData.append('userEmail', userEmail);
+  formData.append('pdf', pdfBlob); // Assuming you have the PDF as a blob
+
+  // Send the email with the PDF attachment
+  axios.post('/api/quizResults/sendQuizResults', formData)
+    .then((response) => {
+      toast.success('Email sent successfully:', response);
+    })
+    .catch((error) => {
+      toast.error('Error sending email:', error);
+    });
+
+  // Update test status and score in the database
+  axios.post('/api/scheduleTest/updateTestStatus', {
+    userId,
+    selectedCourse,
+    selectedSubject,
+    score, 
+    status: "Completed",  // Assuming 'Completed' is the status after submission
+  })
+  .then((response) => {
+    toast.success('Test updated successfully:', response.data);
+  })
+  .catch((error) => {
+    toast.error('Error updating test:', error);
+  });
+
+  navigate('/user-panel');
+}, [selectedOptions, correctAnswers, generatePDF, userEmail, userId, selectedCourse, selectedSubject, navigate]);
+
+// Countdown timer
+useEffect(() => {
+  if (timer > 0 && !quizSubmitted) {
+    const interval = setInterval(() => {
+      setTimer((prevTime) => prevTime - 1);
+    }, 1000);
+    return () => clearInterval(interval);
+  }
+  if (timer <= 0) {
+    handleSubmitQuiz();
+  }
+}, [timer, quizSubmitted, handleSubmitQuiz]);
+
+// Function to format time in hours, minutes, and seconds
+const formatTime = (seconds) => {
+  const hours = Math.floor(seconds / 3600);
+  const minutes = Math.floor((seconds % 3600) / 60);
+  const secs = seconds % 60;
+  return `${hours}h ${minutes}m ${secs}s`;
+};
+
 const handleGoToQuestion = (questionIndex) => {
   setCurrentQuestionIndex(questionIndex - 1); // Convert to 0-based index
   setShowPopup(false);
@@ -186,12 +468,9 @@ const handleGoToQuestion = (questionIndex) => {
 
 const handleClosePopup = () => {
   setShowPopup(false);
-  setShowSubmitPopup(false);
 };
-const isQuestionAnswered = (index) => {
-  return !!selectedOptions[quizquestionSet[index]._id];
-};
-//unanswered questions popup
+
+// Popup Component
 const UnansweredQuestionsPopup = () => (
   <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0, 0, 0, 0.5)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 1000 }}>
     <div style={{ background: 'white', padding: '20px', borderRadius: '5px', boxShadow: '0 2px 10px rgba(0, 0, 0, 0.1)', maxWidth: '500px', width: '100%', position: 'relative' }}>
@@ -229,7 +508,10 @@ const handleFlagQuestion = () => {
 const handleQuestionSelect = (index) => {
   setCurrentQuestionIndex(index - 1); // Set the index based on the selected question number (1-based index)
   setShowPendingQuestionsPopup(false); // Close the popup when a question is selected
-}
+};
+const [pendingQuestions, setPendingQuestions] = useState([]);
+const [showPendingQuestionsPopup, setShowPendingQuestionsPopup] = useState(false);
+const [isSubmitClicked, setIsSubmitClicked] = useState(false);
 // Popup to display unanswered questions
 const PendingQuestionsPopup = () => (
   <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0, 0, 0, 0.5)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 1000 }}>
@@ -256,7 +538,7 @@ const PendingQuestionsPopup = () => (
         </button>
         {/* Button to submit test */}
         <button
-          onClick={() => {setShowSubmitPopup(true);}}
+          onClick={() => {handleSubmitQuiz();}}
           style={{ backgroundColor: '#f44336', color: 'white', padding: '10px', fontSize: '14px', borderRadius: '5px', cursor: 'pointer', width: '48%' }}
         >Submit Test
         </button>
@@ -287,7 +569,7 @@ const handleFinishTest = () => {
 useEffect(() => {
   const handleBeforeUnload = (event) => {
     event.preventDefault();
-    event.returnValue = ''; // Show confirmation dialog
+    event.returnValue = 'your time is not resert '; // Show confirmation dialog
   };
 
   window.addEventListener('beforeunload', handleBeforeUnload);
@@ -295,259 +577,36 @@ useEffect(() => {
     window.removeEventListener('beforeunload', handleBeforeUnload);
   };
 }, []);
-
-
-  const generatePDF = useCallback(() => {
-    const doc = new jsPDF('p', 'mm', 'a4'); // Set A4 size
-    const pageMargin = 10;  // Page margin from edges
-    const pageWidth = doc.internal.pageSize.width - 2 * pageMargin; // Width minus margins
-    const pageHeight = doc.internal.pageSize.height - 2 * pageMargin;
-    doc.setFont("helvetica", "normal"); // Use Helvetica font
-    doc.setFontSize(12);
-
-    // Title section
-    doc.setFontSize(16);
-    doc.setTextColor(0, 123, 255); // Blue for title
-    doc.text('Test Results', 105, 20, { align: 'center' }); // Title at the top center
-    doc.setFontSize(12);
-    doc.setTextColor(0, 0, 0); // Reset text color to black
-  
-    // Basic Info Section
-    doc.text(`Course: ${courseName}`, 10, 40);
-    doc.text(`Subject: ${subjectName}`, 10, 50);
-  
-    let yPosition = 60;
-  
-    // Loop through all questions and add them to the PDF
-    quizquestionSet.forEach((question, index) => {
-      if (yPosition > pageHeight - 20) {
-        doc.addPage();
-        yPosition = 20;
-      }
-  
-      // Add Question Heading
-      doc.setFontSize(14);
-      doc.setTextColor(0, 0, 0); // Black color for headings
-      doc.text(`Question ${index + 1}:`, 10, yPosition);
-      yPosition += 10;
-  
-      // Question Text, Image, and Table
-      const questionFields = [
-        { text: question.questionText1, image: question.questionImage1, table: question.questionTable1 },
-        { text: question.questionText2, image: question.questionImage2, table: question.questionTable2 },
-        { text: question.questionText3, image: question.questionImage3, table: question.questionTable3 },
-      ];
-  
-      questionFields.forEach(({ text, image, table }) => {
-        if (text || image || table) {
-          if (text) {
-            doc.setFontSize(12);
-            const lines = doc.splitTextToSize(text, pageWidth); // Split text to fit within page width
-            lines.forEach(line => {
-              if (yPosition > pageHeight - 10) {
-                doc.addPage();
-                yPosition = 20;
-              }
-              doc.text(line, 10, yPosition);
-              yPosition += 10;
-            });
-          }
-          if (image) {
-            const imgWidth = pageWidth * 0.5;  // Set image width to 50% of page width
-            const imgHeight = pageWidth * 0.5; // Set image height to 50% of page width (it should match the width)
-            const imgX = (doc.internal.pageSize.width - imgWidth) / 2; // Center the image horizontally
-            
-            const imageType = image.includes('.png') ? 'PNG' : 'JPEG'; // Determine image format
-        
-            // Add image with calculated width and height
-            doc.addImage(image, imageType, imgX, yPosition, imgWidth, imgHeight);
-            yPosition += imgHeight + 10; // Adjust yPosition after the image
-        }
-        
-          if (table && table.data) {
-            table.data.forEach((row) => {
-              let xPosition = 10;
-              row.forEach((cell) => {
-                doc.rect(xPosition, yPosition, 30, 10); // Draw cell
-                doc.text(String(cell), xPosition + 2, yPosition + 7); // Add text to cell
-                xPosition += 30;
-              });
-              yPosition += 10;
-            });
-            yPosition += 5; // Add spacing after the table
-          }
-        }
-      });
-  
-      // Options
-      if (question.options && Object.keys(question.options).length > 0) {
-        doc.setFontSize(14);
-        doc.text("Options:", 10, yPosition);
-        yPosition += 10;
-
-        doc.setFontSize(12);
-        Object.entries(question.options).forEach(([key, value]) => {
-            if (yPosition > pageHeight - 10) { // Check if there's enough space for the next option
-                doc.addPage();
-                yPosition = 20;
-            }
-            doc.text(`${key.toUpperCase()}: ${value}`, 10, yPosition);
-            yPosition += 10;
-        });
-      }
-  
-      // Selected and Correct Answers
-      doc.setTextColor(0, 123, 0); // Green for selected answer
-      doc.text(`Your Answer: ${selectedOptions[question._id] || 'None'}`, 10, yPosition);
-      yPosition += 10;
-  
-      doc.setTextColor(255, 0, 0); // Red for correct answer
-      doc.text(`Correct Answer: ${question.correctAns}`, 10, yPosition);
-      yPosition += 10;
-  
-      // Explanation
-      doc.setFontSize(14);
-      doc.setTextColor(0, 0, 0); // Black color for heading
-      doc.text("Answer Description:", 10, yPosition);
-      yPosition += 10;
-  
-      const explanationFields = [
-        { text: question.answerDescriptionText1, image: question.answerDescriptionImage1, table: question.answerDescriptionTable1 },
-        { text: question.answerDescriptionText2, image: question.answerDescriptionImage2, table: question.answerDescriptionTable2 },
-        { text: question.answerDescriptionText3, image: question.answerDescriptionImage3, table: question.answerDescriptionTable3 },
-      ];
-  
-      explanationFields.forEach(({ text, image, table }) => {
-        if (text || image || table) {
-          if (yPosition > pageHeight - 10) {
-            doc.addPage();
-            yPosition = 20;
-          }
-          if (text) {
-            doc.setFontSize(12);
-            const lines = doc.splitTextToSize(text, pageWidth); // Split text to fit within page width
-            lines.forEach(line => {
-              if (yPosition > pageHeight - 10) {
-                doc.addPage();
-                yPosition = 20;
-              }
-              doc.text(line, 10, yPosition);
-              yPosition += 10;
-            });
-          }
-          if (image) {
-            const imgWidth = pageWidth * 0.5;  // Set image width to 50% of page width
-            const imgHeight = pageWidth * 0.5; // Set image height to 50% of page width (it should match the width)
-            const imgX = (doc.internal.pageSize.width - imgWidth) / 2; // Center the image horizontally
-            
-            const imageType = image.includes('.png') ? 'PNG' : 'JPEG'; // Determine image format
-        
-            // Add image with calculated width and height
-            doc.addImage(image, imageType, imgX, yPosition, imgWidth, imgHeight);
-            yPosition += imgHeight + 10; // Adjust yPosition after the image
-        }
-        
-          if (table && table.data) {
-            table.data.forEach((row) => {
-              let xPosition = 10;
-              row.forEach((cell) => {
-                doc.rect(xPosition, yPosition, 30, 10);
-                doc.text(String(cell), xPosition + 2, yPosition + 7);
-                xPosition += 30;
-              });
-              yPosition += 10;
-            });
-            yPosition += 5; // Add spacing after the table
-          }
-        }
-      });
-  
-      // Add a separator line
-      doc.setDrawColor(0, 0, 0);
-      doc.line(10, yPosition, doc.internal.pageSize.width - 10, yPosition);
-      yPosition += 10;
-    });
-  
-    // Save the generated PDF
-    const pdfBlob = doc.output('blob'); // Get PDF as Blob
-    return pdfBlob;
-    //doc.save('exam_results.pdf');
-  }, [courseName, subjectName, quizquestionSet, selectedOptions]);
-
-// Submit quiz and calculate the score
-const handleSubmitQuiz = useCallback(() => {
-  setQuizSubmitted(true);
-  // Calculate the score by comparing selected options to correct answers
-  const calculatedScore = Object.keys(selectedOptions).reduce((acc, questionId) => {
-    return acc + (selectedOptions[questionId] === correctAnswers[questionId] ? 1 : 0);
-  }, 0);
-  setScore(calculatedScore);
-  console.log('Score:', calculatedScore);
-  setShowResults(true);
-
-  axios.post('/api/scheduleTest/updateTestStatus', {
-    userId,
-    selectedCourse,
-    selectedSubject,
-    score: calculatedScore, // Make sure this is 2
-    status: "Completed",
-  })
-  .then((response) => {
-    console.log('Payload sent:', {
-      userId,
-      selectedCourse,
-      selectedSubject,
-      score: calculatedScore,
-      status: "Completed",
-    });
-    console.log('Test updated successfully:', response.data);
-  })
-  .catch((error) => {
-    console.error('Error updating test:', error.response?.data || error.message);
-  });
-  
-
-  // Generate PDF for the results
-  const pdfBlob = generatePDF();
-  const formData = new FormData();
-  formData.append('userEmail', userEmail);
-  formData.append('pdf', pdfBlob); // Assuming you have the PDF as a blob
-
-  // Send the email with the PDF attachment
-  axios.post('/api/quizResults/sendQuizResults', formData)
-    .then((response) => {
-      console.log('Email sent successfully:', response);
-    })
-    .catch((error) => {
-      console.error('Error sending email:', error);
-    });
-    
-    navigate('/user-panel');
-}, [selectedOptions, correctAnswers, generatePDF, userEmail, userId, selectedCourse, selectedSubject]);
-
-// Countdown timer
+const [isEnterRoomClicked, setIsEnterRoomClicked] = useState(false);
+const isQuestionAnswered = (index) => {
+  return !!selectedOptions[quizquestionSet[index]._id];
+};
+const [quizStarted, setQuizStarted] = useState(false);
 useEffect(() => {
-  if (timer > 0 && !quizSubmitted) {
+  // Retrieve the timer value from localStorage (if available)
+  const savedTimer = localStorage.getItem('quizTimer');
+  if (savedTimer) {
+    setTimer(parseInt(savedTimer, 10)); // Set the timer to the saved value
+  }
+
+  // Only set up the interval when the quiz is started
+  if (quizStarted) {
     const interval = setInterval(() => {
-      setTimer((prevTime) => prevTime - 1);
+      setTimer((prevTimer) => {
+        const newTime = prevTimer - 1;
+        localStorage.setItem('quizTimer', newTime); // Save the updated timer to localStorage
+        return newTime;
+      });
     }, 1000);
+
+    // Cleanup interval on component unmount or when the quiz ends
     return () => clearInterval(interval);
   }
-  if (timer <= 0) {
-    handleSubmitQuiz();
-  }
-}, [timer, quizSubmitted, handleSubmitQuiz]);
-
-// Function to format time in hours, minutes, and seconds
-const formatTime = (seconds) => {
-  const hours = Math.floor(seconds / 3600);
-  const minutes = Math.floor((seconds % 3600) / 60);
-  const secs = seconds % 60;
-  return `${hours}h ${minutes}m ${secs}s`;
-};
+}, [quizStarted]);
 
   return (
     <div className="quiz-container" style={{ margin: '0 auto', maxWidth: '900px', padding: '20px' }}>
+      <ToastContainer />
       {/* <h1 style={{ textAlign: 'center', fontSize: '2rem', marginBottom: '20px' }} >Quiz Test</h1> */}
         <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', marginTop: '10px', marginBottom: '50px' }}>
           {/* <p>User ID: {userId}</p>
@@ -556,6 +615,7 @@ const formatTime = (seconds) => {
           <p>Course: {courseName || 'Loading...'}</p>
           <p>Subject: {subjectName || 'Loading...'}</p>
           <p>QuestionSet: {questionSet}</p> */}
+          {/* <button onClick={handleEnterRoom}>Enter Room</button> */}
           {!isEnterRoomClicked && (
             <button  onClick={handleEnterRoom} style={{ padding: '10px 20px',  backgroundColor: '#8CC63E',  color: '#fff',  border: 'none',  cursor: 'pointer',  borderRadius: '5px',  fontSize: '16px', }}>
               Enter Room
@@ -583,7 +643,7 @@ const formatTime = (seconds) => {
                 {/* Left Side Panel with Question Numbers */}
                 <div className="question-list" style={{ backgroundColor: '#fff', padding: '10px', boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)', maxHeight: '800px', overflowY: 'auto' , fontSize: '16px' }}>
                   {quizquestionSet.map((_, index) => (
-                    <button key={index} onClick={() => setCurrentQuestionIndex(index)} className={currentQuestionIndex === index ? 'active' : ''} style={{ display: 'block', width: '100%', padding: '8px', marginBottom: '5px', border: 'none', backgroundColor: isQuestionAnswered(index) ? '#ccc' : '#8CC63E', color:'#fff', cursor: 'pointer', borderRadius: '4px', textAlign: 'center', position: 'relative', }}>
+                    <button key={index} onClick={() => setCurrentQuestionIndex(index)} className={currentQuestionIndex === index ? 'active' : ''}style={{ display: 'block', width: '100%', padding: '8px', marginBottom: '5px', border: 'none', backgroundColor: isQuestionAnswered(index) ? '#ccc' : '#8CC63E', color:'#fff', cursor: 'pointer', borderRadius: '4px', textAlign: 'center', position: 'relative', }}>
                       {`Q${index + 1}`}
                       {currentQuestionIndex === index && (
                         <span style={{ position: 'absolute', top: '50%', right: '-10px', transform: 'translateY(-50%)', width: '0', height: '0', borderTop: '10px solid transparent', borderBottom: '10px solid transparent', borderLeft: '10px solid #8CC63E', fontSize: '16px'}}></span>
@@ -749,21 +809,10 @@ const formatTime = (seconds) => {
                   onClose={() => setShowPendingQuestionsPopup(false)} 
                 />
               )}
-              {showSubmitPopup && (
-                <div style={{ position: 'fixed', top: '0', left: '0', right: '0', bottom: '0', backgroundColor: 'rgba(0, 0, 0, 0.5)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: '1000' }}>
-                  <div style={{ backgroundColor: '#fff', padding: '20px', borderRadius: '8px', textAlign: 'center', width: '300px', boxShadow: '0 4px 8px rgba(0, 0, 0, 0.2)' }}>
-                    <h3 style={{ color: '#333', marginBottom: '20px' }}>Are you sure you want to submit the quiz?</h3>
-                    <div>
-                      <button onClick={handleSubmitQuiz} style={{ padding: '10px 20px', backgroundColor: '#4CAF50', color: '#fff', border: 'none', borderRadius: '5px', cursor: 'pointer', fontSize: '16px', marginRight: '10px' }}>Yes</button>
-                      <button onClick={handleClosePopup} style={{ padding: '10px 20px', backgroundColor: '#f44336', color: '#fff', border: 'none', borderRadius: '5px', cursor: 'pointer', fontSize: '16px' }}>No</button>
-                    </div>
-                  </div>
-                </div>
-              )}
               {/* {showPendingQuestionsPopup && <PendingQuestionsPopup />} */}
               <div className="navigation-buttons" style={{ marginTop: '5px', display: 'flex', justifyContent: 'flex-end', gap: '10px' }}>
                 {currentQuestionIndex === quizquestionSet.length - 1 && (
-                  <button onClick={() => setShowSubmitPopup(true)} style={{  padding: '10px 20px', backgroundColor: '#fff8dd', color: '#333', border: 'none', cursor: 'pointer', borderRadius: '5px', fontSize: '16px' }}>
+                  <button onClick={handleSubmitQuiz} style={{  padding: '10px 20px', backgroundColor: '#fff8dd', color: '#333', border: 'none', cursor: 'pointer', borderRadius: '5px', fontSize: '16px' }}>
                     Submit Quiz
                   </button>
                 )}
@@ -784,14 +833,15 @@ const formatTime = (seconds) => {
           )}
         </>
       {/* Display quiz results and allow PDF download */}
-      {showResults && (
+      {/* {showResults && (
         <div>
           <h2>Your Score: {score}/{quizquestionSet.length}</h2>
           <button onClick={generatePDF}>Download PDF</button>
         </div>
-      )}
+      )} */}
     </div>
   );
 };
 
 export default Test;
+===============================================================

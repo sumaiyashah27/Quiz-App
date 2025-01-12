@@ -7,7 +7,7 @@ const Image = require('../models/image-model'); // Ensure this path points to yo
 const router = express.Router();
 
 // Define the folder where images will be stored
-const uploadFolder = path.join(__dirname, '../image');
+const uploadFolder = path.join(__dirname, '../image'); // Path to the images folder
 fs.ensureDirSync(uploadFolder); // Ensure the folder exists
 
 // Multer storage setup
@@ -20,23 +20,20 @@ const storage = multer.diskStorage({
   },
 });
 
-const upload = multer({ storage,
-  limits: { fileSize: 20 * 1024 * 1024 }, //
- });
+const upload = multer({ 
+  storage,
+  limits: { fileSize: 70 * 1024 * 1024 }, // 70 MB file size limit
+});
 
 // Route: Upload images
-router.post('/upload-images', upload.array('images', 10), async (req, res) => {
+router.post('/upload-images', upload.array('images', 100), async (req, res) => {
   try {
-    // Construct full image URL
     const imageRecords = req.files.map((file) => ({
       name: file.originalname,
       location: `/images/${file.filename}`,
-      //location: `${req.protocol}://${req.get('host')}/images/${file.filename}`, // Matches the Nginx alias
-      //location: `${req.protocol}://api.edumocks.com/images/${file.filename}`,
     }));
 
     const savedImages = await Image.insertMany(imageRecords);
-
     res.status(201).json(savedImages);
   } catch (error) {
     console.error('Error uploading images:', error);

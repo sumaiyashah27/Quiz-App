@@ -116,7 +116,10 @@ router.post('/updateTestStatus', async (req, res) => {
     const updatedTest = await ScheduleTest.findOneAndUpdate(
       { userId, selectedCourse, selectedSubject, testStatus: 'Scheduled' }, // Match tests that are still "Scheduled"
       {
-        testStatus: 'Completed',  // Update the test status
+        $set: {
+          testStatus: 'Completed',  // Update the test status
+          score,                   // Update the score
+        },
       },
       { new: true }  // Return the updated test document
     );

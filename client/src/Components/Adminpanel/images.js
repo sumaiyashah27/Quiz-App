@@ -9,7 +9,7 @@ export default function Images() {
   const [selectedFiles, setSelectedFiles] = useState([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
+  //const [error, setError] = useState('');
 
   useEffect(() => {
     setLoading(true);
@@ -37,7 +37,7 @@ export default function Images() {
       setSelectedFiles([]);
       toast.success('Images uploaded successfully.');
     } catch (error) {
-      toast.error('Error uploading images:', error);
+      console.error('Error uploading images:', error);
     }
   };//
 
@@ -50,7 +50,7 @@ export default function Images() {
       await axios.delete(`/api/images/${imageId}`, { data: { location: imageLocation } });
       setImages(images.filter((image) => image._id !== imageId));
     } catch (error) {
-      toast.error('Error deleting image:', error);
+      console.error('Error deleting image:', error);
     }
   };
 
