@@ -376,29 +376,19 @@ useEffect(() => {
       });
   
       // Options
-      // Options
-      if (question.options && Object.keys(question.options).length > 0) {
-        doc.setFontSize(14);
-        doc.text("Options:", 10, yPosition);
+      doc.setFontSize(14);
+      doc.text("Options:", 10, yPosition);
+      yPosition += 10;
+  
+      doc.setFontSize(12);
+      Object.entries(question.options).forEach(([key, value]) => {
+        if (yPosition > 270) {
+          doc.addPage();
+          yPosition = 10;
+        }
+        doc.text(`${key.toUpperCase()}: ${value}`, 10, yPosition);
         yPosition += 10;
-
-        doc.setFontSize(12);
-        Object.entries(question.options).forEach(([key, value]) => {
-          // Only display the option if it has a value
-          if (value.trim()) { // Check if the value is not empty or just spaces
-            if (yPosition > pageHeight - 10) { // Check if there's enough space for the next option
-              doc.addPage();
-              yPosition = 20;
-            }
-            doc.text(`${key.toUpperCase()}: ${value}`, 10, yPosition);
-            yPosition += 10;
-          }
-        });
-      } else {
-        // If there are no options, the section won't be included.
-      }
-
-
+      });
   
       // Selected and Correct Answers
       doc.setTextColor(0, 123, 0); // Green for selected answer
@@ -784,12 +774,12 @@ const formatTime = (seconds) => {
           )}
         </>
       {/* Display quiz results and allow PDF download */}
-      {showResults && (
+      {/* {showResults && (
         <div>
           <h2>Your Score: {score}/{quizquestionSet.length}</h2>
           <button onClick={generatePDF}>Download PDF</button>
         </div>
-      )}
+      )} */}
     </div>
   );
 };
