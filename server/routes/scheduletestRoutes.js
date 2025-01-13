@@ -419,14 +419,38 @@ router.post('/sendReminder1Hour', async (req, res) => {
   }
 });
 
-// Route to get all scheduled tests
-router.get('/api/scheduletests', async (req, res) => {
+// Get all scheduled tests with populated user details
+// router.get('/', async (req, res) => {
+//   try {
+//       const scheduleTests = await ScheduleTest.find()
+//           .populate('userId')
+//           .populate('selectedCourse')
+//           .populate('selectedSubject');
+//       res.status(200).json(scheduleTests);
+//   } catch (error) {
+//       console.error('Error fetching schedule tests:', error.message);
+//       res.status(400).json({ message: 'Failed to fetch schedule tests', error: error.message });
+//   }
+// });
+
+// Route to get all test schedules for a user
+router.get('/user/:userId', async (req, res) => {
   try {
-    const tests = await TestModel.find().populate('userId', 'email'); // Adjust query as needed
-    res.json(tests);
+    const { userId } = req.params; // Get the userId from the URL params
+
+    // Query the ScheduleTest collection for all tests related to the given userId
+    const testSchedules = await ScheduleTest.find({ userId }).populate('selectedCourse selectedSubject');
+
+    if (!testSchedules.length) {
+      return res.status(404).json({ message: 'No test schedules found for this user.' });
+    }
+
+    res.status(200).json(testSchedules);
   } catch (error) {
-    res.status(500).json({ error: 'Failed to fetch tests' });
+    console.error(error);
+    res.status(500).json({ message: 'Server error' });
   }
 });
+
 
 module.exports = router;

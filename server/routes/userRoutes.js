@@ -187,4 +187,13 @@ router.post("/reset-password", async (req, res) => {
     }
 });
 
+
+router.get('/users', async (req, res) => {
+    try {
+      const users = await User.find({}, 'userId firstName lastName'); // Select userId, firstName, and lastName
+      res.json(users); // Send the list of users as response
+    } catch (error) {
+      res.status(500).json({ message: 'Error fetching users' });
+    }
+  });
 module.exports = router;

@@ -37,7 +37,7 @@ const Adminpanel = () => {
     { name: 'Subject', panel: 'subject', icon: faChalkboardTeacher },
     { name: 'Images', panel: 'images', icon: faImage },
     { name: 'QuizEnroll', panel: 'quizenroll', icon: faClipboardList },
-    //{ name: 'Student Result', panel: 'studentresult', icon: faChartLine },
+    { name: 'Student Result', panel: 'studentresult', icon: faChartLine },
   ];
 
   const renderContent = () => {
@@ -48,7 +48,7 @@ const Adminpanel = () => {
       case 'subject': return <Subject />;
       case 'images': return <Images />;
       case 'quizenroll': return <QuizEnroll />;
-      //case 'studentresult': return <StudentResult />
+      case 'studentresult': return <StudentResult />
       default: return <h2>Welcome! Please select an option.</h2>;
     }
   };
