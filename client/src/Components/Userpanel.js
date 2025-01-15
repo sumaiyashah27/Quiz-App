@@ -156,9 +156,8 @@ const Userpanel = () => {
     console.log('Selected Question Set:', questionSet); // This logs the selected value
   
     // Validate if the selected time is in the past
-    const selectedDateTime = new Date(`${testDate}T${testTime}`);
-    const currentDateTime = new Date();
-  
+    const selectedDateTime = DateTime.fromISO(`${testDate}T${testTime}`, { zone: 'local' }).toUTC();
+    const currentDateTime = DateTime.utc();
     // Validate if all fields are filled out, including questionSet
     if (!testDate || !testTime || !questionSet) {
       if (!questionSet) {
@@ -180,8 +179,8 @@ const Userpanel = () => {
       selectedCourse,
       selectedSubject,
       questionSet,  // This holds the selected value
-      testDate,
-      testTime,
+      testDate: selectedDateTime.toISODate(),
+      testTime: selectedDateTime.toISOTime(),
       testStatus: 'Scheduled',
     };
     // Optimistically update the UI
@@ -420,78 +419,78 @@ const handleEnterRoom = async (course, subject) => {
       )}
       {/* Modal for scheduling the test */}
       {modalOpen && (
-  <div style={{ position: 'fixed', top: '0', left: '0', right: '0', bottom: '0', backgroundColor: 'rgba(0, 0, 0, 0.5)', display: 'flex', justifyContent: 'center', alignItems: 'center', padding: '20px' }}>
-    <div style={{ backgroundColor: '#ffffff', padding: '30px', borderRadius: '12px', width: '400px', boxShadow: '0 4px 15px rgba(0, 0, 0, 0.2)', position: 'relative', animation: 'fadeIn 0.3s ease' }}>
-      <button onClick={() => { setModalOpen(false); setQuestionSet('30'); setTestDate(''); setTestTime(''); }} style={{ position: 'absolute', top: '9px', right: '12px', backgroundColor: 'transparent', border: 'none', fontSize: '1.5rem', cursor: 'pointer', color: '#333' }}>
-        <FontAwesomeIcon icon={faTimes} />
-      </button>
-      <h3 style={{ fontSize: '1.6rem', fontWeight: 'bold', color: '#333', textAlign: 'center', marginBottom: '20px' }}>Schedule Test</h3>
+        <div style={{ position: 'fixed', top: '0', left: '0', right: '0', bottom: '0', backgroundColor: 'rgba(0, 0, 0, 0.5)', display: 'flex', justifyContent: 'center', alignItems: 'center', padding: '20px' }}>
+          <div style={{ backgroundColor: '#ffffff', padding: '30px', borderRadius: '12px', width: '400px', boxShadow: '0 4px 15px rgba(0, 0, 0, 0.2)', position: 'relative', animation: 'fadeIn 0.3s ease' }}>
+            <button onClick={() => { setModalOpen(false); setQuestionSet('30'); setTestDate(''); setTestTime(''); }} style={{ position: 'absolute', top: '9px', right: '12px', backgroundColor: 'transparent', border: 'none', fontSize: '1.5rem', cursor: 'pointer', color: '#333' }}>
+              <FontAwesomeIcon icon={faTimes} />
+            </button>
+            <h3 style={{ fontSize: '1.6rem', fontWeight: 'bold', color: '#333', textAlign: 'center', marginBottom: '20px' }}>Schedule Test</h3>
 
-      <div style={{ marginBottom: '15px' }}>
-        <label style={{ fontSize: '1.3rem', fontWeight: 'bold', color: '#555' }}>Course:</label>
-        <span style={{ fontSize: '1.1rem', color: '#333' }}>{getCourseName(selectedCourse)}</span>
-      </div>
+            <div style={{ marginBottom: '15px' }}>
+              <label style={{ fontSize: '1.3rem', fontWeight: 'bold', color: '#555' }}>Course:</label>
+              <span style={{ fontSize: '1.1rem', color: '#333' }}>{getCourseName(selectedCourse)}</span>
+            </div>
 
-      <div style={{ marginBottom: '15px' }}>
-        <label style={{ fontSize: '1.3rem', fontWeight: 'bold', color: '#555' }}>Subject:</label>
-        <span style={{ fontSize: '1.1rem', color: '#333' }}>{getSubjectName(selectedSubject)}</span>
-      </div>
+            <div style={{ marginBottom: '15px' }}>
+              <label style={{ fontSize: '1.3rem', fontWeight: 'bold', color: '#555' }}>Subject:</label>
+              <span style={{ fontSize: '1.1rem', color: '#333' }}>{getSubjectName(selectedSubject)}</span>
+            </div>
 
-      <div style={{ marginBottom: '15px' }}>
-        <label style={{ fontSize: '1.2rem', fontWeight: 'bold', color: '#555' }}>Question Set:</label>
-        <select value={questionSet} onChange={(e) => setQuestionSet(e.target.value)} style={{ width: '100%', padding: '8px', marginTop: '10px', border: '1px solid #ddd', borderRadius: '6px', fontSize: '1rem', color: '#333', backgroundColor: '#f9f9f9', boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)' }} >
-          {getCourseName(selectedCourse) === 'CFA LEVEL - 1' ? (
-            <>
-              <option value="" disabled>select</option>
-              <option value="30">30 Questions</option>
-              <option value="60">60 Questions</option>
-              <option value="90">90 Questions</option>
-            </>
-          ) : (
-            <>
-              <option value="" disabled>select</option>
-              <option value="44">44 Questions</option>
-            </>
-          )}
-        </select>
-      </div>
+            <div style={{ marginBottom: '15px' }}>
+              <label style={{ fontSize: '1.2rem', fontWeight: 'bold', color: '#555' }}>Question Set:</label>
+              <select value={questionSet} onChange={(e) => setQuestionSet(e.target.value)} style={{ width: '100%', padding: '8px', marginTop: '10px', border: '1px solid #ddd', borderRadius: '6px', fontSize: '1rem', color: '#333', backgroundColor: '#f9f9f9', boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)' }} >
+                {getCourseName(selectedCourse) === 'CFA LEVEL - 1' ? (
+                  <>
+                    <option value="" disabled>select</option>
+                    <option value="30">30 Questions</option>
+                    <option value="60">60 Questions</option>
+                    <option value="90">90 Questions</option>
+                  </>
+                ) : (
+                  <>
+                    <option value="" disabled>select</option>
+                    <option value="44">44 Questions</option>
+                  </>
+                )}
+              </select>
+            </div>
 
-      <div style={{ marginBottom: '15px' }}>
-        <label style={{ fontSize: '1.2rem', fontWeight: 'bold', color: '#555' }}>Test Date:</label>
-        <input
-          type="date"
-          value={testDate}
-          onChange={(e) => setTestDate(e.target.value)}
-          min={DateTime.now().toFormat('yyyy-MM-dd')}
-          style={{ width: '100%', padding: '8px', marginTop: '10px', border: '1px solid #ddd', borderRadius: '6px', fontSize: '1rem', color: '#333', backgroundColor: '#f9f9f9', boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)' }}
-        />
-      </div>
+            <div style={{ marginBottom: '15px' }}>
+              <label style={{ fontSize: '1.2rem', fontWeight: 'bold', color: '#555' }}>Test Date:</label>
+              <input
+                type="date"
+                value={testDate}
+                onChange={(e) => setTestDate(e.target.value)}
+                min={DateTime.now().toFormat('yyyy-MM-dd')}
+                style={{ width: '100%', padding: '8px', marginTop: '10px', border: '1px solid #ddd', borderRadius: '6px', fontSize: '1rem', color: '#333', backgroundColor: '#f9f9f9', boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)' }}
+              />
+            </div>
 
-      <div style={{ marginBottom: '15px' }}>
-        <label style={{ fontSize: '1.2rem', fontWeight: 'bold', color: '#555' }}>Test Time:</label>
-        <input
-          type="time"
-          value={testTime}
-          onChange={(e) => setTestTime(e.target.value)}
-          style={{ width: '100%', padding: '8px', marginTop: '10px', border: '1px solid #ddd', borderRadius: '6px', fontSize: '1rem', color: '#333', backgroundColor: '#f9f9f9', boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)' }}
-        />
-        {timeError && <div style={{ color: 'red', marginTop: '10px', fontSize: '1rem' }}>{timeError}</div>}
-      </div>
+            <div style={{ marginBottom: '15px' }}>
+              <label style={{ fontSize: '1.2rem', fontWeight: 'bold', color: '#555' }}>Test Time:</label>
+              <input
+                type="time"
+                value={testTime}
+                onChange={(e) => setTestTime(e.target.value)}
+                style={{ width: '100%', padding: '8px', marginTop: '10px', border: '1px solid #ddd', borderRadius: '6px', fontSize: '1rem', color: '#333', backgroundColor: '#f9f9f9', boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)' }}
+              />
+              {timeError && <div style={{ color: 'red', marginTop: '10px', fontSize: '1rem' }}>{timeError}</div>}
+            </div>
 
-      {errorMessage && <div style={{ color: 'red', marginBottom: '15px', fontSize: '1rem' }}>{errorMessage}</div>}
+            {errorMessage && <div style={{ color: 'red', marginBottom: '15px', fontSize: '1rem' }}>{errorMessage}</div>}
 
-      <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-        <button
-          onClick={handleConfirmSchedule}
-          style={{ fontSize: '1.1rem', backgroundColor: '#28a745', color: 'white', padding: '12px 20px', border: 'none', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold', width: '100%', transition: 'transform 0.3s ease' }}
-          onMouseEnter={(e) => (e.target.style.transform = 'scale(1.05)')}
-          onMouseLeave={(e) => (e.target.style.transform = 'scale(1)')}
-        >Confirm
-        </button>
-      </div>
-    </div>
-  </div>
-)}
+            <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+              <button
+                onClick={handleConfirmSchedule}
+                style={{ fontSize: '1.1rem', backgroundColor: '#28a745', color: 'white', padding: '12px 20px', border: 'none', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold', width: '100%', transition: 'transform 0.3s ease' }}
+                onMouseEnter={(e) => (e.target.style.transform = 'scale(1.05)')}
+                onMouseLeave={(e) => (e.target.style.transform = 'scale(1)')}
+              >Confirm
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
       {delayModalOpen && selectedTest && (
         <div style={{ position: 'fixed', top: '0', left: '0', right: '0', bottom: '0', backgroundColor: 'rgba(0, 0, 0, 0.5)', display: 'flex', justifyContent: 'center', alignItems: 'center', padding: '20px' }}>
           <div style={{ backgroundColor: '#fff', padding: '30px', borderRadius: '12px', width: '400px', boxShadow: '0 4px 20px rgba(0, 0, 0, 0.2)', position: 'relative', animation: 'fadeIn 0.3s ease' }}>
@@ -529,88 +528,74 @@ const handleEnterRoom = async (course, subject) => {
           </div>
         </div>
       )}
-      {/* Display past attempts (Completed tests) */}
       <div style={{ marginTop: '20px' }}>
         <h3 style={{ fontSize: '2rem', fontWeight: 'bold', color: '#333', textAlign: 'center', marginBottom: '20px', textTransform: 'uppercase' }}>
           Past Attempts
         </h3>
-        <table style={{ width: '100%', borderCollapse: 'collapse', marginTop: '20px', borderRadius: '8px', boxShadow: '0px 4px 8px rgba(0, 0, 0, 0.1)', overflow: 'hidden' }}>
-          <thead>
-            <tr style={{ backgroundColor: '#100B5C', color: '#FFDC5C', textAlign: 'center', fontSize: '1.2rem', padding: '12px', textTransform: 'uppercase' }}>
-              <th style={{ padding: '12px', fontWeight: 'bold', borderBottom: '2px solid #ddd' }}>Course</th>
-              <th style={{ padding: '12px', fontWeight: 'bold', borderBottom: '2px solid #ddd' }}>Subject</th>
-              <th style={{ padding: '12px', fontWeight: 'bold', borderBottom: '2px solid #ddd' }}>Score</th>
-              <th style={{ padding: '12px', fontWeight: 'bold', borderBottom: '2px solid #ddd' }}>Percentage</th> {/* New column for percentage */}
-              <th style={{ padding: '12px', fontWeight: 'bold', borderBottom: '2px solid #ddd' }}>Grade</th>
-              <th style={{ padding: '12px', fontWeight: 'bold', borderBottom: '2px solid #ddd' }}>Status</th>
-            </tr>
-          </thead>
-          <tbody>
-            {completedTests.length === 0 ? (
-              <tr>
-                <td colSpan="6" style={{ textAlign: 'center', padding: '15px', color: '#777' }}>No past attempts found</td>
+
+        <div style={{ overflowX: 'auto', borderRadius: '8px', boxShadow: '0px 4px 8px rgba(0, 0, 0, 0.1)' }}>
+          <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: '600px', backgroundColor: '#FFFFFF' }}>
+            <thead>
+              <tr style={{ backgroundColor: '#100B5C', color: '#FFDC5C', textAlign: 'center', fontSize: '1.2rem', textTransform: 'uppercase' }}>
+                <th style={{ padding: '12px', fontWeight: 'bold' }}>Course</th>
+                <th style={{ padding: '12px', fontWeight: 'bold' }}>Subject</th>
+                <th style={{ padding: '12px', fontWeight: 'bold' }}>Score</th>
+                <th style={{ padding: '12px', fontWeight: 'bold' }}>Percentage</th>
+                <th style={{ padding: '12px', fontWeight: 'bold' }}>Grade</th>
+                <th style={{ padding: '12px', fontWeight: 'bold' }}>Status</th>
               </tr>
-            ) : (
-              completedTests.map((test, index) => {
-                const totalQuestions = test.questionSet;
-                const solvedPercentage = (test.score / totalQuestions) * 100;
+            </thead>
+            <tbody>
+              {completedTests.length === 0 ? (
+                <tr>
+                  <td colSpan="6" style={{ textAlign: 'center', padding: '15px', color: '#777' }}>
+                    No past attempts found
+                  </td>
+                </tr>
+              ) : (
+                completedTests.map((test, index) => {
+                  const totalQuestions = test.questionSet;
+                  const solvedPercentage = (test.score / totalQuestions) * 100;
 
-                let grade = '';
-                let status = '';
-                let gradeColor = '';
-                if (solvedPercentage > 90) {
-                  grade = 'AAA';
-                  status = 'Exceptional performance';
-                  gradeColor = '#4CAF50'; // Green
-                } else if (solvedPercentage >= 80) {
-                  grade = 'AA';
-                  status = 'Outstanding Effort';
-                  gradeColor = '#8BC34A'; // Light Green
-                } else if (solvedPercentage >= 70) {
-                  grade = 'BBB';
-                  status = 'Passed with confidence';
-                  gradeColor = '#FFC107'; // Yellow
-                } else if (solvedPercentage >= 60) {
-                  grade = 'BB';
-                  status = 'Borderline safe';
-                  gradeColor = '#FF9800'; // Orange
-                } else if (solvedPercentage >= 50) {
-                  grade = 'C';
-                  status = 'Needs improvement';
-                  gradeColor = '#FF5722'; // Deep Orange
-                } else {
-                  grade = 'D';
-                  status = 'Reassess and rebuild';
-                  gradeColor = '#F44336'; // Red
-                }
+                  let grade = '';
+                  let status = '';
+                  let gradeColor = '';
+                  if (solvedPercentage > 90) { grade = 'AAA'; status = 'Exceptional performance'; gradeColor = '#4CAF50'; }
+                  else if (solvedPercentage >= 80) { grade = 'AA'; status = 'Outstanding Effort'; gradeColor = '#8BC34A'; }
+                  else if (solvedPercentage >= 70) { grade = 'BBB'; status = 'Passed with confidence'; gradeColor = '#FFC107'; }
+                  else if (solvedPercentage >= 60) { grade = 'BB'; status = 'Borderline safe'; gradeColor = '#FF9800'; }
+                  else if (solvedPercentage >= 50) { grade = 'C'; status = 'Needs improvement'; gradeColor = '#FF5722'; }
+                  else { grade = 'D'; status = 'Reassess and rebuild'; gradeColor = '#F44336'; }
 
-                return (
-                  <tr key={index} style={{ backgroundColor: index % 2 === 0 ? '#FFDC5C' : '#FFFFFF', transition: 'background-color 0.3s ease', cursor: 'pointer' }}>
-                    <td style={{ fontSize: '1.1rem', padding: '12px', textAlign: 'center', backgroundColor: '#f9f9f9', color: '#333', fontWeight: 'bold' }}>
-                      {getCourseName(test.selectedCourse)} <br />
-                    </td>
-                    <td style={{ fontSize: '1.1rem', padding: '12px', textAlign: 'center', backgroundColor: '#f9f9f9', color: '#333' }}>
-                      {getSubjectName(test.selectedSubject)}
-                    </td>
-                    <td style={{ fontSize: '1.1rem', padding: '12px', textAlign: 'center', backgroundColor: '#f9f9f9', color: '#333' }}>
-                      {test.score} / {totalQuestions}
-                    </td>
-                    <td style={{ fontSize: '1.1rem', padding: '12px', textAlign: 'center', backgroundColor: '#f9f9f9', color: '#333' }}>
-                      {solvedPercentage.toFixed(2)}% {/* Display percentage */}
-                    </td>
-                    <td style={{ fontSize: '1.1rem', padding: '12px', textAlign: 'center', backgroundColor: '#f9f9f9', color: gradeColor, fontWeight: 'bold' }}>
-                      {grade}
-                    </td>
-                    <td style={{ fontSize: '1.1rem', padding: '12px', textAlign: 'center', backgroundColor: '#f9f9f9', color: '#333' }}>
-                      {status}
-                    </td>
-                  </tr>
-                );
-              })
-            )}
-          </tbody>
-        </table>
+                  return (
+                    <tr key={index} style={{ backgroundColor: index % 2 === 0 ? '#FFDC5C' : '#FFFFFF', transition: 'background-color 0.3s ease', cursor: 'pointer' }}>
+                      <td style={{ fontSize: '1.1rem', padding: '12px', textAlign: 'center', backgroundColor: '#f9f9f9', color: '#333', fontWeight: 'bold' }}>
+                        {getCourseName(test.selectedCourse)}
+                      </td>
+                      <td style={{ fontSize: '1.1rem', padding: '12px', textAlign: 'center', backgroundColor: '#f9f9f9', color: '#333' }}>
+                        {getSubjectName(test.selectedSubject)}
+                      </td>
+                      <td style={{ fontSize: '1.1rem', padding: '12px', textAlign: 'center', backgroundColor: '#f9f9f9', color: '#333' }}>
+                        {test.score} / {totalQuestions}
+                      </td>
+                      <td style={{ fontSize: '1.1rem', padding: '12px', textAlign: 'center', backgroundColor: '#f9f9f9', color: '#333' }}>
+                        {solvedPercentage.toFixed(2)}%
+                      </td>
+                      <td style={{ fontSize: '1.1rem', padding: '12px', textAlign: 'center', backgroundColor: '#f9f9f9', color: gradeColor, fontWeight: 'bold' }}>
+                        {grade}
+                      </td>
+                      <td style={{ fontSize: '1.1rem', padding: '12px', textAlign: 'center', backgroundColor: '#f9f9f9', color: '#333' }}>
+                        {status}
+                      </td>
+                    </tr>
+                  );
+                })
+              )}
+            </tbody>
+          </table>
+        </div>
       </div>
+
     </div>
   );
 };
