@@ -404,11 +404,11 @@ const handleCSVUpload = async (event, currentSubjectId) => {
                 <button onClick={() => { setCurrentSubjectId(subject._id); setShowUploadModal(true); }} style={{ backgroundColor: '#4CAF50', color: 'white', padding: '8px 16px', borderRadius: '5px', cursor: 'pointer' }} >
                   <FontAwesomeIcon icon={faUpload} style={{ marginRight: '8px' }} /> Upload CSV
                 </button>
-                <button onClick={() => { handleDownloadCSV(subject._id); }} className="download-csv-btn">
+                {/* <button onClick={() => { handleDownloadCSV(subject._id); }} className="download-csv-btn">
                   Download CSV
                 </button>
 
-                <input type="file" accept=".csv" onChange={(event) => handleCSVUpload(event, currentSubjectId)} />
+                <input type="file" accept=".csv" onChange={(event) => handleCSVUpload(event, currentSubjectId)} /> */}
 
                 {/* <button onClick={() => { setCurrentSubjectId(subject._id); setShowUploadModal(true); }} style={{ backgroundColor: '#4CAF50', color: 'white', padding: '8px 16px', borderRadius: '5px', cursor: 'pointer' }} >
                   <FontAwesomeIcon icon={faUpload} style={{ marginRight: '8px' }} /> Upload CSV
