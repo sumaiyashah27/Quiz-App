@@ -221,17 +221,26 @@ const Subject = () => {
     ),
   };
 }
-// Update a specific cell in the table
-function updateTableCell(question, index, rowIndex, colIndex, value) {
-  const tableKey = `questionTable${index}`;
-  const updatedTable = { ...question[tableKey] };
-  updatedTable.data[rowIndex][colIndex] = value;
+function updateTableCell(question, tableType, index, rowIndex, colIndex, value) {
+  // Create the key for the correct table using tableType and index
+  const tableKey = `${tableType}${index}`;
+  
+  // Ensure table data exists
+  if (!question[tableKey]?.data) return;
 
+  // Clone the existing table data
+  const updatedTable = { ...question[tableKey] };
+  
+  // Update the value at the specified row and column
+  updatedTable.data[rowIndex][colIndex] = value;
+  
+  // Update the state with the modified table data
   setUpdatedQuestion((prev) => ({
     ...prev,
     [tableKey]: updatedTable,
   }));
 }
+
 
 const handleDownloadCSV = async (currentSubjectId) => {
   if (!currentSubjectId) {
@@ -705,7 +714,7 @@ const handleCSVUpload = async (event, currentSubjectId) => {
                   <img src={updatedQuestion[`questionImage${index}`]} alt={`Preview ${index}`} style={{ maxWidth: '25%', maxHeight: '200px', borderRadius: '5px', marginBottom: '10px', }}/>
                 )}
                 {/* Table Editor */}
-                <div>
+                {/* <div>
                   <div style={{ display: 'flex', gap: '10px', marginBottom: '10px' }}>
                     <input type="number" min="1" placeholder="Rows"
                       value={
@@ -759,6 +768,56 @@ const handleCSVUpload = async (event, currentSubjectId) => {
                           </tr>
                         )
                       )}
+                    </tbody>
+                  </table>
+                </div> */}
+                <div>
+                  <div style={{ display: 'flex', gap: '10px', marginBottom: '10px' }}>
+                    <input type="number" min="1" placeholder="Rows"
+                      value={updatedQuestion[`questionTable${index}`]?.rows || 0}
+                      onChange={(e) =>
+                        setUpdatedQuestion((prev) => {
+                          const rows = parseInt(e.target.value) || 0;
+                          const cols = updatedQuestion[`questionTable${index}`]?.cols || 0;
+                          return {
+                            ...prev,
+                            [`questionTable${index}`]: generateTableData(rows, cols),
+                          };
+                        })
+                      } style={{ width: '50%', padding: '10px' }}
+                    />
+                    <input type="number" min="1" placeholder="Columns"
+                      value={updatedQuestion[`questionTable${index}`]?.cols || 0}
+                      onChange={(e) =>
+                        setUpdatedQuestion((prev) => {
+                          const rows = updatedQuestion[`questionTable${index}`]?.rows || 0;
+                          const cols = parseInt(e.target.value) || 0;
+                          return {
+                            ...prev,
+                            [`questionTable${index}`]: generateTableData(rows, cols),
+                          };
+                        })
+                      } style={{ width: '50%', padding: '10px' }}
+                    />
+                  </div>
+                  <table border="1" style={{ width: '100%', textAlign: 'center', marginBottom: '10px' }}>
+                    <tbody>
+                      {updatedQuestion[`questionTable${index}`]?.data?.map((row, rowIndex) => (
+                        <tr key={`row-${rowIndex}`}>
+                          {row.map((cell, colIndex) => (
+                            <td key={`cell-${rowIndex}-${colIndex}`}>
+                              <input
+                                type="text"
+                                value={cell}
+                                onChange={(e) =>
+                                  updateTableCell(updatedQuestion, 'questionTable', index, rowIndex, colIndex, e.target.value)
+                                }
+                                style={{ width: '100%', padding: '5px' }}
+                              />
+                            </td>
+                          ))}
+                        </tr>
+                      ))}
                     </tbody>
                   </table>
                 </div>
@@ -829,9 +888,7 @@ const handleCSVUpload = async (event, currentSubjectId) => {
                 <div>
                   <div style={{ display: 'flex', gap: '10px', marginBottom: '10px' }}>
                     <input type="number" min="1" placeholder="Rows"
-                      value={
-                        updatedQuestion[`answerDescriptionTable${index}`]?.rows || 0
-                      }
+                      value={updatedQuestion[`answerDescriptionTable${index}`]?.rows || 0}
                       onChange={(e) =>
                         setUpdatedQuestion((prev) => {
                           const rows = parseInt(e.target.value) || 0;
@@ -844,13 +901,10 @@ const handleCSVUpload = async (event, currentSubjectId) => {
                       } style={{ width: '50%', padding: '10px' }}
                     />
                     <input type="number" min="1" placeholder="Columns"
-                      value={
-                        updatedQuestion[`answerDescriptionTable${index}`]?.cols || 0
-                      }
+                      value={updatedQuestion[`answerDescriptionTable${index}`]?.cols || 0}
                       onChange={(e) =>
                         setUpdatedQuestion((prev) => {
-                          const rows =
-                            updatedQuestion[`answerDescriptionTable${index}`]?.rows || 0;
+                          const rows = updatedQuestion[`answerDescriptionTable${index}`]?.rows || 0;
                           const cols = parseInt(e.target.value) || 0;
                           return {
                             ...prev,
@@ -860,26 +914,24 @@ const handleCSVUpload = async (event, currentSubjectId) => {
                       } style={{ width: '50%', padding: '10px' }}
                     />
                   </div>
-                  <table border="1" style={{ width: '100%', textAlign: 'center', marginBottom: '10px', }} >
+                  <table border="1" style={{ width: '100%', textAlign: 'center', marginBottom: '10px' }}>
                     <tbody>
-                      {updatedQuestion[`answerDescriptionTable${index}`]?.data?.map(
-                        (row, rowIndex) => (
-                          <tr key={`row-${rowIndex}`}>
-                            {row.map((cell, colIndex) => (
-                              <td key={`cell-${rowIndex}-${colIndex}`}>
-                                <input
-                                  type="text"
-                                  value={cell}
-                                  onChange={(e) =>
-                                    updateTableCell( updatedQuestion, index, rowIndex, colIndex, e.target.value )
-                                  }
-                                  style={{ width: '100%', padding: '5px', }}
-                                />
-                              </td>
-                            ))}
-                          </tr>
-                        )
-                      )}
+                      {updatedQuestion[`answerDescriptionTable${index}`]?.data?.map((row, rowIndex) => (
+                        <tr key={`row-${rowIndex}`}>
+                          {row.map((cell, colIndex) => (
+                            <td key={`cell-${rowIndex}-${colIndex}`}>
+                              <input
+                                type="text"
+                                value={cell}
+                                onChange={(e) =>
+                                  updateTableCell(updatedQuestion, 'answerDescriptionTable', index, rowIndex, colIndex, e.target.value)
+                                }
+                                style={{ width: '100%', padding: '5px' }}
+                              />
+                            </td>
+                          ))}
+                        </tr>
+                      ))}
                     </tbody>
                   </table>
                 </div>
