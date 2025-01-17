@@ -257,6 +257,76 @@ const handleDownloadCSV = async (currentSubjectId) => {
   }
 };
 
+const handleDeleteQuestion = async (questionId, currentSubjectId) => {
+  try {
+    // Confirm deletion
+    const confirmDelete = window.confirm("Are you sure you want to delete this question?");
+    if (!confirmDelete) return;
+
+    // API call to delete question from the database
+    const response = await fetch(`/api/subjects/${currentSubjectId}/questions/${questionId}`, {
+      method: "DELETE",
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
+
+    if (response.ok) {
+      // Update the local state after deletion
+      setSubjects((prevSubjects) =>
+        prevSubjects.map((sub) =>
+          sub._id === currentSubjectId
+            ? {
+                ...sub,
+                questions: sub.questions.filter((q) => q._id !== questionId),
+              }
+            : sub
+        )
+      );
+      toast.success("Question deleted successfully!");
+    } else {
+      alert("Failed to delete question. Please try again.");
+    }
+  } catch (error) {
+    console.error("Error deleting question:", error);
+    alert("An error occurred while deleting the question.");
+  }
+};
+
+const handleCSVUpload = async (event, currentSubjectId) => {
+  if (!currentSubjectId) {
+    toast.error("Please select a subject first.");
+    return;
+  }
+
+  const file = event.target.files[0];
+  if (!file) {
+    toast.error("No file selected.");
+    return;
+  }
+
+  const formData = new FormData();
+  formData.append("csvFile", file);
+
+  try {
+    const response = await axios.post(`/api/subjects/${currentSubjectId}/upload-csv`, formData, {
+      headers: {
+        "Content-Type": "multipart/form-data",
+      },
+    });
+
+    if (response.status === 200) {
+      toast.success("CSV uploaded successfully!");
+      // Optionally, refresh the data on the page
+    } else {
+      console.error("Failed to upload CSV.");
+    }
+  } catch (error) {
+    console.error("Error uploading CSV:", error);
+    toast.error("An error occurred while uploading the CSV.");
+  }
+};
+
   return (
     <div>
        <ToastContainer />
@@ -334,8 +404,14 @@ const handleDownloadCSV = async (currentSubjectId) => {
                 <button onClick={() => { setCurrentSubjectId(subject._id); setShowUploadModal(true); }} style={{ backgroundColor: '#4CAF50', color: 'white', padding: '8px 16px', borderRadius: '5px', cursor: 'pointer' }} >
                   <FontAwesomeIcon icon={faUpload} style={{ marginRight: '8px' }} /> Upload CSV
                 </button>
-                {/* <button onClick={() => { handleDownloadCSV(subject._id); }} className="download-csv-btn">
+                <button onClick={() => { handleDownloadCSV(subject._id); }} className="download-csv-btn">
                   Download CSV
+                </button>
+
+                <input type="file" accept=".csv" onChange={(event) => handleCSVUpload(event, currentSubjectId)} />
+
+                {/* <button onClick={() => { setCurrentSubjectId(subject._id); setShowUploadModal(true); }} style={{ backgroundColor: '#4CAF50', color: 'white', padding: '8px 16px', borderRadius: '5px', cursor: 'pointer' }} >
+                  <FontAwesomeIcon icon={faUpload} style={{ marginRight: '8px' }} /> Upload CSV
                 </button> */}
 
 
@@ -355,7 +431,7 @@ const handleDownloadCSV = async (currentSubjectId) => {
                           <FontAwesomeIcon icon={faEdit} />
                         </button>
                         {/* Delete Button */}
-                        <button style={{ marginLeft: "5px", padding: "5px 12px", backgroundColor: "#f44336", color: "white", borderRadius: "5px", cursor: "pointer" }} >
+                        <button onClick={() => handleDeleteQuestion(question._id, currentSubjectId)} style={{ marginLeft: "5px", padding: "5px 12px", backgroundColor: "#f44336", color: "white", borderRadius: "5px", cursor: "pointer" }} >
                           <FontAwesomeIcon icon={faTrash} />
                         </button>
                       </div>

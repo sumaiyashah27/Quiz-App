@@ -50,7 +50,7 @@ const Navbar = () => {
         </a>
       ))}
         {firstName ? (
-          <div style={{ display: "inline-block", color: "#333", textDecoration: "none", borderRadius: "5px", display: "inline-block"}} onMouseEnter={() => setDropdownOpen(true)} onMouseLeave={() => setDropdownOpen(false)}>
+          <div style={{ display: "inline-block", color: "#333", textDecoration: "none", borderRadius: "5px", }} onMouseEnter={() => setDropdownOpen(true)} onMouseLeave={() => setDropdownOpen(false)}>
             <h3 onClick={() => setDropdownOpen(!dropdownOpen)} style={{ cursor: "pointer", color: "#333" , marginRight:'10px'}} >
               <FaUser /> Hi, {firstName}
             </h3>
@@ -109,6 +109,12 @@ const Navbar = () => {
                   <div style={{  display: "inline-block",position: "absolute", backgroundColor: "white", boxShadow: "0px 4px 6px rgba(0, 0, 0, 0.1)", borderRadius: "4px", overflow: "hidden", zIndex: "10" }} 
                   onMouseEnter={(e) => (e.target.style.color = "#007BFF")}
                   onMouseLeave={(e) => (e.target.style.color = "#333")}>
+                    {email === "kunal@edumocks.com" && (
+                      <Link to="/admin-panel" onClick={() => setDropdownOpen(false)}
+                        style={{ display: "block", padding: "20px 20px", textDecoration: "none", color: "#333", backgroundColor: "#fff", textAlign: "left",}}>
+                        <FaUserCog /> Admin Panel
+                      </Link>
+                    )}
                     <Link to="/user-panel" onClick={() => setDropdownOpen(false)} style={{ display: "block", padding: "10px 20px", textDecoration: "none", color: "#333", backgroundColor: "#fff", textAlign: "left" }}>
                       <FaUserCog  /> Dashboard
                     </Link>

@@ -54,7 +54,7 @@ const SignIn = () => {
         } else {
           // Default navigation for regular users
           setLoading(true);
-          navigate("/");
+          navigate("/user-panel");
         }
       }
     } catch (error) {

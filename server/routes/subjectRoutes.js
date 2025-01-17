@@ -332,4 +332,121 @@ router.get('/:id/download-csv', async (req, res) => {
   }
 });
 
+// DELETE route to remove a question from a subject
+router.delete("/:subjectId/questions/:questionId", async (req, res) => {
+  const { subjectId, questionId } = req.params;
+
+  try {
+    // Find the subject by ID
+    const subject = await Subject.findById(subjectId);
+    if (!subject) {
+      return res.status(404).json({ message: "Subject not found" });
+    }
+
+    // Find the question within the subject's questions array
+    const questionIndex = subject.questions.findIndex(
+      (q) => q._id.toString() === questionId
+    );
+    if (questionIndex === -1) {
+      return res.status(404).json({ message: "Question not found in the subject" });
+    }
+
+    // Remove the question from the array
+    subject.questions.splice(questionIndex, 1);
+
+    // Save the updated subject
+    await subject.save();
+
+    res.status(200).json({ message: "Question deleted successfully" });
+  } catch (error) {
+    console.error("Error deleting question:", error);
+    res.status(500).json({ message: "Server error" });
+  }
+});
+
+// Route to handle Data CSV upload
+router.post("/:id/upload-csv", upload.single("csvFile"), async (req, res) => {
+  const { id } = req.params;
+
+  try {
+    // Check if the subject exists
+    const subject = await Subject.findById(id);
+    if (!subject) {
+      return res.status(404).json({ message: "Subject not found" });
+    }
+
+    // Get CSV file from memory (req.file.buffer contains the file data)
+    const questionsData = [];
+    const csvBuffer = req.file.buffer;
+
+    // Convert CSV buffer to readable stream (to be parsed)
+    const stream = require('stream');
+    const readableStream = new stream.Readable();
+    readableStream.push(csvBuffer);
+    readableStream.push(null); // End of stream
+
+    // Pipe the readable stream to csv-parser
+    readableStream
+      .pipe(csvParser())
+      .on("headers", (headers) => {
+        // Validate the CSV headers
+        if (!validateHeaders(headers)) {
+          return res.status(400).json({ message: "Invalid CSV headers. Please check the file format." });
+        }
+      })
+      .on("data", (row) => {
+        // Process each row to match the schema
+        questionsData.push({
+          questionText1: row.questionText1 || "",
+          questionImage1: row.questionImage1 || "",
+          questionTable1: row.questionTable1 || "",
+          
+          questionText2: row.questionText2 || "",
+          questionImage2: row.questionImage2 || "",
+          questionTable2: row.questionTable2 || "",
+          
+          questionText3: row.questionText3 || "",
+          questionImage3: row.questionImage3 || "",
+          questionTable3: row.questionTable3 || "",
+          
+          options: {
+            a: row.a || "",
+            b: row.b || "",
+            c: row.c || "",
+            d: row.d || "",
+          },
+          correctAns: row.correctAns || "",
+          
+          answerDescriptionText1: row.answerDescriptionText1 || "",
+          answerDescriptionImage1: row.answerDescriptionImage1 || "",
+          answerDescriptionTable1: row.answerDescriptionTable1 || "",
+          
+          answerDescriptionText2: row.answerDescriptionText2 || "",
+          answerDescriptionImage2: row.answerDescriptionImage2 || "",
+          answerDescriptionTable2: row.answerDescriptionTable2 || "",
+          
+          answerDescriptionText3: row.answerDescriptionText3 || "",
+          answerDescriptionImage3: row.answerDescriptionImage3 || "",
+          answerDescriptionTable3: row.answerDescriptionTable3 || "",
+        });
+      })
+      .on("end", async () => {
+        // After parsing, insert questions into the database
+        try {
+          await insertQuestionsToSubject(id, questionsData);
+          res.status(200).json({ message: "CSV uploaded and questions added successfully!" });
+        } catch (error) {
+          res.status(500).json({ message: error.message });
+        }
+      })
+      .on("error", (error) => {
+        console.error("Error reading CSV file:", error);
+        res.status(500).json({ message: "Failed to process CSV file." });
+      });
+
+  } catch (error) {
+    console.error("Error uploading CSV:", error);
+    res.status(500).json({ message: "Server error while uploading CSV." });
+  }
+});
 module.exports = router;

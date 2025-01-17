@@ -5,6 +5,7 @@ import jsPDF from 'jspdf';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faChevronLeft, faChevronRight, faTimes, faFlag  } from '@fortawesome/free-solid-svg-icons';
 import 'jspdf-autotable';
+import html2canvas from 'html2canvas';
 
 const Test = () => {
   const location = useLocation();
@@ -306,23 +307,54 @@ const generatePDF = useCallback(() => {
 
   doc.setFont("helvetica", "normal");
   doc.setFontSize(12);
-
+  
   // Draw Page Border
   const drawPageBorder = () => {
-    doc.setDrawColor(0, 0, 0); // Black border
+    doc.setDrawColor(16, 11, 92); // RGB for #100B5C
     doc.rect(pageMargin, pageMargin, pageWidth, pageHeight); // Draw rectangle
   };
   drawPageBorder();
+  
 
-  // Title section
+  const logo = '/edulog-2.png'; // Replace with your logo URL
+  const logoWidth = 90; // Set logo width
+  const logoHeight = 30; // Set logo height
+  const logoX = pageMargin; // Align logo to the left
+  const logoY = pageMargin; // Set logo position
+
+  // Add the logo
+  doc.addImage(logo, 'PNG', logoX, logoY, logoWidth, logoHeight, { align: 'left' });
+
+  // Add the title below the logo
   doc.setFontSize(16);
+  doc.setFont('helvetica', 'bold'); // Set the font to bold
   doc.setTextColor(0, 123, 255); // Blue for title
-  doc.text('Test Results', doc.internal.pageSize.width / 2, yPosition + 10, { align: 'center' });
-  yPosition += 20;
+
+  // Calculate the X position to center the title on the page
+  const titleX = (pageWidth - doc.getTextWidth('Test Results')) / 2; // Center title horizontally
+  const titleY = logoY + logoHeight + 10; // Position title below the logo with a margin
+  // Add the title text
+  doc.text('Test Results', titleX, titleY);
+  // Update yPosition for subsequent content
+  yPosition = titleY + 20;
+
+  const addWatermark = () => {
+    const watermark = logo; // Replace with your watermark URL
+    const watermarkWidth = 100; // Set watermark width
+    const watermarkHeight = 50; // Set watermark height
+    const watermarkX = (doc.internal.pageSize.width - watermarkWidth) / 2; // Center horizontally
+    const watermarkY = (doc.internal.pageSize.height - watermarkHeight) / 2; // Center vertically
+    // Set global transparency for the watermark
+    doc.setGState(new doc.GState({ opacity: 0.2 })); // Set opacity to 20%
+    // Add the watermark image
+    doc.addImage(watermark, 'PNG', watermarkX, watermarkY, watermarkWidth, watermarkHeight);
+    // Reset global transparency to default
+    doc.setGState(new doc.GState({ opacity: 1 }));
+  };
 
   doc.setFontSize(12);
+  doc.setFont('helvetica', 'bold');
   doc.setTextColor(0, 0, 0);
-
   // Basic Info Section
   doc.text(`Course: ${courseName}`, pageMargin, yPosition);
   doc.text(`Subject: ${subjectName}`, pageMargin, yPosition + 10);
@@ -333,6 +365,7 @@ const generatePDF = useCallback(() => {
     if (yPosition > pageHeight - 20) {
       doc.addPage();
       drawPageBorder();
+       addWatermark();
       yPosition = pageMargin + 10;
     }
 
@@ -354,6 +387,7 @@ const generatePDF = useCallback(() => {
           if (yPosition > pageHeight - 10) {
             doc.addPage();
             drawPageBorder();
+            addWatermark();
             yPosition = pageMargin + 10;
           }
           doc.text(line, pageMargin, yPosition);
@@ -362,20 +396,20 @@ const generatePDF = useCallback(() => {
       }
 
       if (image) {
-        const imgWidth = 60; // Fixed width
-        const imgHeight = 60; // Fixed height
-        const imgX = (doc.internal.pageSize.width - imgWidth) / 2;
+        const imgWidth = doc.internal.pageSize.width * 0.8; // 30% of page width
+        const imgHeight = doc.internal.pageSize.width * 0.3; // Maintain aspect ratio
+        const imgX = (doc.internal.pageSize.width - imgWidth) / 2; // Center horizontally
         const imageType = image.includes('.png') ? 'PNG' : 'JPEG';
-
         if (yPosition + imgHeight > pageHeight - 10) {
           doc.addPage();
           drawPageBorder();
+          addWatermark();
           yPosition = pageMargin + 10;
         }
-
         doc.addImage(image, imageType, imgX, yPosition, imgWidth, imgHeight);
         yPosition += imgHeight + 10;
       }
+      
 
       if (table && table.data) {
         table.data.forEach(row => {
@@ -395,17 +429,21 @@ const generatePDF = useCallback(() => {
     doc.setFontSize(14);
     doc.text("Options:", pageMargin, yPosition);
     yPosition += 10;
-
     doc.setFontSize(12);
     Object.entries(question.options).forEach(([key, value]) => {
+      if (['a', 'b', 'c', 'd'].includes(key) && !value) {
+        return;
+      }
       if (yPosition > pageHeight - 10) {
         doc.addPage();
         drawPageBorder();
+        addWatermark();
         yPosition = pageMargin + 10;
       }
       doc.text(`${key.toUpperCase()}: ${value}`, pageMargin, yPosition);
       yPosition += 10;
     });
+
 
     // Add selected and correct answers
     doc.setTextColor(0, 123, 0); // Green for selected answer
@@ -435,6 +473,7 @@ const generatePDF = useCallback(() => {
           if (yPosition > pageHeight - 10) {
             doc.addPage();
             drawPageBorder();
+            addWatermark();
             yPosition = pageMargin + 10;
           }
           doc.text(line, pageMargin, yPosition);
@@ -443,19 +482,20 @@ const generatePDF = useCallback(() => {
       }
 
       if (image) {
-        const imgWidth = 40;
-        const imgHeight = 40;
-        const imgX = (doc.internal.pageSize.width - imgWidth) / 2;
-
+        const imgWidth = doc.internal.pageSize.width * 0.8; // 30% of page width
+        const imgHeight = doc.internal.pageSize.width * 0.3; // Maintain aspect ratio
+        const imgX = (doc.internal.pageSize.width - imgWidth) / 2; // Center horizontally
+        const imageType = image.includes('.png') ? 'PNG' : 'JPEG';
         if (yPosition + imgHeight > pageHeight - 10) {
           doc.addPage();
           drawPageBorder();
+          addWatermark();
           yPosition = pageMargin + 10;
         }
-
-        doc.addImage(image, 'JPEG', imgX, yPosition, imgWidth, imgHeight);
+        doc.addImage(image, imageType, imgX, yPosition, imgWidth, imgHeight);
         yPosition += imgHeight + 10;
       }
+      
 
       if (table && table.data) {
         table.data.forEach(row => {
@@ -566,10 +606,33 @@ const formatTime = (seconds) => {
           <p>Subject: {subjectName || 'Loading...'}</p>
           <p>QuestionSet: {questionSet}</p> */}
           {!isEnterRoomClicked && (
-            <button  onClick={handleEnterRoom} style={{ padding: '10px 20px',  backgroundColor: '#8CC63E',  color: '#fff',  border: 'none',  cursor: 'pointer',  borderRadius: '5px',  fontSize: '16px', }}>
-              Enter Room
-            </button>
+            <div style={{ padding: '20px', width: '80%', margin: '20px auto', }}>
+              <h2 style={{ color: '#333', textAlign: 'center', fontSize: '20px', marginBottom: '20px' }}>Welcome to the CFA Exam Practice Test</h2>
+              <p style={{ fontSize: '16px', color: '#333', lineHeight: '1.6' }}>
+                <strong>Instructions:</strong>
+                <ul style={{ listStyleType: 'none', paddingLeft: '0' }}>
+                  <li><strong>Time Limit:</strong> The exam will be timed. Ensure you are in a quiet environment and free from distractions. </li>
+                  <li><strong>Questions Format:</strong> The exam consists of multiple-choice questions. Select the correct answer from the options provided.</li>
+                  <li><strong>Navigation:</strong> You can navigate through the exam using the "Next" or "Back" buttons. You may also skip questions and return to them later.</li>
+                  <li><strong>No Pausing:</strong> Once the exam starts, there will be no option to pause it. Ensure you are ready to complete it in one go.</li>
+                  <li><strong>Cheating:</strong> The exam is meant to test your knowledge. Please refrain from using external resources or assistance during the exam.</li>
+                  <li><strong>Exam Completion:</strong> Once you complete the exam, you will receive your results immediately. Review your performance and take notes on areas you may need to improve.</li>
+                  <li><strong>Technical Issues:</strong> In case of any technical difficulties during the exam, please contact <a href="mailto:support@edumocks.com" style={{ color: '#8CC63E' }}>support@edumocks.com</a> immediately for assistance.</li>
+                </ul>
+              </p>
+              <h3 style={{ color: '#333', marginTop: '20px' }}>Scoring Pattern:</h3>
+              <ul style={{ listStyleType: 'none', paddingLeft: '0', fontSize: '16px' }}>
+                <li><span style={{ color: '#8CC63E', fontWeight: 'bold' }}>AAA </span>: Exceptional Performance</li>
+                <li><span style={{ color: '#4CAF50', fontWeight: 'bold' }}>AA </span>: Outstanding Effort</li>
+                <li><span style={{ color: '#FFC107', fontWeight: 'bold' }}>BBB </span>: Passed with Confidence</li>
+                <li><span style={{ color: '#FF9800', fontWeight: 'bold' }}>BB</span>: Borderline Safe</li>
+                <li><span style={{ color: '#FF5722', fontWeight: 'bold' }}>C </span>: Needs Improvement</li>
+                <li><span style={{ color: '#F44336', fontWeight: 'bold' }}>D </span>: Reassess and Rebuild</li>
+              </ul>
+              <button onClick={handleEnterRoom} style={{ padding: '10px 20px', backgroundColor: '#8CC63E', color: '#fff', border: 'none', cursor: 'pointer', borderRadius: '5px', fontSize: '16px', marginTop: '20px', display: 'block', width: '100%' }}>Enter Room</button>
+            </div>
           )}
+
           {/* {loadingMessage && <p style={{ color: 'blue', textAlign: 'center' }}>{loadingMessage}</p>}
           {countdown > 0 && <p style={{ color: 'orange', textAlign: 'center' }}>Starting in {countdown} seconds...</p>} */}
         </div>

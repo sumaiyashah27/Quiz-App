@@ -156,8 +156,15 @@ const Userpanel = () => {
     console.log('Selected Question Set:', questionSet); // This logs the selected value
   
     // Validate if the selected time is in the past
-    const selectedDateTime = DateTime.fromISO(`${testDate}T${testTime}`, { zone: 'local' }).toUTC();
+    const selectedDateTime = DateTime.fromISO(`${testDate}T${testTime}`, { zone: 'local' });
+    // Remove .toUTC() to keep the time in the local zone.
+    //const selectedDateTime = DateTime.fromISO(`${testDate}T${testTime}`, { zone: 'local' }).toUTC();
     const currentDateTime = DateTime.utc();
+    // Convert to UTC for storage
+    const selectedDateTimeUTC = selectedDateTime.toUTC();
+
+    // Convert back to local time for display
+    const displayTime = selectedDateTimeUTC.setZone('local').toFormat('HH:mm:ss');
     // Validate if all fields are filled out, including questionSet
     if (!testDate || !testTime || !questionSet) {
       if (!questionSet) {
@@ -393,14 +400,15 @@ const handleEnterRoom = async (course, subject) => {
           </div>
         )}
       </div>
-       {isModalOpen && (
+      {isModalOpen && (
         <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0, 0, 0, 0.5)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 1000 }}>
           <div style={{ backgroundColor: '#fff', padding: '20px', borderRadius: '8px', maxWidth: '500px', width: '100%', boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)', textAlign: 'center' }}>
             <h2>Test Details</h2>
             {/* <p><strong>Course:</strong> {selectTest.selectedCourse}</p>
             <p><strong>Subject:</strong> {selectTest.selectedSubject}</p> */}
             <p><strong>Question Set:</strong> {selectTest.questionSet}</p>
-            <p><strong>Test Time:</strong> {selectTest.testTime}</p>
+            <p><strong>Test Time:</strong> {selectTest.testTime.split('.')[0]}</p>
+            {/* <p><strong>Test Time:</strong> {selectTest.testTime}</p> */}
             <p><strong>Test Date:</strong> {new Date(selectTest.testDate).toLocaleDateString()}</p>
               
             {!showEnterButton && remainingTime && <p style={{ color: 'red', fontWeight: 'bold' }}>Countdown: {remainingTime}</p>}
@@ -595,6 +603,35 @@ const handleEnterRoom = async (course, subject) => {
           </table>
         </div>
       </div>
+      <div
+      style={{
+        display: 'flex',
+        justifyContent: 'center',
+        alignItems: 'center',
+        height: '100vh',
+      }}
+    >
+      <div
+        style={{
+          textAlign: 'center',
+          padding: '20px',
+          borderRadius: '8px',
+          boxShadow: '0 4px 8px rgba(0, 0, 0, 0.1)',
+          width: '80%',
+          maxWidth: '600px',
+        }}
+      >
+        <h2>Your Performance based on </h2>
+        <div style={{ fontSize: '18px', margin: '10px 0' }}>
+          <p><strong>AAA (&gt;90%)</strong>: Exceptional Performance</p>
+          <p><strong>AA (80–90%)</strong>: Outstanding Effort</p>
+          <p><strong>BBB (70–80%)</strong>: Passed with Confidence</p>
+          <p><strong>BB (60–70%)</strong>: Borderline Safe</p>
+          <p><strong>C (50–60%)</strong>: Needs Improvement</p>
+          <p><strong>D (&lt;50%)</strong>: Reassess and Rebuild</p>
+        </div>
+      </div>
+    </div>
 
     </div>
   );
