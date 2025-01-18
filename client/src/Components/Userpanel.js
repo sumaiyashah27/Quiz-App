@@ -536,6 +536,31 @@ const handleEnterRoom = async (course, subject) => {
           </div>
         </div>
       )}
+      <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', marginTop: '30px' }}>
+        <div style={{ textAlign: 'center', padding: '20px', borderRadius: '8px', boxShadow: '0 4px 8px rgba(0, 0, 0, 0.1)', width: '80%', maxWidth: '600px' }}>
+          <h2>Your Performance based on </h2>
+          <div style={{ fontSize: '18px', margin: '10px 0' }}>
+            <div style={{ backgroundColor: '#FF4C4C', color: 'white', padding: '8px 12px', borderRadius: '4px', fontSize: '20px', margin: '5px 0' }}>
+              <strong>AAA (&gt;90%)</strong>: Exceptional Performance
+            </div>
+            <div style={{ backgroundColor: '#FF4C4C', color: 'white', padding: '8px 12px', borderRadius: '4px', fontSize: '20px', margin: '5px 0' }}>
+              <strong>AA (80–90%)</strong>: Outstanding Effort
+            </div>
+            <div style={{ backgroundColor: '#FF4C4C', color: 'white', padding: '8px 12px', borderRadius: '4px', fontSize: '20px', margin: '5px 0' }}>
+              <strong>BBB (70–80%)</strong>: Passed with Confidence
+            </div>
+            <div style={{ backgroundColor: '#FF4C4C', color: 'white', padding: '8px 12px', borderRadius: '4px', fontSize: '20px', margin: '5px 0' }}>
+              <strong>BB (60–70%)</strong>: Borderline Safe
+            </div>
+            <div style={{ backgroundColor: '#FF4C4C', color: 'white', padding: '8px 12px', borderRadius: '4px', fontSize: '20px', margin: '5px 0' }}>
+              <strong>C (50–60%)</strong>: Needs Improvement
+            </div>
+            <div style={{ backgroundColor: '#FF4C4C', color: 'white', padding: '8px 12px', borderRadius: '4px', fontSize: '20px', margin: '5px 0' }}>
+              <strong>D (&lt;50%)</strong>: Reassess and Rebuild
+            </div>
+          </div>
+        </div>
+      </div>
       <div style={{ marginTop: '20px' }}>
         <h3 style={{ fontSize: '2rem', fontWeight: 'bold', color: '#333', textAlign: 'center', marginBottom: '20px', textTransform: 'uppercase' }}>
           Past Attempts
@@ -603,36 +628,6 @@ const handleEnterRoom = async (course, subject) => {
           </table>
         </div>
       </div>
-      <div
-      style={{
-        display: 'flex',
-        justifyContent: 'center',
-        alignItems: 'center',
-        height: '100vh',
-      }}
-    >
-      <div
-        style={{
-          textAlign: 'center',
-          padding: '20px',
-          borderRadius: '8px',
-          boxShadow: '0 4px 8px rgba(0, 0, 0, 0.1)',
-          width: '80%',
-          maxWidth: '600px',
-        }}
-      >
-        <h2>Your Performance based on </h2>
-        <div style={{ fontSize: '18px', margin: '10px 0' }}>
-          <p><strong>AAA (&gt;90%)</strong>: Exceptional Performance</p>
-          <p><strong>AA (80–90%)</strong>: Outstanding Effort</p>
-          <p><strong>BBB (70–80%)</strong>: Passed with Confidence</p>
-          <p><strong>BB (60–70%)</strong>: Borderline Safe</p>
-          <p><strong>C (50–60%)</strong>: Needs Improvement</p>
-          <p><strong>D (&lt;50%)</strong>: Reassess and Rebuild</p>
-        </div>
-      </div>
-    </div>
-
     </div>
   );
 };

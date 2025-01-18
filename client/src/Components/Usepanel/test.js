@@ -297,24 +297,22 @@ useEffect(() => {
   };
 }, []);
 
-
 const generatePDF = useCallback(() => {
   const doc = new jsPDF('p', 'mm', 'a4'); // Set A4 size
-  const pageMargin = 10; // Page margin from edges
+  const pageMargin = 7; // Page margin from edges
   const pageWidth = doc.internal.pageSize.width - 2 * pageMargin;
   const pageHeight = doc.internal.pageSize.height - 2 * pageMargin;
-  let yPosition = pageMargin; // Start position for content
-
-  doc.setFont("helvetica", "normal");
+  const tableMargin = 10; // Table margin
+  let yPosition = pageMargin + tableMargin; // Start position for content
+  doc.setFont("times", "normal");
   doc.setFontSize(12);
-  
+
   // Draw Page Border
   const drawPageBorder = () => {
     doc.setDrawColor(16, 11, 92); // RGB for #100B5C
     doc.rect(pageMargin, pageMargin, pageWidth, pageHeight); // Draw rectangle
   };
   drawPageBorder();
-  
 
   const logo = '/edulog-2.png'; // Replace with your logo URL
   const logoWidth = 90; // Set logo width
@@ -327,14 +325,11 @@ const generatePDF = useCallback(() => {
 
   // Add the title below the logo
   doc.setFontSize(16);
-  doc.setFont('helvetica', 'bold'); // Set the font to bold
   doc.setTextColor(0, 123, 255); // Blue for title
-
-  // Calculate the X position to center the title on the page
   const titleX = (pageWidth - doc.getTextWidth('Test Results')) / 2; // Center title horizontally
   const titleY = logoY + logoHeight + 10; // Position title below the logo with a margin
-  // Add the title text
   doc.text('Test Results', titleX, titleY);
+
   // Update yPosition for subsequent content
   yPosition = titleY + 20;
 
@@ -344,17 +339,14 @@ const generatePDF = useCallback(() => {
     const watermarkHeight = 50; // Set watermark height
     const watermarkX = (doc.internal.pageSize.width - watermarkWidth) / 2; // Center horizontally
     const watermarkY = (doc.internal.pageSize.height - watermarkHeight) / 2; // Center vertically
-    // Set global transparency for the watermark
     doc.setGState(new doc.GState({ opacity: 0.2 })); // Set opacity to 20%
-    // Add the watermark image
     doc.addImage(watermark, 'PNG', watermarkX, watermarkY, watermarkWidth, watermarkHeight);
-    // Reset global transparency to default
     doc.setGState(new doc.GState({ opacity: 1 }));
   };
 
   doc.setFontSize(12);
-  doc.setFont('helvetica', 'bold');
   doc.setTextColor(0, 0, 0);
+
   // Basic Info Section
   doc.text(`Course: ${courseName}`, pageMargin, yPosition);
   doc.text(`Subject: ${subjectName}`, pageMargin, yPosition + 10);
@@ -365,7 +357,7 @@ const generatePDF = useCallback(() => {
     if (yPosition > pageHeight - 20) {
       doc.addPage();
       drawPageBorder();
-       addWatermark();
+      addWatermark();
       yPosition = pageMargin + 10;
     }
 
@@ -381,25 +373,28 @@ const generatePDF = useCallback(() => {
     ];
 
     questionFields.forEach(({ text, image, table }) => {
+      // Text Handling
       if (text) {
-        const lines = doc.splitTextToSize(text, pageWidth);
+        const lines = doc.splitTextToSize(text, pageWidth - 2 * pageMargin); // Wrap text
         lines.forEach(line => {
-          if (yPosition > pageHeight - 10) {
+          if (yPosition > pageHeight - 10) { 
             doc.addPage();
             drawPageBorder();
             addWatermark();
-            yPosition = pageMargin + 10;
+            yPosition = pageMargin + 10; // Reset y-position for the new page
           }
           doc.text(line, pageMargin, yPosition);
-          yPosition += 10;
+          yPosition += 10; // Increment y-position for the next line
         });
       }
 
+      // Image Handling
       if (image) {
-        const imgWidth = doc.internal.pageSize.width * 0.8; // 30% of page width
-        const imgHeight = doc.internal.pageSize.width * 0.3; // Maintain aspect ratio
-        const imgX = (doc.internal.pageSize.width - imgWidth) / 2; // Center horizontally
+        const imgWidth = doc.internal.pageSize.width * 0.8;
+        const imgHeight = doc.internal.pageSize.width * 0.3;
+        const imgX = (doc.internal.pageSize.width - imgWidth) / 2; 
         const imageType = image.includes('.png') ? 'PNG' : 'JPEG';
+
         if (yPosition + imgHeight > pageHeight - 10) {
           doc.addPage();
           drawPageBorder();
@@ -409,23 +404,56 @@ const generatePDF = useCallback(() => {
         doc.addImage(image, imageType, imgX, yPosition, imgWidth, imgHeight);
         yPosition += imgHeight + 10;
       }
-      
 
+      // Table Handling
       if (table && table.data) {
-        table.data.forEach(row => {
-          let xPosition = pageMargin;
-          row.forEach(cell => {
-            doc.rect(xPosition, yPosition, 30, 10); // Draw cell
-            doc.text(String(cell), xPosition + 2, yPosition + 7); // Add text to cell
-            xPosition += 30;
-          });
-          yPosition += 10;
+        const cellWidth = 40;
+        const cellHeight = 10;
+        const rowHeights = table.data.map(row => {
+          return row.reduce((maxHeight, cell) => {
+            const lines = doc.splitTextToSize(String(cell), cellWidth - 4);
+            const dynamicHeight = Math.max(lines.length * 7, cellHeight);
+            return Math.max(maxHeight, dynamicHeight);
+          }, cellHeight);
         });
-        yPosition += 5;
+
+        const tableHeight = rowHeights.reduce((total, rowHeight) => total + rowHeight, 0);
+        const tableWidth = cellWidth * table.data[0].length;
+
+        if (pageMargin + tableMargin + tableWidth > pageWidth - pageMargin) {
+          console.log("Table exceeds page width.");
+          return;
+        }
+
+        if (yPosition + tableHeight + tableMargin > pageHeight - pageMargin) {
+          doc.addPage();
+          yPosition = pageMargin + tableMargin;
+        }
+
+        table.data.forEach((row, rowIndex) => {
+          let xPosition = pageMargin + tableMargin;
+          const rowHeight = rowHeights[rowIndex];
+
+          row.forEach(cell => {
+            const lines = doc.splitTextToSize(String(cell), cellWidth - 4);
+            doc.rect(xPosition, yPosition, cellWidth, rowHeight);
+            lines.forEach((line, index) => {
+              doc.text(line, xPosition + 2, yPosition + 7 + index * 7);
+            });
+            xPosition += cellWidth;
+          });
+
+          yPosition += rowHeight;
+        });
+
+        doc.rect(pageMargin + tableMargin, yPosition - tableHeight, tableWidth, tableHeight);
+        // Add extra space below the table before the next field
+        const tableSpace = 10; // Adjust this value to your liking
+        yPosition += tableSpace;
       }
     });
 
-    // Add options
+    // Add Options
     doc.setFontSize(14);
     doc.text("Options:", pageMargin, yPosition);
     yPosition += 10;
@@ -434,27 +462,31 @@ const generatePDF = useCallback(() => {
       if (['a', 'b', 'c', 'd'].includes(key) && !value) {
         return;
       }
-      if (yPosition > pageHeight - 10) {
-        doc.addPage();
-        drawPageBorder();
-        addWatermark();
-        yPosition = pageMargin + 10;
-      }
-      doc.text(`${key.toUpperCase()}: ${value}`, pageMargin, yPosition);
-      yPosition += 10;
+
+      const lines = doc.splitTextToSize(`${key.toUpperCase()}: ${value}`, pageWidth - 2 * pageMargin);
+
+      lines.forEach(line => {
+        if (yPosition > pageHeight - 10) {
+          doc.addPage();
+          drawPageBorder();
+          addWatermark();
+          yPosition = pageMargin + 10;
+        }
+        doc.text(line, pageMargin, yPosition);
+        yPosition += 10;
+      });
     });
 
-
-    // Add selected and correct answers
-    doc.setTextColor(0, 123, 0); // Green for selected answer
+    // Add Selected and Correct Answers
+    doc.setTextColor(0, 123, 0); 
     doc.text(`Your Answer: ${selectedOptions[question._id] || 'None'}`, pageMargin, yPosition);
     yPosition += 10;
 
-    doc.setTextColor(255, 0, 0); // Red for correct answer
+    doc.setTextColor(255, 0, 0); 
     doc.text(`Correct Answer: ${question.correctAns}`, pageMargin, yPosition);
     yPosition += 10;
 
-    // Add explanation
+    // Add Explanation
     doc.setFontSize(14);
     doc.setTextColor(0, 0, 0);
     doc.text("Answer Description:", pageMargin, yPosition);
@@ -467,25 +499,29 @@ const generatePDF = useCallback(() => {
     ];
 
     explanationFields.forEach(({ text, image, table }) => {
+      // Similar logic for Explanation (text, image, table) as done for questions
+      // Text Handling
       if (text) {
-        const lines = doc.splitTextToSize(text, pageWidth);
+        const lines = doc.splitTextToSize(text, pageWidth - 2 * pageMargin); // Wrap text
         lines.forEach(line => {
-          if (yPosition > pageHeight - 10) {
+          if (yPosition > pageHeight - 10) { 
             doc.addPage();
             drawPageBorder();
             addWatermark();
-            yPosition = pageMargin + 10;
+            yPosition = pageMargin + 10; // Reset y-position for the new page
           }
           doc.text(line, pageMargin, yPosition);
-          yPosition += 10;
+          yPosition += 10; // Increment y-position for the next line
         });
       }
 
+      // Image Handling
       if (image) {
-        const imgWidth = doc.internal.pageSize.width * 0.8; // 30% of page width
-        const imgHeight = doc.internal.pageSize.width * 0.3; // Maintain aspect ratio
-        const imgX = (doc.internal.pageSize.width - imgWidth) / 2; // Center horizontally
+        const imgWidth = doc.internal.pageSize.width * 0.8;
+        const imgHeight = doc.internal.pageSize.width * 0.3;
+        const imgX = (doc.internal.pageSize.width - imgWidth) / 2; 
         const imageType = image.includes('.png') ? 'PNG' : 'JPEG';
+
         if (yPosition + imgHeight > pageHeight - 10) {
           doc.addPage();
           drawPageBorder();
@@ -495,23 +531,55 @@ const generatePDF = useCallback(() => {
         doc.addImage(image, imageType, imgX, yPosition, imgWidth, imgHeight);
         yPosition += imgHeight + 10;
       }
-      
 
+      // Table Handling
       if (table && table.data) {
-        table.data.forEach(row => {
-          let xPosition = pageMargin;
-          row.forEach(cell => {
-            doc.rect(xPosition, yPosition, 30, 10);
-            doc.text(String(cell), xPosition + 2, yPosition + 7);
-            xPosition += 30;
-          });
-          yPosition += 10;
+        const cellWidth = 40;
+        const cellHeight = 10;
+        const rowHeights = table.data.map(row => {
+          return row.reduce((maxHeight, cell) => {
+            const lines = doc.splitTextToSize(String(cell), cellWidth - 4);
+            const dynamicHeight = Math.max(lines.length * 7, cellHeight);
+            return Math.max(maxHeight, dynamicHeight);
+          }, cellHeight);
         });
-        yPosition += 5;
+
+        const tableHeight = rowHeights.reduce((total, rowHeight) => total + rowHeight, 0);
+        const tableWidth = cellWidth * table.data[0].length;
+
+        if (pageMargin + tableMargin + tableWidth > pageWidth - pageMargin) {
+          console.log("Table exceeds page width.");
+          return;
+        }
+
+        if (yPosition + tableHeight + tableMargin > pageHeight - pageMargin) {
+          doc.addPage();
+          yPosition = pageMargin + tableMargin;
+        }
+
+        table.data.forEach((row, rowIndex) => {
+          let xPosition = pageMargin + tableMargin;
+          const rowHeight = rowHeights[rowIndex];
+
+          row.forEach(cell => {
+            const lines = doc.splitTextToSize(String(cell), cellWidth - 4);
+            doc.rect(xPosition, yPosition, cellWidth, rowHeight);
+            lines.forEach((line, index) => {
+              doc.text(line, xPosition + 2, yPosition + 7 + index * 7);
+            });
+            xPosition += cellWidth;
+          });
+
+          yPosition += rowHeight;
+        });
+
+        doc.rect(pageMargin + tableMargin, yPosition - tableHeight, tableWidth, tableHeight);
+        // Add extra space below the table before the next field
+        const tableSpace = 10; // Adjust this value to your liking
+        yPosition += tableSpace;
       }
     });
 
-    // Add a separator line
     doc.setDrawColor(0, 0, 0);
     doc.line(pageMargin, yPosition, doc.internal.pageSize.width - pageMargin, yPosition);
     yPosition += 10;
