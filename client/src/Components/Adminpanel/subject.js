@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios'; // If using 'react-modal' library
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faPlus, faEdit, faTrash, faTimes, faDollarSign, faUpload } from '@fortawesome/free-solid-svg-icons';
+import { faPlus, faEdit, faDownload, faTrash, faTimes, faDollarSign, faUpload } from '@fortawesome/free-solid-svg-icons';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 
@@ -302,40 +302,6 @@ const handleDeleteQuestion = async (questionId, currentSubjectId) => {
   }
 };
 
-const handleCSVUpload = async (event, currentSubjectId) => {
-  if (!currentSubjectId) {
-    toast.error("Please select a subject first.");
-    return;
-  }
-
-  const file = event.target.files[0];
-  if (!file) {
-    toast.error("No file selected.");
-    return;
-  }
-
-  const formData = new FormData();
-  formData.append("csvFile", file);
-
-  try {
-    const response = await axios.post(`/api/subjects/${currentSubjectId}/upload-csv`, formData, {
-      headers: {
-        "Content-Type": "multipart/form-data",
-      },
-    });
-
-    if (response.status === 200) {
-      toast.success("CSV uploaded successfully!");
-      // Optionally, refresh the data on the page
-    } else {
-      console.error("Failed to upload CSV.");
-    }
-  } catch (error) {
-    console.error("Error uploading CSV:", error);
-    toast.error("An error occurred while uploading the CSV.");
-  }
-};
-
   return (
     <div>
        <ToastContainer />
@@ -410,19 +376,26 @@ const handleCSVUpload = async (event, currentSubjectId) => {
 
             {expandedSubject === subject._id && (
               <div style={{ marginTop: '10px' }}>
-                <button onClick={() => { setCurrentSubjectId(subject._id); setShowUploadModal(true); }} style={{ backgroundColor: '#4CAF50', color: 'white', padding: '8px 16px', borderRadius: '5px', cursor: 'pointer' }} >
-                  <FontAwesomeIcon icon={faUpload} style={{ marginRight: '8px' }} /> Upload CSV
-                </button>
-                {/* <button onClick={() => { handleDownloadCSV(subject._id); }} className="download-csv-btn">
-                  Download CSV
-                </button>
+                <div style={{ display: 'flex', gap: '50px', marginBottom: '30px' }}>
+                  <button 
+                    onClick={() => { setCurrentSubjectId(subject._id); setShowUploadModal(true); }} 
+                    style={{ backgroundColor: '#4CAF50', color: 'white', padding: '12px', width: '30px', height: '30px', borderRadius: '0', cursor: 'pointer', display: 'flex', justifyContent: 'center', alignItems: 'center', boxShadow: '0 4px 8px rgba(0, 0, 0, 0.2)', transition: 'transform 0.3s ease-in-out' }} 
+                    onMouseEnter={(e) => e.target.style.transform = 'scale(1.1)'}
+                    onMouseLeave={(e) => e.target.style.transform = 'scale(1)'}
+                  >
+                    <FontAwesomeIcon icon={faUpload} style={{ fontSize: '20px' }} />
+                  </button>
 
-                <input type="file" accept=".csv" onChange={(event) => handleCSVUpload(event, currentSubjectId)} /> */}
-
-                {/* <button onClick={() => { setCurrentSubjectId(subject._id); setShowUploadModal(true); }} style={{ backgroundColor: '#4CAF50', color: 'white', padding: '8px 16px', borderRadius: '5px', cursor: 'pointer' }} >
-                  <FontAwesomeIcon icon={faUpload} style={{ marginRight: '8px' }} /> Upload CSV
-                </button> */}
-
+                  <button 
+                    onClick={() => { handleDownloadCSV(subject._id); }} 
+                    className="download-csv-btn"
+                    style={{ backgroundColor: '#2196F3', color: 'white', padding: '12px', width: '30px', height: '30px', borderRadius: '0', cursor: 'pointer', display: 'flex', justifyContent: 'center', alignItems: 'center', boxShadow: '0 4px 8px rgba(0, 0, 0, 0.2)', transition: 'transform 0.3s ease-in-out' }}
+                    onMouseEnter={(e) => e.target.style.transform = 'scale(1.1)'}
+                    onMouseLeave={(e) => e.target.style.transform = 'scale(1)'}
+                  >
+                    <FontAwesomeIcon icon={faDownload} style={{ fontSize: '20px' }} />
+                  </button>
+                </div>
 
                 {/* Questions here */}
                 <>
@@ -714,63 +687,6 @@ const handleCSVUpload = async (event, currentSubjectId) => {
                   <img src={updatedQuestion[`questionImage${index}`]} alt={`Preview ${index}`} style={{ maxWidth: '25%', maxHeight: '200px', borderRadius: '5px', marginBottom: '10px', }}/>
                 )}
                 {/* Table Editor */}
-                {/* <div>
-                  <div style={{ display: 'flex', gap: '10px', marginBottom: '10px' }}>
-                    <input type="number" min="1" placeholder="Rows"
-                      value={
-                        updatedQuestion[`questionTable${index}`]?.rows || 0
-                      }
-                      onChange={(e) =>
-                        setUpdatedQuestion((prev) => {
-                          const rows = parseInt(e.target.value) || 0;
-                          const cols = updatedQuestion[`questionTable${index}`]?.cols || 0;
-                          return {
-                            ...prev,
-                            [`questionTable${index}`]: generateTableData(rows, cols),
-                          };
-                        })
-                      } style={{ width: '50%', padding: '10px' }}
-                    />
-                    <input type="number" min="1" placeholder="Columns"
-                      value={
-                        updatedQuestion[`questionTable${index}`]?.cols || 0
-                      }
-                      onChange={(e) =>
-                        setUpdatedQuestion((prev) => {
-                          const rows =
-                            updatedQuestion[`questionTable${index}`]?.rows || 0;
-                          const cols = parseInt(e.target.value) || 0;
-                          return {
-                            ...prev,
-                            [`questionTable${index}`]: generateTableData(rows, cols),
-                          };
-                        })
-                      } style={{ width: '50%', padding: '10px' }}
-                    />
-                  </div>
-                  <table border="1" style={{ width: '100%', textAlign: 'center', marginBottom: '10px', }} >
-                    <tbody>
-                      {updatedQuestion[`questionTable${index}`]?.data?.map(
-                        (row, rowIndex) => (
-                          <tr key={`row-${rowIndex}`}>
-                            {row.map((cell, colIndex) => (
-                              <td key={`cell-${rowIndex}-${colIndex}`}>
-                                <input
-                                  type="text"
-                                  value={cell}
-                                  onChange={(e) =>
-                                    updateTableCell( updatedQuestion, index, rowIndex, colIndex, e.target.value )
-                                  }
-                                  style={{ width: '100%', padding: '5px', }}
-                                />
-                              </td>
-                            ))}
-                          </tr>
-                        )
-                      )}
-                    </tbody>
-                  </table>
-                </div> */}
                 <div>
                   <div style={{ display: 'flex', gap: '10px', marginBottom: '10px' }}>
                     <input type="number" min="1" placeholder="Rows"

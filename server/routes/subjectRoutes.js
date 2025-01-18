@@ -81,6 +81,139 @@ router.get("/:id", async (req, res) => {
   });
   
   // Upload route for questions CSV file
+  // router.post("/:id/upload", upload.single("file"), async (req, res) => {
+  //   const { id } = req.params; // Get the subject ID from the route parameter
+  
+  //   // Validate uploaded file
+  //   if (!req.file) {
+  //       return res.status(400).json({ message: "No file uploaded" });
+  //   }
+  
+  //   const questionsData = [];
+  //   const csvStream = new stream.Readable();
+  //   csvStream.push(req.file.buffer.toString());
+  //   csvStream.push(null);
+  
+  //   let isHeaderValid = true;
+  //   let hasValidRow = false;
+  
+  //   // Parse the CSV
+  //   csvStream
+  //   .pipe(csv())
+  //   .on("headers", (headers) => {
+  //       // Validate if the headers match your schema (without 'subject' field in CSV)
+  //       const expectedHeaders = [
+  //           "questionText1", "questionImage1", "questionTable1",
+  //           "questionText2", "questionImage2", "questionTable2",
+  //           "questionText3", "questionImage3", "questionTable3",
+  //           "a", "b", "c", "d", "correctAns",
+  //           "answerDescriptionText1", "answerDescriptionImage1", "answerDescriptionTable1",
+  //           "answerDescriptionText2", "answerDescriptionImage2", "answerDescriptionTable2",
+  //           "answerDescriptionText3", "answerDescriptionImage3", "answerDescriptionTable3"
+  //       ];
+
+  //       if (
+  //           headers.length !== expectedHeaders.length ||
+  //           !headers.every((h, i) => h.trim() === expectedHeaders[i])
+  //       ) {
+  //           isHeaderValid = false;
+  //       }
+  //   })
+  //   .on("data", (row) => {
+  //       if (!isHeaderValid) return;
+
+  //       // Skip empty rows
+  //       const isEmptyRow = Object.values(row).every((value) => !value.trim());
+  //       if (!isEmptyRow) {
+  //           hasValidRow = true;
+
+  //           // Transform CSV row to match the schema, using column names dynamically
+  //           const question = {
+  //               questionText1: row.questionText1 || null,
+  //               questionImage1: row.questionImage1 || null,
+  //               questionTable1: row.questionTable1 || null,
+
+  //               questionText2: row.questionText2 || null,
+  //               questionImage2: row.questionImage2 || null,
+  //               questionTable2: row.questionTable2 || null,
+
+  //               questionText3: row.questionText3 || null,
+  //               questionImage3: row.questionImage3 || null,
+  //               questionTable3: row.questionTable3 || null,
+
+  //               options: {
+  //                   a: row.a || null,
+  //                   b: row.b || null,
+  //                   c: row.c || null,
+  //                   d: row.d || null,
+  //               },
+  //               correctAns: row.correctAns || null,
+
+  //               answerDescriptionText1: row.answerDescriptionText1 || null,
+  //               answerDescriptionImage1: row.answerDescriptionImage1 || null,
+  //               answerDescriptionTable1: row.answerDescriptionTable1 || null,
+
+  //               answerDescriptionText2: row.answerDescriptionText2 || null,
+  //               answerDescriptionImage2: row.answerDescriptionImage2 || null,
+  //               answerDescriptionTable2: row.answerDescriptionTable2 || null,
+
+  //               answerDescriptionText3: row.answerDescriptionText3 || null,
+  //               answerDescriptionImage3: row.answerDescriptionImage3 || null,
+  //               answerDescriptionTable3: row.answerDescriptionTable3 || null,
+
+  //               subjectId: id,  // Correctly set to `subjectId` based on the schema
+  //           };
+
+  //           questionsData.push(question);
+  //       }
+  //   })
+  //   .on("end", async () => {
+  //       if (!isHeaderValid) {
+  //           return res.status(400).json({
+  //               message: "Invalid file headers. Please upload a valid CSV file.",
+  //           });
+  //       }
+
+  //       if (!hasValidRow) {
+  //           return res.status(400).json({
+  //               message: "No valid rows found in the file.",
+  //           });
+  //       }
+
+  //       try {
+  //           // Insert questions into the database
+  //           const insertedQuestions = await Question.insertMany(questionsData);
+
+  //           // Update the subject with new questions
+  //           const questionIds = insertedQuestions.map((q) => q._id);
+  //           await Subject.findByIdAndUpdate(
+  //               id,
+  //               { $push: { questions: { $each: questionIds } } },
+  //               { new: true }
+  //           );
+
+  //           res.status(200).json({
+  //               message: "Questions uploaded successfully",
+  //               insertedQuestions,
+  //           });
+  //       } catch (error) {
+  //           console.error("Error inserting questions:", error);
+  //           res.status(500).json({
+  //               message: "Failed to upload questions",
+  //               error: error.message,
+  //           });
+  //       }
+  //   })
+  //   .on("error", (error) => {
+  //       console.error("Error parsing CSV:", error);
+  //       res.status(500).json({
+  //           message: "Failed to process CSV",
+  //           error: error.message,
+  //       });
+  //   });
+
+  // });
+  
   router.post("/:id/upload", upload.single("file"), async (req, res) => {
     const { id } = req.params; // Get the subject ID from the route parameter
   
@@ -127,19 +260,28 @@ router.get("/:id", async (req, res) => {
         if (!isEmptyRow) {
             hasValidRow = true;
 
+            // Parse tables if they exist and are in valid JSON format
+            const parseTable = (tableString) => {
+                try {
+                    return tableString && tableString.trim() ? JSON.parse(tableString) : null;
+                } catch (e) {
+                    return null; // In case of invalid JSON, return null
+                }
+            };
+
             // Transform CSV row to match the schema, using column names dynamically
             const question = {
                 questionText1: row.questionText1 || null,
                 questionImage1: row.questionImage1 || null,
-                questionTable1: row.questionTable1 || null,
+                questionTable1: parseTable(row.questionTable1),
 
                 questionText2: row.questionText2 || null,
                 questionImage2: row.questionImage2 || null,
-                questionTable2: row.questionTable2 || null,
+                questionTable2: parseTable(row.questionTable2),
 
                 questionText3: row.questionText3 || null,
                 questionImage3: row.questionImage3 || null,
-                questionTable3: row.questionTable3 || null,
+                questionTable3: parseTable(row.questionTable3),
 
                 options: {
                     a: row.a || null,
@@ -211,9 +353,8 @@ router.get("/:id", async (req, res) => {
             error: error.message,
         });
     });
+});
 
-  });
-  
 // Update question by ID
 router.put('/:subjectId/questions/:questionId', async (req, res) => {
   const { subjectId, questionId } = req.params;
