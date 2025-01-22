@@ -76,6 +76,13 @@ const QuizEnroll = () => {
       await axios.post('/api/quizenroll', enrollmentData); // Backend URL
       toast.success('User successfully enrolled for the quiz!'); // Show success message
       setErrorMessage(''); // Clear any previous error message
+      // Call email API
+      await axios.post('/api/enrollmail/send-enrollemail', {
+        userId: selectedUser,
+        selectedCourse: selectedCourse,
+        selectedSubject: selectedSubjects,
+      });
+      toast.success('Confirmation email sent to the user!');
       setModalOpen(false);
     } catch (error) {
       toast.error("Error adding user:", error);

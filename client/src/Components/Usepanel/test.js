@@ -34,6 +34,39 @@ const Test = () => {
   const [isSubmitClicked, setIsSubmitClicked] = useState(false);
   const [isEnterRoomClicked, setIsEnterRoomClicked] = useState(false);
   const [showSubmitPopup, setShowSubmitPopup] = useState(false);
+
+  useEffect(() => {
+    let isConfirmationDisplayed = false; // Flag to avoid repeated prompts
+  
+    const handlePopState = (event) => {
+      if (!isConfirmationDisplayed) {
+        isConfirmationDisplayed = true; // Set the flag to true
+        const confirmation = window.confirm("If you go back, you will lose this test. Do you want to go back?");
+        if (confirmation) {
+          // If "Yes" is clicked, allow navigation
+          window.history.back();
+        } else {
+          // If "Cancel" is clicked, prevent navigation
+          window.history.pushState(null, null, window.location.pathname);
+        }
+        isConfirmationDisplayed = false; // Reset the flag
+      }
+    };
+  
+    // Add an initial dummy state to detect back navigation
+    window.history.pushState(null, null, window.location.pathname);
+  
+    // Add popstate event listener
+    window.addEventListener("popstate", handlePopState);
+  
+    return () => {
+      // Cleanup on component unmount
+      window.removeEventListener("popstate", handlePopState);
+    };
+  }, []);
+  
+  
+  
   // Fetch course name
   const fetchCourseName = useCallback(() => {
     if (selectedCourse) {
@@ -348,8 +381,10 @@ const generatePDF = useCallback(() => {
   doc.setTextColor(0, 0, 0);
 
   // Basic Info Section
-  doc.text(`Course: ${courseName}`, pageMargin, yPosition);
-  doc.text(`Subject: ${subjectName}`, pageMargin, yPosition + 10);
+  const textPadding = 5;
+  doc.setFont("times", "bold");
+  doc.text(`Course: ${courseName}`, pageMargin + textPadding, yPosition);
+  doc.text(`Subject: ${subjectName}`, pageMargin + textPadding, yPosition + 10);
   yPosition += 20;
 
   // Loop through all questions
@@ -362,7 +397,9 @@ const generatePDF = useCallback(() => {
     }
 
     doc.setFontSize(14);
-    doc.text(`Question ${index + 1}:`, pageMargin, yPosition);
+    doc.setFont("times", "bold"); // Set font to bold
+    doc.text(`Question ${index + 1}:`, pageMargin + textPadding, yPosition);
+    doc.setFont("times", "normal"); // Revert font to normal
     yPosition += 10;
 
     // Add Question Fields
@@ -375,6 +412,7 @@ const generatePDF = useCallback(() => {
     questionFields.forEach(({ text, image, table }) => {
       // Text Handling
       if (text) {
+        const textPadding = 5;
         const lines = doc.splitTextToSize(text, pageWidth - 2 * pageMargin); // Wrap text
         lines.forEach(line => {
           if (yPosition > pageHeight - 10) { 
@@ -383,7 +421,7 @@ const generatePDF = useCallback(() => {
             addWatermark();
             yPosition = pageMargin + 10; // Reset y-position for the new page
           }
-          doc.text(line, pageMargin, yPosition);
+          doc.text(line, pageMargin + textPadding, yPosition);
           yPosition += 10; // Increment y-position for the next line
         });
       }
@@ -455,7 +493,9 @@ const generatePDF = useCallback(() => {
 
     // Add Options
     doc.setFontSize(14);
-    doc.text("Options:", pageMargin, yPosition);
+    doc.setFont("times", "bold")
+    doc.text("Options:", pageMargin + textPadding, yPosition);
+    doc.setFont("times", "normal")
     yPosition += 10;
     doc.setFontSize(12);
     Object.entries(question.options).forEach(([key, value]) => {
@@ -472,24 +512,28 @@ const generatePDF = useCallback(() => {
           addWatermark();
           yPosition = pageMargin + 10;
         }
-        doc.text(line, pageMargin, yPosition);
+        doc.text(line, pageMargin + textPadding, yPosition);
         yPosition += 10;
       });
     });
 
     // Add Selected and Correct Answers
     doc.setTextColor(0, 123, 0); 
-    doc.text(`Your Answer: ${selectedOptions[question._id] || 'None'}`, pageMargin, yPosition);
+    doc.setFont("times", "bold")
+    doc.text(`Your Answer: ${selectedOptions[question._id] || 'None'}`, pageMargin + textPadding, yPosition);
     yPosition += 10;
 
     doc.setTextColor(255, 0, 0); 
-    doc.text(`Correct Answer: ${question.correctAns}`, pageMargin, yPosition);
+    doc.setFont("times", "bold")
+    doc.text(`Correct Answer: ${question.correctAns}`, pageMargin + textPadding, yPosition);
     yPosition += 10;
 
     // Add Explanation
     doc.setFontSize(14);
     doc.setTextColor(0, 0, 0);
-    doc.text("Answer Description:", pageMargin, yPosition);
+    doc.setFont("times", "bold")
+    doc.text("Answer Description:", pageMargin + textPadding, yPosition);
+    doc.setFont("times", "normal")
     yPosition += 10;
 
     const explanationFields = [
@@ -502,6 +546,7 @@ const generatePDF = useCallback(() => {
       // Similar logic for Explanation (text, image, table) as done for questions
       // Text Handling
       if (text) {
+        const textPadding = 5;
         const lines = doc.splitTextToSize(text, pageWidth - 2 * pageMargin); // Wrap text
         lines.forEach(line => {
           if (yPosition > pageHeight - 10) { 
@@ -510,7 +555,7 @@ const generatePDF = useCallback(() => {
             addWatermark();
             yPosition = pageMargin + 10; // Reset y-position for the new page
           }
-          doc.text(line, pageMargin, yPosition);
+          doc.text(line, pageMargin + textPadding, yPosition);
           yPosition += 10; // Increment y-position for the next line
         });
       }

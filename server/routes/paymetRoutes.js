@@ -5,6 +5,7 @@ const User = require("../models/user-model");
 const Course = require("../models/course-model");
 const stripe = require("stripe")(process.env.STRIPE_SECRET_KEY);
 const Razorpay = require('razorpay');
+const nodemailer = require("nodemailer");
 require('dotenv').config();
 
 // const razorpayInstance = new Razorpay({
@@ -16,6 +17,16 @@ const razorpayInstance = new Razorpay({
   key_id: process.env.RAZORPAY_KEY_ID,
   key_secret: process.env.RAZORPAY_KEY_SECRET,
 });
+
+// Email setup with Nodemailer
+const transporter = nodemailer.createTransport({
+  service: 'gmail', // Or use any other service like SendGrid, etc.
+  auth: {
+    user: process.env.GMAIL_USER, // Your email here
+    pass: process.env.GMAIL_PASS, // Your email password or App password if 2FA is enabled
+  },
+});
+
 
 // // Create Razorpay Order
 // router.post('/api/payment/create-razorpay-order', async (req, res) => {
@@ -60,6 +71,27 @@ router.post("/", async (req, res) => {
       savedEnrollment.paymentStatus = "success";
       savedEnrollment.paymentId = paymentId;
       await savedEnrollment.save();
+
+      // Send email notification on successful payment
+      const user = await User.findById(userId); // Fetch user data
+      const course = await Course.findById(selectedCourse); // Fetch course data
+      const subjectNames = selectedSubject.map(sub => sub.name).join(", "); // Get selected subjects
+
+      const mailOptions = {
+        from: process.env.EMAIL, // Sender address
+        to: user.email, // Receiver email
+        subject: `Test Assigned Successfully - ${course.name}`,
+        text: `Hello ${user.firstName},\n\nTest assignment for the course ${course.name} and selected subjects: ${subjectNames} is successful. Now, you can schedule your test.\n\nBest of luck!\n\nThe Edumocks Team\n[https://edumocks.com/]`,
+      };
+
+      transporter.sendMail(mailOptions, (error, info) => {
+        if (error) {
+          console.log("Error sending email:", error);
+        } else {
+          console.log("Email sent: " + info.response);
+        }
+      });
+
       console.log("Payment successful for:", paymentId);
     }, 5000); // Simulate 5 seconds delay for payment
 

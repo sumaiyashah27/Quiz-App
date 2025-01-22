@@ -22,6 +22,7 @@ const stripe = require("stripe")(process.env.STRIPE_SECRET_KEY);
 const delayTestRoutes = require('./routes/delayTestRoutes');
 const emailRoutes = require("./routes/emailRoutes");
 const checkAndSendReminders = require('./services/scheduler');
+const sendEmailRouter = require('./services/enrollemail');
 const app = express();
 
 // Load environment variables
@@ -52,6 +53,7 @@ app.use('/api/quizResults', quizResultsRoutes);
 app.use("/api/testEnroll", testEnrollRoutes);
 app.use("/api/delayTest",delayTestRoutes);
 app.use("/api/email", emailRoutes);
+app.use('/api/enrollmail', sendEmailRouter);
 
 const PORT = process.env.PORT || 5000;
 connectDB().then(() => {
