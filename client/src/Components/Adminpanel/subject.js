@@ -635,14 +635,15 @@ const handleDeleteQuestion = async (questionId, currentSubjectId) => {
       )}
       {/* Upload CSV Modal */}
       {showUploadModal && (
-        <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', backgroundColor: 'rgba(0,0,0,0.5)' }}>
-          <div style={{ backgroundColor: '#fff', padding: '20px', borderRadius: '8px', width: '400px', textAlign: 'center', position: 'relative' }}>
-            <span onClick={() => setShowUploadModal(false)} style={{ position: 'absolute', top: '10px', right: '10px', cursor: 'pointer', fontSize: '20px' }}>
+        <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', backgroundColor: 'rgba(0, 0, 0, 0.5)', zIndex: 1000 }}>
+          <div style={{ backgroundColor: '#fff', padding: '30px', borderRadius: '8px', width: '500px', textAlign: 'center', position: 'relative', boxShadow: '0 6px 20px rgba(0, 0, 0, 0.1)' }}>
+            <span onClick={() => setShowUploadModal(false)} style={{ position: 'absolute', top: '10px', right: '10px', cursor: 'pointer', fontSize: '24px', color: '#333' }}>
               <FontAwesomeIcon icon={faTimes} />
             </span>
-            <h3>Upload CSV for Questions</h3>
-            <input type="file" accept=".csv" onChange={(e) => setSelectedFile(e.target.files[0])} />
-            <button onClick={handleUploadCSV} style={{ backgroundColor: '#4CAF50', color: 'white', padding: '10px 12px', fontSize: '14px', borderRadius: '8px', cursor: 'pointer' }}>
+            <h3 style={{ fontSize: '22px', fontWeight: '600', marginBottom: '20px' }}>Upload CSV for Questions</h3>
+            <input type="file" accept=".csv" onChange={(e) => setSelectedFile(e.target.files[0])} style={{ padding: '10px', fontSize: '16px', borderRadius: '6px', border: '1px solid #ddd', marginBottom: '20px', width: '100%', boxSizing: 'border-box' }} />
+            <div style={{ marginBottom: '10px' }}></div> {/* Added space */}
+            <button onClick={handleUploadCSV} style={{ backgroundColor: '#4CAF50', color: 'white', padding: '8px 12px', fontSize: '16px', borderRadius: '6px', cursor: 'pointer', width: '100%', border: 'none', boxSizing: 'border-box' }}>
               Upload CSV
             </button>
           </div>
