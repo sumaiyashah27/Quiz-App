@@ -87,6 +87,7 @@ router.post("/", async (req, res) => {
       transporter.sendMail(mailOptions, (error, info) => {
         if (error) {
           console.log("Error sending email:", error);
+          console.log("Email sent: ", user.email);
         } else {
           console.log("Email sent: " + info.response);
         }

@@ -107,6 +107,14 @@ const Payment = () => {
         });
         setPaymentStatus("success");
         toast.success("Enrollment Successful! Coupon Applied.");
+        // Call email API
+        await axios.post('/api/enrollmail/send-enrollemail', {
+          userId: userData._id,
+          selectedCourse: selectedCourse,
+          selectedSubject: selectedSubjects,
+        });
+        toast.success('Confirmation email sent to the user!');
+
         navigate("/user-panel", {
           state: { userId: userData._id, firstName: userData.firstName },
         });
@@ -140,6 +148,13 @@ const Payment = () => {
             });
             setPaymentStatus("success");
             toast.success("Payment successful. You are enrolled!");
+            // Call email API
+            await axios.post('/api/enrollmail/send-enrollemail', {
+              userId: userData._id,
+              selectedCourse: selectedCourse,
+              selectedSubject: selectedSubjects,
+            });
+            toast.success('Confirmation email sent to the user!');
             navigate("/user-panel", {
               state: { userId: userData._id, firstName: userData.firstName },
             });
@@ -231,6 +246,13 @@ const Payment = () => {
         });
         setPaymentStatus("success");
         toast.success("Enrollment Successful! Coupon Applied.");
+        // Call email API
+        await axios.post('/api/enrollmail/send-enrollemail', {
+          userId: userData._id,
+          selectedCourse: selectedCourse,
+          selectedSubject: selectedSubjects,
+        });
+        toast.success('Confirmation email sent to the user!');
         navigate("/user-panel", {
           state: { userId: userData._id, firstName: userData.firstName },
         });
@@ -266,6 +288,13 @@ const Payment = () => {
             });
             setPaymentStatus("success");
             toast.success("Payment Successful. You are enrolled!");
+            // Call email API
+            await axios.post('/api/enrollmail/send-enrollemail', {
+              userId: userData._id,
+              selectedCourse: selectedCourse,
+              selectedSubject: selectedSubjects,
+           });
+            toast.success('Confirmation email sent to the user!');  
             navigate("/user-panel", {
               state: { userId: userData._id, firstName: userData.firstName },
             });

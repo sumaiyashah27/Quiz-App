@@ -14,7 +14,17 @@ router.post('/send-enrollemail', async (req, res) => {
     // Fetch user and course details
     const user = await User.findById(userId);
     const course = await Course.findById(selectedCourse);
-    const subject = await Subject.findById(selectedSubject);
+
+    // If multiple subjects are selected, fetch all subject details
+    let subjectNames = [];
+    if (Array.isArray(selectedSubject)) {
+      const subjects = await Subject.find({ '_id': { $in: selectedSubject } });
+      subjectNames = subjects.map(subject => subject.name);
+    } else {
+      // If only one subject is selected, fetch its details
+      const subject = await Subject.findById(selectedSubject);
+      subjectNames.push(subject.name);
+    }
 
     // Configure NodeMailer
     const transporter = nodemailer.createTransport({
@@ -32,7 +42,7 @@ router.post('/send-enrollemail', async (req, res) => {
       subject: `Test Assigned Successfully - ${course.name}`,
       text: `Hello ${user.firstName},
 
-Test assign for the course ${course.name} and selected subjects: ${subject.name} is successful. 
+Test assigned for the course ${course.name} with the following subjects: ${subjectNames.join(', ')} is successful.
 
 Now, you can schedule your test.
 

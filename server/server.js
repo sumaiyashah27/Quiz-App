@@ -28,6 +28,10 @@ const app = express();
 // Load environment variables
 dotenv.config();
 
+// Body Parsing Middleware (Increase payload size limit)
+app.use(express.json({ limit: '1150mb' })); // Increase limit if necessary
+app.use(express.urlencoded({ limit: '1150mb', extended: true }));
+
 app.use(cors({
     origin: ["https://edumocks.com", "https://www.edumocks.com", "http://localhost:3000"],
     methods: ["GET", "POST", "PUT", "DELETE"], // Ensure all needed methods are allowed
