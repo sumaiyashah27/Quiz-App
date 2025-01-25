@@ -37,10 +37,10 @@ const Navbar = () => {
   };
 
   return (
-    <nav style={{justifyContent: "space-between",alignItems: "center",display: openMenu ? "none" : "flex", backgroundColor: "#fff",}} >
+    <nav style={{justifyContent: "space-between",alignItems: "center",display: openMenu ? "none" : "flex", backgroundColor: "#fff", padding: "0 20px",}} >
       <div className="nav-logo-container">
         <Link to="/">
-        <img src={Logo} alt="Logo" style={{ width: 'auto', height: '75px', position: 'relative', top: '1px' }} />
+        <img src={Logo} alt="Logo" style={{ width: 'auto', height: '55px', position: 'relative', top: '1px' }} />
         </Link>
       </div>
       <div className="navbar-links-container" style={{ alignItems: "center", fontWeight: 'bold' }}>

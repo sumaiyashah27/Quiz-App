@@ -661,20 +661,43 @@ const handleDeleteQuestion = async (questionId, currentSubjectId) => {
       )}  
 
       {showEditQuestionModal && (
-        <Modal isOpen={showEditQuestionModal} onClose={() => setShowEditQuestionModal(false)} contentLabel="Edit Question"  style={{overlay: { display: 'flex', justifyContent: 'center', alignItems: 'center', backgroundColor: 'rgba(0, 0, 0, 0.5)', }, content: { position: 'relative', maxWidth: '500px', maxHeight: '80vh', margin: '0 auto', padding: '20px', overflow: 'hidden', borderRadius: '10px', }, }}>
+        <Modal isOpen={showEditQuestionModal} onClose={() => setShowEditQuestionModal(false)} contentLabel="Edit Question"  style={{overlay: { display: 'flex', justifyContent: 'center', alignItems: 'center', backgroundColor: 'rgba(0, 0, 0, 0.5)', }, content: { position: 'relative', maxWidth: '800px', maxHeight: '80vh', margin: '0 auto', padding: '20px', overflow: 'hidden', borderRadius: '10px', }, }}>
           <h3>Edit Question</h3>
           {/* Question Fields */}
           <div style={{ maxHeight: 'calc(80vh - 50px)', overflowY: 'auto', paddingRight: '10px',}}>
             {[1, 2, 3].map((index) => (
               <div key={`question-set-${index}`}>
-                <input type="text" value={updatedQuestion[`questionText${index}`]}
+                {/* <input type="text" value={updatedQuestion[`questionText${index}`]}
                   onChange={(e) =>
                     setUpdatedQuestion((prev) => ({
                       ...prev,
                       [`questionText${index}`]: e.target.value,
                     }))
                   } placeholder={`Question Text ${index}`} style={{ padding: '10px', width: '100%', marginBottom: '10px' }}
-                />
+                /> */}
+                <textarea
+                value={updatedQuestion[`questionText${index}`]}
+                onChange={(e) =>
+                  setUpdatedQuestion((prev) => ({
+                    ...prev,
+                    [`questionText${index}`]: e.target.value,
+                  }))
+                }
+                placeholder={`Question Text ${index}`}
+                style={{
+                  padding: '10px',
+                  width: '100%',
+                  marginBottom: '10px',
+                  resize: 'none', // Disable manual resizing
+                  overflow: 'hidden', // Disable scrolling
+                }}
+                rows="1" // Minimum height
+                onInput={(e) => {
+                  e.target.style.height = 'auto'; // Reset height before calculation
+                  e.target.style.height = `${e.target.scrollHeight}px`; // Set height to content
+                }}
+              />
+
                 <input type="text" value={updatedQuestion[`questionImage${index}`]}
                   onChange={(e) =>
                     setUpdatedQuestion((prev) => ({
@@ -766,7 +789,7 @@ const handleDeleteQuestion = async (questionId, currentSubjectId) => {
             {/* Answer Description Fields */}
             {[1, 2, 3].map((index) => (
               <div key={`answer-description-${index}`}>
-                <textarea
+                {/* <textarea
                   value={updatedQuestion[`answerDescriptionText${index}`]}
                   onChange={(e) =>
                     setUpdatedQuestion((prev) => ({
@@ -776,7 +799,29 @@ const handleDeleteQuestion = async (questionId, currentSubjectId) => {
                   }
                   placeholder={`Answer Description Text ${index}`}
                   style={{ padding: '10px', width: '100%', marginBottom: '10px' }}
-                />
+                /> */}
+                <textarea
+                value={updatedQuestion[`answerDescriptionText${index}`]}
+                onChange={(e) =>
+                  setUpdatedQuestion((prev) => ({
+                    ...prev,
+                    [`answerDescriptionText${index}`]: e.target.value,
+                  }))
+                }
+                placeholder={`Answer Description Text ${index}`}
+                style={{
+                  padding: '10px',
+                  width: '100%',
+                  marginBottom: '10px',
+                  resize: 'none', // Disable manual resizing
+                  overflow: 'hidden', // Disable scrolling
+                }}
+                rows="1" // Minimum height
+                onInput={(e) => {
+                  e.target.style.height = 'auto'; // Reset height before calculation
+                  e.target.style.height = `${e.target.scrollHeight}px`; // Set height to content
+                }}
+              />
                 <input
                   type="text"
                   value={updatedQuestion[`answerDescriptionImage${index}`]}
@@ -867,7 +912,7 @@ const handleDeleteQuestion = async (questionId, currentSubjectId) => {
 
 const Modal = ({ title, children, onClose }) => (
   <div style={{ position: "fixed", top: 0, left: 0, width: "100%", height: "100%", backgroundColor: "rgba(0,0,0,0.5)", display: "flex", justifyContent: "center", alignItems: "center", zIndex: 1000 }}>
-    <div style={{ backgroundColor: "#fff", padding: "20px", borderRadius: "8px", width: "400px", textAlign: "center", position: "relative" }}>
+    <div style={{ backgroundColor: "#fff", padding: "20px", borderRadius: "8px", width: "80%", textAlign: "center", position: "relative" }}>
       <span onClick={onClose} style={{ position: "absolute", top: "10px", right: "10px", cursor: "pointer", fontSize: "20px" }}>
         <FontAwesomeIcon icon={faTimes} />
       </span>

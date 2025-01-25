@@ -23,7 +23,11 @@ const Home = () => {
   }, [firstName]); // This runs after firstName is fetched
 
   return (
-    <div className="home-container">
+    <div className="home-container" style={{
+      padding: "20px", // Add padding around the entire container
+      maxWidth: "1200px", // Set a maximum width for the content
+      margin: "0 auto", // Center the content
+    }}>
       <div className="home-banner-container">
         <div className="home-bannerImage-container">
           <img src={BannerBackground} alt="" />
