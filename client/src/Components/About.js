@@ -4,7 +4,7 @@ import { Link } from "react-router-dom";
 
 const About = () => {
   const firstName = localStorage.getItem("firstName"); // Retrieve user data
-  // Function to scroll to the bookcourse section
+  
   const scrollToBookCourse = () => {
     const bookcourseSection = document.getElementById("bookcourse");
     if (bookcourseSection) {
@@ -13,10 +13,10 @@ const About = () => {
   };
 
   return (
-    <div className="about-section-container"  style={{ position: 'relative', overflow: 'hidden', }}>
-      <div style={{ textAlign: 'center', padding: '50px 20px', backgroundColor: 'rgba(255, 255, 255, 0.9)', borderRadius: '15px', boxShadow: '0 4px 10px rgba(0, 0, 0, 0.1)', }}>
+    <div className="about-section-container" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '100vh', overflow: 'hidden', padding: '0 20px', boxSizing: 'border-box' }}>
+      <div style={{ textAlign: 'center', padding: '40px 20px', backgroundColor: 'rgba(255, 255, 255, 0.9)', borderRadius: '15px', boxShadow: '0 4px 10px rgba(0, 0, 0, 0.1)', width: '100%', maxWidth: '900px' }}>
         <p style={{ fontSize: '1.2rem', color: '#C80D18', fontWeight: 'bold' }}>Why Choose Us?</p>
-        <h1 style={{ fontSize: '2.1rem', color: '#100B5C', margin: '20px 0' }}>Why Thousands of CFA Candidates Choose Us</h1>
+        <h1 style={{ fontSize: '2rem', color: '#100B5C', margin: '20px 0' }}>Why Thousands of CFA Candidates Choose Us</h1>
         <p style={{ fontSize: '1.1rem', color: '#555', marginBottom: '30px', lineHeight: '1.6' }}>Join thousands of successful candidates who have relied on our resources to enhance their exam readiness. Let’s make your CFA journey smoother and more effective!</p>
 
         <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'center', gap: '30px', marginTop: '40px', padding: '0 15px' }}>
@@ -39,10 +39,10 @@ const About = () => {
           </div>
         </div>
 
-        <div style={{ marginTop: '40px' }} >
-          <button  onClick={scrollToBookCourse}>
-            <span className="secondary-button">
-              {firstName ? "Book Your Test Now" : "Sign In"} <FiArrowRight  style={{ fontSize: "1.5rem",  marginLeft: "8px",  verticalAlign: "middle",}}/>
+        <div style={{ marginTop: '40px' }}>
+          <button onClick={scrollToBookCourse}>
+            <span className="secondary-button" style={{ fontSize: '1.1rem', padding: '10px 20px', backgroundColor: '#C80D18', color: '#fff', borderRadius: '5px', cursor: 'pointer' }}>
+              {firstName ? "Book Your Test Now" : "Sign In"} <FiArrowRight style={{ fontSize: "1.5rem", marginLeft: "8px", verticalAlign: "middle" }} />
             </span>
           </button>
         </div>
