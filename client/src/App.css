@@ -24,6 +24,19 @@
   transition: opacity 0.3s;
 }
 
+/* styles.css or App.css */
+@keyframes scrollText {
+  0% { transform: translateX(100%); }
+  100% { transform: translateX(-100%); }
+}
+
+.scroll-text {
+  font-weight: bold;
+  margin: 0;
+  animation: scrollText 10s linear infinite;
+}
+
+
 .scroll-up:hover {
   background-color: #100B5C;
 }

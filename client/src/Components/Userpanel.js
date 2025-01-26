@@ -365,6 +365,13 @@ const handleEnterRoom = async (course, subject) => {
           </p>
         )} */}
       </div>
+      {/* Test Solution PDF Notification */}
+      <div style={{textAlign: 'center',padding: '15px',marginTop: '30px',fontSize: '1.2rem',color: '#333',overflow: 'hidden',width: '100%',whiteSpace: 'nowrap',}}>
+        <p className="scroll-text">
+        After submitting the test, you will receive an email with a PDF of all correct answers and detailed solutions.
+        </p>
+      </div>
+
       {/* Display active tests (Quiz Enrollment) */}
       <div style={{ marginTop: '20px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '20px' }}>
         <h3 style={{ fontSize: '2rem', fontWeight: 'bold', color: '#2c3e50', textAlign: 'center', marginBottom: '10px', textTransform: 'uppercase', letterSpacing: '1px' }}>Upcoming Test</h3>
@@ -536,31 +543,7 @@ const handleEnterRoom = async (course, subject) => {
           </div>
         </div>
       )}
-      <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', marginTop: '30px' }}>
-        <div style={{ textAlign: 'center', padding: '20px', borderRadius: '8px', boxShadow: '0 4px 8px rgba(0, 0, 0, 0.1)', width: '80%', maxWidth: '600px' }}>
-          <h2>Your Performance based on </h2>
-          <div style={{ fontSize: '18px', margin: '10px 0' }}>
-            <div style={{ backgroundColor: '#FF4C4C', color: 'white', padding: '8px 12px', borderRadius: '4px', fontSize: '20px', margin: '5px 0' }}>
-              <strong>AAA (&gt;90%)</strong>: Exceptional Performance
-            </div>
-            <div style={{ backgroundColor: '#FF4C4C', color: 'white', padding: '8px 12px', borderRadius: '4px', fontSize: '20px', margin: '5px 0' }}>
-              <strong>AA (80–90%)</strong>: Outstanding Effort
-            </div>
-            <div style={{ backgroundColor: '#FF4C4C', color: 'white', padding: '8px 12px', borderRadius: '4px', fontSize: '20px', margin: '5px 0' }}>
-              <strong>BBB (70–80%)</strong>: Passed with Confidence
-            </div>
-            <div style={{ backgroundColor: '#FF4C4C', color: 'white', padding: '8px 12px', borderRadius: '4px', fontSize: '20px', margin: '5px 0' }}>
-              <strong>BB (60–70%)</strong>: Borderline Safe
-            </div>
-            <div style={{ backgroundColor: '#FF4C4C', color: 'white', padding: '8px 12px', borderRadius: '4px', fontSize: '20px', margin: '5px 0' }}>
-              <strong>C (50–60%)</strong>: Needs Improvement
-            </div>
-            <div style={{ backgroundColor: '#FF4C4C', color: 'white', padding: '8px 12px', borderRadius: '4px', fontSize: '20px', margin: '5px 0' }}>
-              <strong>D (&lt;50%)</strong>: Reassess and Rebuild
-            </div>
-          </div>
-        </div>
-      </div>
+      {/* Past Attempts */}
       <div style={{ marginTop: '20px' }}>
         <h3 style={{ fontSize: '2rem', fontWeight: 'bold', color: '#333', textAlign: 'center', marginBottom: '20px', textTransform: 'uppercase' }}>
           Past Attempts
@@ -573,7 +556,7 @@ const handleEnterRoom = async (course, subject) => {
                 <th style={{ padding: '12px', fontWeight: 'bold' }}>Course</th>
                 <th style={{ padding: '12px', fontWeight: 'bold' }}>Subject</th>
                 <th style={{ padding: '12px', fontWeight: 'bold' }}>Score</th>
-                <th style={{ padding: '12px', fontWeight: 'bold' }}>Percentage</th>
+                <th style={{ padding: '12px', fontWeight: 'bold' }}>%</th>
                 <th style={{ padding: '12px', fontWeight: 'bold' }}>Grade</th>
                 <th style={{ padding: '12px', fontWeight: 'bold' }}>Status</th>
               </tr>
@@ -581,9 +564,7 @@ const handleEnterRoom = async (course, subject) => {
             <tbody>
               {completedTests.length === 0 ? (
                 <tr>
-                  <td colSpan="6" style={{ textAlign: 'center', padding: '15px', color: '#777' }}>
-                    No past attempts found
-                  </td>
+                  <td colSpan="6" style={{ textAlign: 'center', padding: '15px', color: '#777' }}>No past attempts found</td>
                 </tr>
               ) : (
                 completedTests.map((test, index) => {
@@ -626,6 +607,19 @@ const handleEnterRoom = async (course, subject) => {
               )}
             </tbody>
           </table>
+        </div>
+      </div>
+
+      <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', marginTop: '30px' }}>
+        <div style={{ textAlign: 'center', padding: '20px', borderRadius: '8px', boxShadow: '0 4px 8px rgba(0, 0, 0, 0.1)', width: '80%', maxWidth: '600px' }}>
+          <h2>Your Performance based on</h2>
+          <div style={{ fontSize: '18px', margin: '10px 0' }}>
+            {['AAA (>90%)', 'AA (80–90%)', 'BBB (70–80%)', 'BB (60–70%)', 'C (50–60%)', 'D (<50%)'].map((grade, index) => (
+              <div key={index} style={{ backgroundColor: '#FF4C4C', color: 'white', padding: '8px 12px', borderRadius: '4px', fontSize: '20px', margin: '5px 0' }}>
+                <strong>{grade}</strong>: {['Exceptional Performance', 'Outstanding Effort', 'Passed with Confidence', 'Borderline Safe', 'Needs Improvement', 'Reassess and Rebuild'][index]}
+              </div>
+            ))}
+          </div>
         </div>
       </div>
     </div>
