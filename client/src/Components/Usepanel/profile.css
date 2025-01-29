@@ -1,0 +1,25 @@
+.profile-container{
+  border-radius: 4px;
+  box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.4);
+  padding: 20px;
+  background-color: #fff;
+  
+}
+
+.profile-sidebar{
+  background-color: #100b5c;
+  color: #fff;
+  border-radius: 8px;
+}
+
+.profile-photo{
+  border: 1px solid white;
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+}
+
+.profile-details{
+  padding: 5px 10px;
+  border-radius: 8px;
+}

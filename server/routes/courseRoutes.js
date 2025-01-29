@@ -220,4 +220,14 @@ router.get('/api/courses/:id', async (req, res) => {
   }
 });
 
+// Get all courses with subjects
+router.get('/api/courses', async (req, res) => {
+  try {
+    const courses = await Course.find().populate('subjects'); // Assuming subjects is populated
+    res.status(200).json(courses);
+  } catch (err) {
+    res.status(500).json({ error: 'Error fetching courses' });
+  }
+});  
+
 module.exports = router;

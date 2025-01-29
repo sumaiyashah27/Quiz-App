@@ -1,0 +1,54 @@
+.scheduled-test-container {
+  padding: 20px;
+}
+
+.scheduled-test-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 20px;
+}
+
+.scheduled-test-card {
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  padding: 20px;
+  background: #fff;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.scheduled-test-card h3 {
+  margin-bottom: 10px;
+}
+
+.scheduled-test-card p {
+  margin: 5px 0;
+}
+
+.test-buttons {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 15px;
+}
+
+.reschedule-btn,
+.attempt-btn {
+  padding: 10px 15px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+.reschedule-btn {
+  background-color: #ffc107;
+  color: #fff;
+}
+
+.attempt-btn {
+  background-color: #007bff;
+  color: #fff;
+}
+
+.attempt-btn:disabled {
+  background-color: #aaa;
+  cursor: not-allowed;
+}

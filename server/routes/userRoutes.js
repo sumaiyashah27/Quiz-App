@@ -128,6 +128,8 @@ router.get("/:userId", async (req, res) => {
             firstName: user.firstName,
             lastName: user.lastName,
             email: user.email,
+            phone: user.phone,         // Ensure phone is included
+            countryCode: user.countryCode,
         });
     } catch (error) {
         console.error("Error fetching user:", error);
@@ -196,4 +198,34 @@ router.get('/users', async (req, res) => {
       res.status(500).json({ message: 'Error fetching users' });
     }
   });
+ // PUT: Update user profile
+ router.put('/user/:userId', async (req, res) => {
+    const { userId } = req.params;
+    const { firstName, lastName, email, countryCode, phone, fullPhoneNumber } = req.body;
+  
+    try {
+      const user = await User.findOne({ userId });
+  
+      if (!user) {
+        return res.status(404).json({ message: 'User not found' });
+      }
+  
+      // Update only the fields that were passed
+      if (firstName) user.firstName = firstName;
+      if (lastName) user.lastName = lastName;
+      if (email) user.email = email;
+      if (countryCode) user.countryCode = countryCode;
+      if (phone) user.phone = phone;
+      if (fullPhoneNumber) user.fullPhoneNumber = fullPhoneNumber;
+  
+      // Save the updated user
+      await user.save();
+      return res.status(200).json(user);
+    } catch (error) {
+      console.error('Error updating user profile:', error); // Log the error here
+      return res.status(500).json({ message: 'Server Error' });
+    }
+  });
+  
+  
 module.exports = router;

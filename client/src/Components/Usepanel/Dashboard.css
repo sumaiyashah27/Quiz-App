@@ -1,0 +1,322 @@
+@import url('https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,100..900;1,100..900&display=swap');
+
+body{
+  font-family: 'Montserrat', sans-serif;
+}
+
+.dashboard-container{
+  border-radius: 8px;
+  background-color: #fff;
+  height: auto;
+}
+
+.topbar{
+  padding: 10px;
+  text-align: start;
+  color: #fff;
+  background-color: #100b5c;
+}
+
+.menu-btn{
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  padding: 10px;
+  border-radius: 8px;
+  background-color: #fff;
+}
+
+.button{
+  padding: 10px;
+  background-color: #c80d18;
+  color: #fff;
+  border: none;
+  border-radius: 10px;
+}
+
+.button:hover{
+  background-color: #bb3f43;
+}
+
+.load-button{
+  padding: 10px;
+  background-color: #c80d18;
+  color: #fff;
+  border: none;
+  border-radius: 10px;
+}
+
+
+.load-button:hover{
+  background-color: #bb3f43;
+}
+
+
+.log-btn{
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  padding: 10px;
+  border-radius: 8px;
+  background-color: #fff;
+}
+
+
+.content-row{
+  padding: 10px;
+  background-color: #fff;
+  border-radius: 8px;
+}
+
+.data-container{
+  border-radius: 8px;
+  padding: 10px;
+}
+
+
+/* Custom CSS for dropdown hover */
+.hover-dropdown:hover .dropdown-menu {
+    display: block !important;
+  }
+  
+  .dropdown-menu {
+    display: none; /* Hide dropdown by default */
+    position: absolute;
+    background-color: white;
+    border: 1px solid #ddd;
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+    z-index: 1;
+  }
+  
+  .dropdown-toggle {
+    background-color: #100b5c;
+    border: none;
+    padding: 10px;
+    font-size: 16px;
+  }
+  
+  .dropdown-item {
+    padding: 8px 16px;
+    color: #100b5c;
+    text-decoration: none;
+  }
+  
+  .dropdown-item:hover {
+    background-color: #f8f9fa;
+  }
+
+  .dropdown-icon {
+    position: absolute; 
+    right: 10px;
+    top: 50%;
+    color: #100b5c;
+    transform: translateY(-50%);
+  }
+  
+
+  /* Scrollable subject dropdown */
+.subject-dropdown {
+  max-height: 200px; /* Limit the height */
+  overflow-y: auto; /* Enable vertical scrolling */
+}
+
+/* Responsive styling */
+@media (max-width: 768px) {
+  .dropdown-menu {
+    width: 100%; /* Make the dropdown menu full width on smaller screens */
+    max-width: 100%;
+  }
+
+ .dropdown-icon {
+    display: none !important;
+  }
+
+  .dropdown-item {
+    font-size: 14px; /* Adjust font size for mobile */
+  }
+}
+
+@media (max-width: 576px) {
+  .dropdown-menu {
+    width: 100%; /* Full-width dropdown on very small screens */
+  }
+  
+  .dropdown-item {
+    font-size: 12px; /* Smaller font size for smaller screens */
+  }
+}
+
+
+  .doughnut-chart-container {
+    width: 100%;
+    height: 250px;  /* Adjust based on your needs */
+    position: relative;
+  }
+  
+  .doughnut-chart {
+    width: 100%;
+    height: 100%;
+  }
+  
+
+  /*doughnut chart*/
+.doughnut-chart-container {
+    display: flex;
+    justify-content: center; /* Center the chart */
+    align-items: center; /* Vertically align it */
+    background-color: white;
+    border-radius: 8px;
+    padding: 10px;
+    flex: 2;
+  }
+
+
+  /*grading css*/
+.grade-container {
+    flex: 1;
+    background-color: white;
+    border-radius: 8px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+    padding: 10px;
+    box-shadow: 0 4px 8px rgba(16, 11, 92, 0.2);
+    margin: 5px;
+  }
+
+  .grading-container {
+    flex: 1;
+    background-color: white;
+    border-radius: 8px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+    padding: 10px;
+    margin: 5px;
+  }
+  
+  .grade-title {
+    color: #100b5c;
+    font-size: 17px;
+    margin-top: 0px
+  }
+  
+  .grade-text {
+    color: #c80d18;
+    font-weight: bold;
+    font-size: 30px;
+  }
+  
+  /*status container*/
+  .status-container {
+    flex: 1;
+    background-color: white;
+    border-radius: 8px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+    padding: 10px;
+    box-shadow: 0 4px 8px rgba(16, 11, 92, 0.2);
+    margin: 5px;
+  }
+  
+  .status-title {
+    color: #100b5c;
+    font-size: 17px;
+    margin-top: 0px;
+  }
+  
+  .status-text {
+    color: #c80d18;
+    font-weight: bold;
+    font-size: 14px;
+  }
+  
+
+  /*chart-container*/
+.chart-container {
+  flex: 1;
+  background-color: white;
+  border-radius: 8px;
+  padding: 10px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  box-shadow: 0 4px 8px rgba(16, 11, 92, 0.2);
+  margin: 5px;
+}
+
+
+/* Floating Panel Styles (Pro Sidebar style) */
+.side-panel {
+  position: fixed; /* Make the panel fixed */
+  top: 0;
+  left: -250px; /* Initially off-screen */
+  width: 250px;
+  height: 100%;
+  background-color: #100b5c; /* Sidebar color */
+  box-shadow: 2px 0px 5px rgba(0, 0, 0, 0.2);
+  padding: 20px;
+  transition: left 0.4s ease; /* Smooth transition */
+  z-index: 9999;
+  color: white; /* Text color */
+  border-radius: 0px 8px 8px 0px; /* Rounded corners */
+}
+
+.side-panel.show {
+  left: 0; /* Slide in when toggled */
+}
+
+.side-panel .btn-close {
+  position: absolute;
+  top: 0;
+  right: 15px;
+  z-index: 10000;
+  cursor: pointer;
+  color: red;
+  font-size: 24px;
+}
+
+.close-btn{
+  cursor: pointer;
+}
+
+.side-panel img {
+  width: 100%;
+  margin-bottom: 20px;
+  border-radius: 8px;
+}
+
+.side-panel ul {
+  list-style-type: none;
+  padding-left: 0;
+}
+
+.side-panel ul li {
+  margin: 15px 0;
+}
+
+.side-panel .btn {
+  color: white;
+  font-size: 18px;
+  display: flex;
+  align-items: center;
+  padding: 12px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+  border-radius: 8px;
+}
+
+.side-panel .btn:hover {
+  background-color: #1f196e; /* Hover color */
+}
+
+.side-panel .btn svg {
+  margin-right: 10px;
+}
+
