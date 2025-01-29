@@ -121,7 +121,7 @@ const handleLoadMore = () => {
               <div className="row">
                 <div className="col-12 p-3 d-flex justify-content-center">
                   {/* Course Dropdown */}
-                  <div>
+                  {/* <div>
                     <select id="course-dropdown" value={selectedCourseId}
                       onChange={handleCourseChange}
                       style={{ width: '100%', padding: '10px', fontSize: '16px', border: '1px solid #ddd', borderRadius: '4px', outline: 'none'
@@ -134,10 +134,10 @@ const handleLoadMore = () => {
                         </option>
                       ))}
                     </select>
-                  </div>
+                  </div> */}
 
                   {/* Subjects Dropdown */}
-                  {selectedCourse && (
+                  {/* {selectedCourse && (
                     <div style={{ marginLeft: '10px' }}>
                       <select id="subject-dropdown" value={selectedSubjectId}
                         onChange={handleSubjectChange}
@@ -151,12 +151,12 @@ const handleLoadMore = () => {
                         ))}
                       </select>
                     </div>
-                  )}
+                  )} */}
 
                   {/* Third button */}
-                  <button className="button" style={{ marginLeft: '10px' }}>
+                  {/* <button className="button" style={{ marginLeft: '10px' }}>
                     Check
-                  </button>
+                  </button> */}
                 </div>
               </div>
 
